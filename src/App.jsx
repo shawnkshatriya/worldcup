@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Predictions from './pages/Predictions'
 import Leaderboard from './pages/Leaderboard'
 import Scores from './pages/Scores'
+import Stats from './pages/Stats'
 import Admin from './pages/Admin'
 import Join from './pages/Join'
 import './index.css'
@@ -19,6 +20,7 @@ function AppShell() {
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/scores" element={<Scores />} />
+          <Route path="/stats" element={<Stats />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/join" element={<Join />} />
         </Routes>
