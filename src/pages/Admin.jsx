@@ -240,6 +240,7 @@ export default function Admin() {
                           </div>
                           <div>
                             <div style={{fontWeight:500}}>{p.name}</div>
+                            <div style={{fontSize:11,color:"var(--c-muted)"}}>{p.email || "no email"}</div>
                             {isDupe && (
                               <div style={{fontSize:11,color:'var(--c-warn)'}}>Duplicate name</div>
                             )}

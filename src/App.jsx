@@ -8,6 +8,7 @@ import Scores from './pages/Scores'
 import Stats from './pages/Stats'
 import Admin from './pages/Admin'
 import Join from './pages/Join'
+import AuthCallback from './pages/AuthCallback'
 import './index.css'
 
 function AppShell() {
@@ -16,13 +17,12 @@ function AppShell() {
       <Sidebar />
       <main className="main">
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/"            element={<Dashboard />} />
           <Route path="/predictions" element={<Predictions />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/scores" element={<Scores />} />
-          <Route path="/stats" element={<Stats />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/join" element={<Join />} />
+          <Route path="/scores"      element={<Scores />} />
+          <Route path="/stats"       element={<Stats />} />
+          <Route path="/admin"       element={<Admin />} />
         </Routes>
       </main>
     </div>
@@ -34,8 +34,9 @@ export default function App() {
     <BrowserRouter>
       <PlayerProvider>
         <Routes>
-          <Route path="/join" element={<Join />} />
-          <Route path="/*" element={<AppShell />} />
+          <Route path="/join"          element={<Join />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/*"             element={<AppShell />} />
         </Routes>
       </PlayerProvider>
     </BrowserRouter>
