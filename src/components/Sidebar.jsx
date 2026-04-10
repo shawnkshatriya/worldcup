@@ -1,54 +1,116 @@
 import { NavLink } from 'react-router-dom'
 import { usePlayer } from '../hooks/usePlayer'
 
-const icons = {
-  dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
-  predictions: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
-  leaderboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-  scores: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>,
-  admin: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 19.07a10 10 0 010-14.14"/></svg>,
-}
+const NAV = [
+  {
+    to: '/', end: true, label: 'Dashboard',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+  },
+  {
+    to: '/predictions', label: 'My Predictions',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  },
+  {
+    to: '/leaderboard', label: 'Leaderboard',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M8 21H5a2 2 0 01-2-2v-5a2 2 0 012-2h3m8 8h3a2 2 0 002-2v-9a2 2 0 00-2-2h-3m-6 0V5a2 2 0 012-2h2a2 2 0 012 2v4m-6 12V9h6v12"/></svg>
+  },
+  {
+    to: '/scores', label: 'Live Scores',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+  },
+  {
+    to: '/stats', label: 'Stats',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+  },
+]
+
+// Trophy SVG
+const TrophyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9H4a2 2 0 01-2-2V5h4M18 9h2a2 2 0 002-2V5h-4"/>
+    <path d="M6 9c0 3.314 2.686 6 6 6s6-2.686 6-6V5H6v4z"/>
+    <path d="M12 15v4M8 21h8"/>
+  </svg>
+)
+
+// Admin icon
+const AdminIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+)
 
 export default function Sidebar() {
   const { player, isAdmin, logout } = usePlayer()
-  const initials = player?.name?.slice(0,2).toUpperCase() || '?'
+  const initials = player?.name?.slice(0, 2).toUpperCase() || '?'
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">
-        WC26<span> predictor</span>
+      <div className="sidebar-brand">
+        <div className="sidebar-trophy">
+          <div className="trophy-icon">
+            <TrophyIcon />
+          </div>
+          <div>
+            <div className="sidebar-title">WC 2026</div>
+            <div className="sidebar-subtitle">Predictor Pool</div>
+          </div>
+        </div>
       </div>
 
-      <NavLink to="/" end className={({isActive})=>'nav-link'+(isActive?' active':'')}>
-        {icons.dashboard} Dashboard
-      </NavLink>
-      <NavLink to="/predictions" className={({isActive})=>'nav-link'+(isActive?' active':'')}>
-        {icons.predictions} My predictions
-      </NavLink>
-      <NavLink to="/leaderboard" className={({isActive})=>'nav-link'+(isActive?' active':'')}>
-        {icons.leaderboard} Leaderboard
-      </NavLink>
-      <NavLink to="/scores" className={({isActive})=>'nav-link'+(isActive?' active':'')}>
-        {icons.scores} Live scores
-      </NavLink>
-      {isAdmin && (
-        <NavLink to="/admin" className={({isActive})=>'nav-link'+(isActive?' active':'')}>
-          {icons.admin} Admin
+      <div className="sidebar-section-label">Menu</div>
+
+      {NAV.map(({ to, end, label, icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
+        >
+          {icon}
+          {label}
         </NavLink>
+      ))}
+
+      {isAdmin && (
+        <>
+          <div className="sidebar-section-label" style={{ marginTop: 8 }}>Admin</div>
+          <NavLink to="/admin" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+            <AdminIcon />
+            Admin Panel
+          </NavLink>
+        </>
       )}
 
-      <div style={{marginTop:'auto', padding:'0 1.5rem'}}>
+      <div className="sidebar-footer">
         {player ? (
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div className="avatar" style={{background:'rgba(201,245,66,0.12)',color:'var(--c-accent)'}}>{initials}</div>
-            <div style={{flex:1,overflow:'hidden'}}>
-              <div style={{fontSize:14,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{player.name}</div>
-              <button onClick={logout} style={{fontSize:12,color:'var(--c-muted)',cursor:'pointer'}}>Log out</button>
+          <div className="user-pill">
+            <div
+              className="avatar"
+              style={{ background: 'rgba(200,16,46,0.2)', color: 'var(--c-accent)', fontSize: 11, fontWeight: 700 }}
+            >
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {player.name}
+              </div>
+              <button
+                onClick={logout}
+                style={{ fontSize: 11, color: 'var(--c-muted)', padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                Log out
+              </button>
             </div>
           </div>
         ) : (
-          <NavLink to="/join" className={({isActive})=>'nav-link'+(isActive?' active':'')}>
-            Join pool
+          <NavLink to="/join" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')} style={{ padding: 0 }}>
+            <div
+              className="btn btn-accent"
+              style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}
+            >
+              Join Pool
+            </div>
           </NavLink>
         )}
       </div>
