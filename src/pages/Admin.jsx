@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, recalcPlayerScores } from '../lib/supabase'
+import { runScoringTests } from '../lib/testRunner'
+import { seedDemoData, clearDemoData } from '../lib/demoData'
 import { usePlayer } from '../hooks/usePlayer'
 import { Navigate } from 'react-router-dom'
 
@@ -85,9 +87,43 @@ export default function Admin() {
 
   async function removePlayer(id) {
     const p = players.find(x => x.id === id)
-    if (!confirm(`Remove "${p?.name}"? Their predictions will also be deleted.`)) return
-    await supabase.from('players').delete().eq('id', id)
-    setPlayers(ps => ps.filter(x => x.id !== id))
+    if (!confirm(`Remove "${p?.name}"? This permanently deletes their account, predictions and scores.`)) return
+
+    setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: true } : x))
+
+    try {
+      // If player has an auth_id, use the edge function to also delete from auth.users
+      if (p.auth_id) {
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-player`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ playerId: id, adminSecret: import.meta.env.VITE_ADMIN_SECRET })
+        })
+        const result = await res.json()
+        if (!res.ok) {
+          alert(`Failed to remove player: ${result.error}`)
+          setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: false } : x))
+          return
+        }
+      } else {
+        // Old player with no auth — just delete the row directly
+        const { error } = await supabase.from('players').delete().eq('id', id)
+        if (error) {
+          alert(`Failed to remove player: ${error.message}`)
+          setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: false } : x))
+          return
+        }
+      }
+      setPlayers(ps => ps.filter(x => x.id !== id))
+    } catch (err) {
+      alert('Network error. Please try again.')
+      setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: false } : x))
+    }
   }
 
   const inviteUrl = room ? `${window.location.origin}/join?code=${room.invite_token}` : ''
@@ -110,7 +146,7 @@ export default function Admin() {
       </div>
       <div className="page-body">
         <div className="tabs">
-          {['weights','invite','results','players'].map(t => (
+          {['weights','invite','results','players','dev'].map(t => (
             <button key={t} className={`tab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
               {t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'players' && dupeCount > 0 && (
@@ -256,7 +292,14 @@ export default function Admin() {
                         <PlayerPredCount playerId={p.id} />
                       </td>
                       <td style={{textAlign:'right'}}>
-                        <button className="btn btn-danger btn-sm" onClick={() => removePlayer(p.id)}>Remove</button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => removePlayer(p.id)}
+                          disabled={p._removing}
+                          style={p._removing ? {opacity:0.5} : {}}
+                        >
+                          {p._removing ? 'Removing...' : 'Remove'}
+                        </button>
                       </td>
                     </tr>
                   )
@@ -264,6 +307,183 @@ export default function Admin() {
               </tbody>
             </table>
           </div>
+        )}
+      {/* Dev / Test Mode */}
+      {tab === 'dev' && <DevPanel onRefresh={loadAll} />}
+
+      </div>
+    </div>
+  )
+}
+
+function DevPanel({ onRefresh }) {
+  const [testResults, setTestResults] = useState(null)
+  const [demoStatus, setDemoStatus] = useState('idle') // idle | seeding | clearing | done | error
+  const [demoLog, setDemoLog] = useState([])
+  const [demoStats, setDemoStats] = useState(null)
+  const [isDemoActive, setIsDemoActive] = useState(false)
+
+  useEffect(() => {
+    // Check if demo data is currently active
+    supabase.from('players').select('id').eq('room_code','DEFAULT').eq('email','demo+shawn@test.com').single()
+      .then(({ data }) => setIsDemoActive(!!data))
+  }, [])
+
+  function runTests() {
+    const results = runScoringTests()
+    setTestResults(results)
+  }
+
+  async function handleSeedDemo() {
+    setDemoStatus('seeding')
+    setDemoLog([])
+    setDemoStats(null)
+    try {
+      const stats = await seedDemoData(msg => setDemoLog(l => [...l, msg]))
+      setDemoStats(stats)
+      setDemoStatus('done')
+      setIsDemoActive(true)
+      onRefresh()
+    } catch (e) {
+      setDemoLog(l => [...l, 'ERROR: ' + e.message])
+      setDemoStatus('error')
+    }
+  }
+
+  async function handleClearDemo() {
+    setDemoStatus('clearing')
+    setDemoLog(['Clearing demo data...'])
+    try {
+      await clearDemoData()
+      setDemoLog(l => [...l, 'Done — demo data removed.'])
+      setDemoStatus('idle')
+      setIsDemoActive(false)
+      setDemoStats(null)
+      onRefresh()
+    } catch (e) {
+      setDemoLog(l => [...l, 'ERROR: ' + e.message])
+      setDemoStatus('error')
+    }
+  }
+
+  const passed = testResults?.filter(r => r.pass).length
+  const failed = testResults?.filter(r => !r.pass).length
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+
+      {/* Demo mode */}
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">Demo mode</div>
+        <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem',lineHeight:1.7}}>
+          Seeds 8 dummy players with realistic predictions and results for the first 24 group matches.
+          Lets you preview the leaderboard, stats charts, and scoring engine with real-looking data.
+          Clear it when done — it won't affect your real players.
+        </p>
+
+        {isDemoActive && (
+          <div className="alert alert-warn" style={{marginBottom:'1rem'}}>
+            Demo data is currently active. Your leaderboard and stats are showing demo players.
+            Clear it before the real tournament starts.
+          </div>
+        )}
+
+        <div style={{display:'flex',gap:10,marginBottom:'1rem',flexWrap:'wrap'}}>
+          <button
+            className="btn btn-accent"
+            onClick={handleSeedDemo}
+            disabled={demoStatus === 'seeding' || demoStatus === 'clearing'}
+          >
+            {demoStatus === 'seeding' ? 'Seeding...' : isDemoActive ? 'Re-seed Demo' : 'Seed Demo Data'}
+          </button>
+          {isDemoActive && (
+            <button
+              className="btn btn-danger"
+              onClick={handleClearDemo}
+              disabled={demoStatus === 'seeding' || demoStatus === 'clearing'}
+            >
+              {demoStatus === 'clearing' ? 'Clearing...' : 'Clear Demo Data'}
+            </button>
+          )}
+        </div>
+
+        {demoLog.length > 0 && (
+          <div style={{background:'var(--c-surface2)',border:'1px solid var(--c-border)',borderRadius:'var(--radius)',padding:'10px 14px',fontFamily:'monospace',fontSize:12,color:'var(--c-muted)',lineHeight:1.8}}>
+            {demoLog.map((l,i) => <div key={i}>{l}</div>)}
+          </div>
+        )}
+
+        {demoStats && (
+          <div style={{display:'flex',gap:12,marginTop:'1rem',flexWrap:'wrap'}}>
+            {[
+              {label:'Players created', value: demoStats.players},
+              {label:'Predictions',     value: demoStats.predictions},
+              {label:'Scores computed', value: demoStats.scores},
+            ].map(s => (
+              <div key={s.label} className="metric" style={{minWidth:130}}>
+                <div className="metric-label">{s.label}</div>
+                <div className="metric-value" style={{fontSize:28}}>{s.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Scoring engine tests */}
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">Scoring engine tests</div>
+        <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem',lineHeight:1.7}}>
+          Runs {15} unit tests against the scoring logic — exact scores, goal diff, approx bonus,
+          KO rounds, edge cases. All tests run in-browser against the live code.
+        </p>
+
+        <button className="btn btn-accent" onClick={runTests} style={{marginBottom:'1rem'}}>
+          Run all tests
+        </button>
+
+        {testResults && (
+          <>
+            <div style={{display:'flex',gap:12,marginBottom:'1rem',flexWrap:'wrap'}}>
+              <div className="metric" style={{minWidth:120}}>
+                <div className="metric-label">Passed</div>
+                <div className="metric-value" style={{fontSize:28,color:'var(--c-success)'}}>{passed}</div>
+              </div>
+              <div className="metric" style={{minWidth:120}}>
+                <div className="metric-label">Failed</div>
+                <div className="metric-value" style={{fontSize:28,color: failed > 0 ? 'var(--c-danger)' : 'var(--c-muted)'}}>{failed}</div>
+              </div>
+              <div className="metric" style={{minWidth:120}}>
+                <div className="metric-label">Total</div>
+                <div className="metric-value" style={{fontSize:28}}>{testResults.length}</div>
+              </div>
+            </div>
+
+            <div style={{display:'flex',flexDirection:'column',gap:4}}>
+              {testResults.map((r,i) => (
+                <div key={i} style={{
+                  display:'flex', alignItems:'flex-start', gap:10,
+                  padding:'8px 12px', borderRadius:'var(--radius)',
+                  background: r.pass ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)',
+                  border: `1px solid ${r.pass ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.2)'}`,
+                  fontSize:13
+                }}>
+                  <span style={{
+                    fontFamily:'monospace', fontWeight:700, flexShrink:0, fontSize:11,
+                    color: r.pass ? 'var(--c-success)' : 'var(--c-danger)',
+                    marginTop:1
+                  }}>
+                    {r.pass ? 'PASS' : 'FAIL'}
+                  </span>
+                  <div>
+                    <div style={{color:'var(--c-text)'}}>{r.name}</div>
+                    {!r.pass && r.error && (
+                      <div style={{color:'var(--c-danger)',fontSize:11,marginTop:2,fontFamily:'monospace'}}>{r.error}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -95,8 +95,19 @@ export function PlayerProvider({ children }) {
     return room.code
   }
 
-  // Send magic link for returning login (no name needed)
+  // Send magic link for returning login — verify email exists in pool first
   async function sendLoginLink(email) {
+    // Check that a player with this email exists in the pool
+    const { data: existing } = await supabase
+      .from('players')
+      .select('id')
+      .eq('email', email.trim().toLowerCase())
+      .eq('room_code', 'DEFAULT')
+
+    if (!existing || existing.length === 0) {
+      throw new Error('EMAIL_NOT_FOUND')
+    }
+
     const redirectTo = `${window.location.origin}/auth/callback`
     const { error } = await supabase.auth.signInWithOtp({
       email,

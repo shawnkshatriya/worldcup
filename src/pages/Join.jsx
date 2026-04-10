@@ -53,7 +53,11 @@ export default function Join() {
       setStatus('sent')
     } catch (e) {
       setStatus('error')
-      setError('Could not send magic link. Please try again.')
+      if (e.message === 'EMAIL_NOT_FOUND') {
+        setError(`No account found for "${email.trim()}". Check your email or join as a new player.`)
+      } else {
+        setError('Could not send magic link. Please try again.')
+      }
     }
   }
 

@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { usePlayer } from '../hooks/usePlayer'
 
 const NAV = [
@@ -14,21 +15,29 @@ const NAV = [
     icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
 ]
 
-export default function Sidebar() {
+const AdminIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" style={{width:15,height:15,flexShrink:0}}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+)
+
+const TrophyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9H4a2 2 0 01-2-2V5h4M18 9h2a2 2 0 002-2V5h-4"/>
+    <path d="M6 9c0 3.314 2.686 6 6 6s6-2.686 6-6V5H6v4z"/>
+    <path d="M12 15v4M8 21h8"/>
+  </svg>
+)
+
+function SidebarContent({ onNavClick }) {
   const { player, authUser, isAdmin, loading, logout } = usePlayer()
   const initials = player?.name?.slice(0,2).toUpperCase() || authUser?.email?.slice(0,2).toUpperCase() || '?'
 
   return (
-    <aside className="sidebar">
+    <>
       <div className="sidebar-brand">
         <div className="sidebar-trophy">
-          <div className="trophy-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9H4a2 2 0 01-2-2V5h4M18 9h2a2 2 0 002-2V5h-4"/>
-              <path d="M6 9c0 3.314 2.686 6 6 6s6-2.686 6-6V5H6v4z"/>
-              <path d="M12 15v4M8 21h8"/>
-            </svg>
-          </div>
+          <div className="trophy-icon"><TrophyIcon /></div>
           <div>
             <div className="sidebar-title">WC 2026</div>
             <div className="sidebar-subtitle">Predictor Pool</div>
@@ -40,51 +49,113 @@ export default function Sidebar() {
 
       {NAV.map(({ to, end, label, icon }) => (
         <NavLink key={to} to={to} end={end}
-          className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
+          className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
+          onClick={onNavClick}>
           {icon}{label}
         </NavLink>
       ))}
 
       {isAdmin && (
         <>
-          <div className="sidebar-section-label" style={{ marginTop: 8 }}>Admin</div>
-          <NavLink to="/admin" className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" style={{ width:15,height:15,flexShrink:0 }}>
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            Admin Panel
+          <div className="sidebar-section-label" style={{marginTop:8}}>Admin</div>
+          <NavLink to="/admin"
+            className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
+            onClick={onNavClick}>
+            <AdminIcon />Admin Panel
           </NavLink>
         </>
       )}
 
       <div className="sidebar-footer">
         {loading ? (
-          <div style={{ fontSize: 12, color: 'var(--c-hint)' }}>Loading...</div>
+          <div style={{fontSize:12,color:'var(--c-hint)'}}>Loading...</div>
         ) : authUser ? (
           <div className="user-pill">
-            <div className="avatar" style={{ background:'rgba(200,16,46,0.2)', color:'var(--c-accent)', fontSize:11, fontWeight:700 }}>
+            <div className="avatar" style={{background:'rgba(200,16,46,0.2)',color:'var(--c-accent)',fontSize:11,fontWeight:700}}>
               {initials}
             </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:13, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                 {player?.name || 'Setting up...'}
               </div>
-              <div style={{ fontSize:11, color:'var(--c-muted)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+              <div style={{fontSize:11,color:'var(--c-muted)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                 {authUser.email}
               </div>
-              <button onClick={logout} style={{ fontSize:11, color:'var(--c-muted)', padding:0, background:'none', border:'none', cursor:'pointer', marginTop:1 }}>
+              <button onClick={logout} style={{fontSize:11,color:'var(--c-muted)',padding:0,background:'none',border:'none',cursor:'pointer',marginTop:1}}>
                 Log out
               </button>
             </div>
           </div>
         ) : (
-          <NavLink to="/join" style={{ display:'block' }}>
-            <div className="btn btn-accent" style={{ width:'100%', justifyContent:'center', fontSize:12 }}>
+          <NavLink to="/join" style={{display:'block'}} onClick={onNavClick}>
+            <div className="btn btn-accent" style={{width:'100%',justifyContent:'center',fontSize:12}}>
               Join Pool
             </div>
           </NavLink>
         )}
       </div>
-    </aside>
+    </>
+  )
+}
+
+export default function Sidebar() {
+  const [open, setOpen] = useState(false)
+  const location = useLocation()
+
+  // Close menu on route change
+  useEffect(() => { setOpen(false) }, [location.pathname])
+
+  // Prevent body scroll when menu open
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="sidebar sidebar-desktop">
+        <SidebarContent onNavClick={() => {}} />
+      </aside>
+
+      {/* Mobile top bar */}
+      <div className="mobile-topbar">
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div className="trophy-icon" style={{width:30,height:30,borderRadius:6}}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9H4a2 2 0 01-2-2V5h4M18 9h2a2 2 0 002-2V5h-4"/>
+              <path d="M6 9c0 3.314 2.686 6 6 6s6-2.686 6-6V5H6v4z"/>
+              <path d="M12 15v4M8 21h8"/>
+            </svg>
+          </div>
+          <div style={{fontFamily:'var(--font-display)',fontSize:20,letterSpacing:'0.06em',color:'var(--c-text)'}}>WC 2026</div>
+        </div>
+        <button
+          className="burger-btn"
+          onClick={() => setOpen(o => !o)}
+          aria-label="Toggle menu"
+        >
+          {open ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile drawer overlay */}
+      {open && (
+        <div className="mobile-overlay" onClick={() => setOpen(false)} />
+      )}
+
+      {/* Mobile drawer */}
+      <aside className={`sidebar sidebar-mobile${open ? ' open' : ''}`}>
+        <SidebarContent onNavClick={() => setOpen(false)} />
+      </aside>
+    </>
   )
 }
