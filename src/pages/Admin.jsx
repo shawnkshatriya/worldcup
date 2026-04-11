@@ -87,16 +87,16 @@ export default function Admin() {
 
   async function removePlayer(id) {
     const p = players.find(x => x.id === id)
-    if (!confirm(`Remove "${p?.name}"? This deletes all their predictions and scores too.`)) return
+    if (!confirm(`Remove "${p?.name}"? This permanently deletes their account, predictions and scores.`)) return
     setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: true } : x))
 
-    // Delete scores and predictions first, then the player row
-    await supabase.from('scores').delete().eq('player_id', id)
-    await supabase.from('predictions').delete().eq('player_id', id)
-    const { error } = await supabase.from('players').delete().eq('id', id)
+    const r1 = await supabase.from('scores').delete().eq('player_id', id)
+    const r2 = await supabase.from('predictions').delete().eq('player_id', id)
+    const r3 = await supabase.from('players').delete().eq('id', id)
 
-    if (error) {
-      alert('Delete failed: ' + error.message)
+    const err = r1.error || r2.error || r3.error
+    if (err) {
+      alert(`Delete failed: ${err.message}\n\nMake sure you ran migration 003_fix_rls.sql in Supabase.`)
       setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: false } : x))
     } else {
       setPlayers(ps => ps.filter(x => x.id !== id))
@@ -105,18 +105,19 @@ export default function Admin() {
 
   async function purgeAllPlayers() {
     if (players.length === 0) { alert('No players to purge.'); return }
-    const input = prompt(`Type DELETE to permanently remove all ${players.length} players, predictions and scores:`)
-    if (input !== 'DELETE') { alert('Cancelled.'); return }
+    const input = prompt(`Type DELETE to permanently remove all ${players.length} players, their predictions and scores:`)
+    if (input !== 'DELETE') { alert('Cancelled — nothing deleted.'); return }
 
     const ids = players.map(p => p.id)
     setPlayers([])
 
-    await supabase.from('scores').delete().in('player_id', ids)
-    await supabase.from('predictions').delete().in('player_id', ids)
-    const { error } = await supabase.from('players').delete().in('id', ids)
+    const r1 = await supabase.from('scores').delete().in('player_id', ids)
+    const r2 = await supabase.from('predictions').delete().in('player_id', ids)
+    const r3 = await supabase.from('players').delete().in('id', ids)
 
-    if (error) {
-      alert('Purge failed: ' + error.message)
+    const err = r1.error || r2.error || r3.error
+    if (err) {
+      alert(`Purge failed: ${err.message}\n\nMake sure you ran migration 003_fix_rls.sql in Supabase.`)
       loadAll()
     } else {
       alert(`Purged ${ids.length} player${ids.length !== 1 ? 's' : ''} successfully.`)
