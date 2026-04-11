@@ -40,14 +40,15 @@ function useCountdown(target) {
 function FlagPill({ emoji, label }) {
   return (
     <div style={{
-      display:'flex', alignItems:'center', gap:8,
+      display:'flex', alignItems:'center', gap: label ? 8 : 0,
       background:'rgba(255,255,255,0.05)',
       border:'1px solid rgba(255,255,255,0.1)',
-      borderRadius:20, padding:'5px 12px 5px 8px',
+      borderRadius:20,
+      padding: label ? '5px 12px 5px 8px' : '6px 10px',
       fontSize:13, fontWeight:500, color:'var(--c-text)',
     }}>
-      <span style={{fontSize:18,lineHeight:1}}>{emoji}</span>
-      {label}
+      <span style={{fontSize:22,lineHeight:1}}>{emoji}</span>
+      {label && <span>{label}</span>}
     </div>
   )
 }
@@ -64,12 +65,13 @@ export default function Dashboard() {
   useEffect(() => { loadData() }, [player])
 
   async function loadData() {
-    const [{ count:playerCount }, { data:finished }, { data:w }] = await Promise.all([
+    const [{ count:playerCount }, { data:finished }, { data:w }, { count:totalMatches }] = await Promise.all([
       supabase.from('players').select('*',{count:'exact',head:true}).eq('room_code','DEFAULT'),
       supabase.from('matches').select('id').eq('status','FINISHED'),
+      supabase.from('matches').select('id', {count:'exact',head:true}),
       supabase.from('scoring_weights').select('*').eq('room_code','DEFAULT').single(),
     ])
-    setStats({ players:playerCount||0, played:finished?.length||0, total:104 })
+    setStats({ players:playerCount||0, played:finished?.length||0, total:totalMatches||104 })
     setWeights(w)
 
     const { data:players } = await supabase.from('players').select('id,name').eq('room_code','DEFAULT')

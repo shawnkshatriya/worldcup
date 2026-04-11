@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import ThemeToggle from './ThemeToggle'
 import { usePlayer } from '../hooks/usePlayer'
 
 const NAV = [
@@ -15,6 +16,8 @@ const NAV = [
     icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
   { to:'/fun', label:'Fun Zone',
     icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M12 2a10 10 0 110 20A10 10 0 0112 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+  { to:'/feedback', label:'Feedback',
+    icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
   { to:'/predictions/all', label:'All Predictions',
     icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> },
 ]
@@ -70,6 +73,7 @@ function SidebarContent({ onNavClick }) {
         </>
       )}
 
+      <div style={{padding:'0 20px 12px'}}><ThemeToggle /></div>
       <div className="sidebar-footer">
         {loading ? (
           <div style={{fontSize:12,color:'var(--c-hint)'}}>Loading...</div>

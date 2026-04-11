@@ -29,3 +29,17 @@ alter table scores drop constraint if exists scores_player_id_fkey;
 alter table scores
   add constraint scores_player_id_fkey
   foreign key (player_id) references players(id) on delete cascade;
+
+-- ── Feedback table ────────────────────────────────────────────────────────
+create table if not exists feedback (
+  id uuid primary key default gen_random_uuid(),
+  player_id uuid references players(id) on delete set null,
+  player_name text,
+  email text,
+  category text,
+  message text not null,
+  rating int check (rating between 1 and 5),
+  created_at timestamptz default now()
+);
+
+alter table feedback disable row level security;

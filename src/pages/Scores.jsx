@@ -12,7 +12,7 @@ const PHASE_LABELS = {
 
 export default function Scores() {
   const [matches, setMatches] = useState([])
-  const [filter, setFilter] = useState('today')
+  const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
   const [syncing, setSyncing] = useState(false)
