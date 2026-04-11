@@ -42,7 +42,7 @@ export const THEMES = {
       '--c-success':  '#167A3A',
       '--c-warn':     '#B45309',
       '--c-danger':   '#C41E1E',
-      '--c-info':     '#1D4ED8',
+      '--c-info':     '#1A3FBE',
       '--c-gold':     '#B45309',
       '--c-silver':   '#4B5563',
       '--c-bronze':   '#78350F',
@@ -54,30 +54,29 @@ export const THEMES = {
   worldcup: {
     label: 'World Cup', icon: '⚽',
     vars: {
-      '--c-bg':       '#C5E1C7',
+      '--c-bg':       '#2D6A2D',
       '--c-surface':  '#357035',
       '--c-surface2': '#3D7A3D',
       '--c-surface3': '#468446',
       '--c-border':   'rgba(255,255,255,0.12)',
       '--c-border2':  'rgba(255,255,255,0.22)',
-      '--c-text':     '#F0FFF0',
-      '--c-muted':    '#A8D5A8',
-      '--c-hint':     '#7AB87A',
+      '--c-text':     '#F0FFF2',
+      '--c-muted':    '#A8D4AC',
+      '--c-hint':     '#6FA875',
       '--c-accent':   '#FFD700',
-      '--c-accent2':  '#FFF176',
-      '--c-success':  '#B9F6CA',
-      '--c-warn':     '#FFE082',
-      '--c-danger':   '#FF8A80',
-      '--c-info':     '#C5E1C7',
+      '--c-accent2':  '#FFA500',
+      '--c-success':  '#90EE90',
+      '--c-warn':     '#FFD700',
+      '--c-danger':   '#FF6B6B',
+      '--c-info':     '#87CEEB',
       '--c-gold':     '#FFD700',
-      '--c-silver':   '#CFD8DC',
-      '--c-bronze':   '#FFAB91',
-      '--fifa-red':   '#FF8A80',
-      '--fifa-blue':  '#80D8FF',
+      '--c-silver':   '#C0C0C0',
+      '--c-bronze':   '#CD7F32',
+      '--fifa-red':   '#FF6B6B',
+      '--fifa-blue':  '#87CEEB',
       '--fifa-gold':  '#FFD700',
     }
   }
-}
 
 export function applyTheme(name) {
   const t = THEMES[name] || THEMES.dark

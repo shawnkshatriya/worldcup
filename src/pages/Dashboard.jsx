@@ -66,17 +66,17 @@ export default function Dashboard() {
 
   async function loadData() {
     const [
-      { data:allPlayers },
-      { data:allMatches },
+      { count:playerCount },
+      { count:playedCount },
+      { count:totalCount },
       { data:w }
     ] = await Promise.all([
-      supabase.from('players').select('id').eq('room_code','DEFAULT'),
-      supabase.from('matches').select('id,status'),
+      supabase.from('players').select('*',{count:'exact',head:true}).eq('room_code','DEFAULT'),
+      supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
+      supabase.from('matches').select('*',{count:'exact',head:true}),
       supabase.from('scoring_weights').select('*').eq('room_code','DEFAULT').single(),
     ])
-    const played = allMatches?.filter(m=>m.status==='FINISHED').length||0
-    const total  = allMatches?.length||104
-    setStats({ players:allPlayers?.length||0, played, total })
+    setStats({ players:playerCount||0, played:playedCount||0, total:104 })
     setWeights(w)
 
     const { data:players } = await supabase.from('players').select('id,name').eq('room_code','DEFAULT')

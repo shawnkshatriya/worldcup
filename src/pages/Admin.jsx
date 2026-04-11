@@ -330,9 +330,9 @@ function DevPanel({ onRefresh }) {
   const [isDemoActive, setIsDemoActive] = useState(false)
 
   useEffect(() => {
-    // Check if demo data is currently active
-    supabase.from('players').select('id').eq('room_code','DEFAULT').eq('email','demo+shawn@test.com').single()
-      .then(({ data }) => setIsDemoActive(!!data))
+    // Check if demo data is active by looking for demo player email
+    supabase.from('players').select('id').eq('room_code','DEFAULT').eq('email','demo+shawn@wc26.test').limit(1)
+      .then(({ data }) => setIsDemoActive(!!(data && data.length > 0)))
   }, [])
 
   function runTests() {

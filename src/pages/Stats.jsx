@@ -137,10 +137,10 @@ export default function Stats() {
   async function loadAll() {
     setLoading(true)
     const [{ data:pl }, { data:sc }, { data:ma }, { data:pr }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code','DEFAULT').order('created_at'),
-      supabase.from('scores').select('*'),
-      supabase.from('matches').select('*').order('match_number'),
-      supabase.from('predictions').select('*'),
+      supabase.from('players').select('id,name').eq('room_code','DEFAULT').order('created_at').limit(500),
+      supabase.from('scores').select('*').limit(5000),
+      supabase.from('matches').select('*').order('match_number').limit(200),
+      supabase.from('predictions').select('player_id,match_id,home_goals,away_goals').limit(5000),
     ])
     setPlayers(pl||[])
     setScores(sc||[])
@@ -477,7 +477,10 @@ export default function Stats() {
             </div>
 
             <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">Most correct results</div>
+              <div className="card-title">Most correct results (W/D/L)</div>
+              <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:12}}>
+                Correct result (W/D/L) is easier to get than an exact score — this is always higher than exact count since every exact score also counts as a correct result.
+              </p>
               {[...playerStats].sort((a,b)=>b.correct-a.correct).map(p=>(
                 <HBar key={p.id} label={p.name} value={p.correct} max={Math.max(...playerStats.map(x=>x.correct),1)} color="var(--c-accent)"/>
               ))}

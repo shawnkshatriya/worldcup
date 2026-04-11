@@ -83,10 +83,10 @@ export default function Fun() {
   async function loadAll() {
     setLoading(true)
     const [{ data:pl },{ data:sc },{ data:pr },{ data:ma }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code','DEFAULT').order('created_at'),
-      supabase.from('scores').select('*'),
-      supabase.from('predictions').select('*'),
-      supabase.from('matches').select('*').order('match_number'),
+      supabase.from('players').select('id,name').eq('room_code','DEFAULT').limit(500).order('created_at').limit(500),
+      supabase.from('scores').select('*').limit(5000),
+      supabase.from('predictions').select('*').limit(5000),
+      supabase.from('matches').select('*').order('match_number').limit(200),
     ])
     setPlayers(pl||[])
     setScores(sc||[])

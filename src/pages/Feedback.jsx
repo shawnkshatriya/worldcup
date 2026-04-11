@@ -18,33 +18,37 @@ export default function Feedback() {
     setStatus('sending'); setError('')
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-      const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-      const res = await fetch(`${supabaseUrl}/functions/v1/send-feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
-        body: JSON.stringify({
-          player_id:   player?.id   || null,
-          player_name: player?.name || authUser?.email || 'Anonymous',
-          email:       authUser?.email || null,
-          category,
-          message: message.trim(),
-          rating:  rating || null,
-        })
+      // Always save to DB first — guaranteed to work
+      const { error: dbErr } = await supabase.from('feedback').insert({
+        player_id:   player?.id   || null,
+        player_name: player?.name || authUser?.email || 'Anonymous',
+        email:       authUser?.email || null,
+        category,
+        message: message.trim(),
+        rating:  rating || null,
       })
 
-      if (!res.ok) {
-        // Edge function not deployed — fall back to direct DB insert
-        await supabase.from('feedback').insert({
-          player_id:   player?.id   || null,
-          player_name: player?.name || authUser?.email || 'Anonymous',
-          email:       authUser?.email || null,
-          category,
-          message: message.trim(),
-          rating:  rating || null,
-        })
+      if (dbErr) {
+        setError('Failed to submit: ' + dbErr.message)
+        setStatus('error')
+        return
       }
+
+      // Try edge function for email notification (non-blocking, best-effort)
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+        await fetch(`${supabaseUrl}/functions/v1/send-feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': anonKey },
+          body: JSON.stringify({
+            player_id: player?.id || null,
+            player_name: player?.name || 'Anonymous',
+            email: authUser?.email || null,
+            category, message: message.trim(), rating: rating || null,
+          })
+        })
+      } catch (_) { /* email notification optional */ }
 
       setStatus('done')
       setMessage('')
@@ -89,7 +93,7 @@ export default function Feedback() {
                   </div>
                   <div>
                     <div style={{fontSize:13,fontWeight:600}}>{player?.name || 'Admin'}</div>
-                    <div style={{fontSize:11,color:'var(--c-muted)'}}>{authUser?.email || 'skshatriya7@gmail.com'}</div>
+                    <div style={{fontSize:11,color:'var(--c-muted)'}}>{player?.name ? 'Logged in' : 'Admin'}</div>
                   </div>
                   <div className="badge badge-green" style={{marginLeft:'auto'}}>Logged in</div>
                 </div>
@@ -148,7 +152,7 @@ export default function Feedback() {
               </button>
 
               <p style={{fontSize:11,color:'var(--c-hint)',marginTop:12,textAlign:'center'}}>
-                Feedback goes directly to Shawn (skshatriya7@gmail.com) and is stored in the database.
+                Your feedback is saved and reviewed by the pool admin.
               </p>
             </div>
           )}
