@@ -118,14 +118,17 @@ export default function Dashboard() {
 
           <div style={{padding:'1.5rem',display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:20}}>
             <div>
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.14em',textTransform:'uppercase',color:'var(--c-accent)',marginBottom:6}}>
-                FIFA World Cup
+              <div style={{fontFamily:'var(--font-display)',fontSize:60,lineHeight:0.9,letterSpacing:'0.04em',color:'var(--c-text)',marginBottom:6}}>
+                FIFA<br/>WORLD CUP
               </div>
-              <div style={{fontFamily:'var(--font-display)',fontSize:window?.innerWidth < 480 ? 36 : 48,lineHeight:0.95,letterSpacing:'0.04em',color:'var(--c-text)',marginBottom:10}}>
-                CANADA<br/>MEXICO · USA
+              <div style={{fontFamily:'var(--font-display)',fontSize:28,letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:4}}>
+                2026
               </div>
-              <div style={{fontSize:13,color:'var(--c-muted)',marginBottom:16}}>
-                June 11 – July 19, 2026 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches
+              <div style={{fontSize:13,color:'var(--c-muted)',marginBottom:4}}>
+                Canada · Mexico · USA
+              </div>
+              <div style={{fontSize:12,color:'var(--c-hint)',marginBottom:16}}>
+                June 11 – July 19 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                 <FlagPill emoji="🇺🇸" label="USA" />
