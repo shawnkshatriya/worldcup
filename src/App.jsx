@@ -7,6 +7,7 @@ import Leaderboard from './pages/Leaderboard'
 import Scores from './pages/Scores'
 import Stats from './pages/Stats'
 import AllPredictions from './pages/AllPredictions'
+import Fun from './pages/Fun'
 import Admin from './pages/Admin'
 import Join from './pages/Join'
 import AuthCallback from './pages/AuthCallback'
@@ -24,6 +25,7 @@ function AppShell() {
           <Route path="/scores"      element={<Scores />} />
           <Route path="/stats"       element={<Stats />} />
           <Route path="/predictions/all" element={<AllPredictions />} />
+          <Route path="/fun" element={<Fun />} />
           <Route path="/admin"       element={<Admin />} />
         </Routes>
       </main>

@@ -87,140 +87,43 @@ export default function Admin() {
 
   async function removePlayer(id) {
     const p = players.find(x => x.id === id)
-    if (!confirm(`Remove "${p?.name}"? This permanently deletes their account, predictions and scores.`)) return
-
+    if (!confirm(`Remove "${p?.name}"? This deletes all their predictions and scores too.`)) return
     setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: true } : x))
 
-    try {
-      // If player has an auth_id, use the edge function to also delete from auth.users
-      if (p.auth_id) {
-        const { data: { session } } = await supabase.auth.getSession()
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-player`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({ playerId: id, adminSecret: import.meta.env.VITE_ADMIN_SECRET })
-        })
-        const result = await res.json()
-        if (!res.ok) {
-          alert(`Failed to remove player: ${result.error}`)
-          setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: false } : x))
-          return
-        }
-      } else {
-        // Old player with no auth — just delete the row directly
-        const { error } = await supabase.from('players').delete().eq('id', id)
-        if (error) {
-          alert(`Failed to remove player: ${error.message}`)
-          setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: false } : x))
-          return
-        }
-      }
-      setPlayers(ps => ps.filter(x => x.id !== id))
-    } catch (err) {
-      alert('Network error. Please try again.')
+    // Delete scores and predictions first, then the player row
+    await supabase.from('scores').delete().eq('player_id', id)
+    await supabase.from('predictions').delete().eq('player_id', id)
+    const { error } = await supabase.from('players').delete().eq('id', id)
+
+    if (error) {
+      alert('Delete failed: ' + error.message)
       setPlayers(ps => ps.map(x => x.id === id ? { ...x, _removing: false } : x))
+    } else {
+      setPlayers(ps => ps.filter(x => x.id !== id))
     }
   }
 
   async function purgeAllPlayers() {
-    const confirmText = 'PURGE ALL'
-    const input = prompt(`This will permanently delete ALL players, predictions and scores.\n\nType "${confirmText}" to confirm:`)
-    if (input !== confirmText) { alert('Purge cancelled.'); return }
+    if (players.length === 0) { alert('No players to purge.'); return }
+    const input = prompt(`Type DELETE to permanently remove all ${players.length} players, predictions and scores:`)
+    if (input !== 'DELETE') { alert('Cancelled.'); return }
 
-    setPlayers(ps => ps.map(p => ({...p, _removing: true})))
-
-    try {
-      // Delete scores first, then predictions, then players
-      const ids = players.map(p => p.id)
-      if (ids.length === 0) { alert('No players to purge.'); return }
-
-      await supabase.from('scores').delete().in('player_id', ids)
-      await supabase.from('predictions').delete().in('player_id', ids)
-
-      // For players with auth, call edge function; for others, delete directly
-      const { data: { session } } = await supabase.auth.getSession()
-      for (const p of players) {
-        if (p.auth_id) {
-          await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-player`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session?.access_token || ''}`,
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify({ playerId: p.id, adminSecret: import.meta.env.VITE_ADMIN_SECRET })
-          })
-        }
-      }
-
-      // Delete remaining (no auth_id) directly
-      const noAuthIds = players.filter(p => !p.auth_id).map(p => p.id)
-      if (noAuthIds.length) {
-        await supabase.from('players').delete().in('id', noAuthIds)
-      }
-
-      setPlayers([])
-      alert(`Purged ${ids.length} players successfully.`)
-    } catch (err) {
-      alert('Purge failed: ' + err.message)
-      await loadAll()
-    }
-  }
-
-  async function purgeAllPlayers() {
-    const confirmed = prompt(
-      `This will PERMANENTLY DELETE all ${players.length} players, their predictions, and scores.\n\nType DELETE to confirm:`
-    )
-    if (confirmed !== 'DELETE') { alert('Cancelled — nothing was deleted.'); return }
-
-    const toDelete = [...players]
+    const ids = players.map(p => p.id)
     setPlayers([])
 
-    // Separate auth players (need edge function) from legacy players (direct delete)
-    const authPlayers    = toDelete.filter(p => p.auth_id)
-    const legacyPlayers  = toDelete.filter(p => !p.auth_id)
+    await supabase.from('scores').delete().in('player_id', ids)
+    await supabase.from('predictions').delete().in('player_id', ids)
+    const { error } = await supabase.from('players').delete().in('id', ids)
 
-    let failed = 0
-
-    // Legacy players — direct DB delete
-    if (legacyPlayers.length > 0) {
-      const ids = legacyPlayers.map(p => p.id)
-      await supabase.from('scores').delete().in('player_id', ids)
-      await supabase.from('predictions').delete().in('player_id', ids)
-      const { error } = await supabase.from('players').delete().in('id', ids)
-      if (error) failed += legacyPlayers.length
-    }
-
-    // Auth players — via edge function
-    for (const p of authPlayers) {
-      try {
-        const { data:{ session } } = await supabase.auth.getSession()
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-player`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || ''}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({ playerId: p.id, adminSecret: import.meta.env.VITE_ADMIN_SECRET })
-        })
-        if (!res.ok) failed++
-      } catch { failed++ }
-    }
-
-    if (failed > 0) {
-      alert(`Purge complete with ${failed} error(s). Refresh to check remaining players.`)
+    if (error) {
+      alert('Purge failed: ' + error.message)
+      loadAll()
     } else {
-      alert(`All ${toDelete.length} players purged successfully.`)
+      alert(`Purged ${ids.length} player${ids.length !== 1 ? 's' : ''} successfully.`)
     }
-    loadAll()
   }
 
-  const inviteUrl = room ? `${window.location.origin}/join?code=${room.invite_token}` : ''
+    const inviteUrl = room ? `${window.location.origin}/join?code=${room.invite_token}` : ''
 
   // Detect duplicates — players sharing the same name (case-insensitive)
   const nameCounts = players.reduce((acc, p) => {

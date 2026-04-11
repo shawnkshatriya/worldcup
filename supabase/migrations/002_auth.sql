@@ -38,3 +38,19 @@ create policy "player update own predictions" on predictions
   for update using (
     player_id in (select id from players where auth_id = auth.uid())
   );
+
+-- ============================================================
+-- Fix cascade deletes so removing a player row automatically
+-- removes their predictions and scores too.
+-- Run this if individual/purge deletes still leave orphans.
+-- ============================================================
+
+alter table predictions drop constraint if exists predictions_player_id_fkey;
+alter table predictions
+  add constraint predictions_player_id_fkey
+  foreign key (player_id) references players(id) on delete cascade;
+
+alter table scores drop constraint if exists scores_player_id_fkey;
+alter table scores
+  add constraint scores_player_id_fkey
+  foreign key (player_id) references players(id) on delete cascade;
