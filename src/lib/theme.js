@@ -1,7 +1,6 @@
 export const THEMES = {
   dark: {
-    label: 'Dark',
-    icon: '🌙',
+    label: 'Dark', icon: '🌙',
     vars: {
       '--c-bg':       '#080B12',
       '--c-surface':  '#0E1220',
@@ -27,8 +26,7 @@ export const THEMES = {
     }
   },
   light: {
-    label: 'Light',
-    icon: '☀️',
+    label: 'Light', icon: '☀️',
     vars: {
       '--c-bg':       '#E8ECF4',
       '--c-surface':  '#F2F5FA',
@@ -54,39 +52,37 @@ export const THEMES = {
     }
   },
   worldcup: {
-    label: 'World Cup',
-    icon: '⚽',
+    label: 'World Cup', icon: '⚽',
     vars: {
-      '--c-bg':       '#071A09',
-      '--c-surface':  '#0C2410',
-      '--c-surface2': '#122E17',
-      '--c-surface3': '#193D1F',
-      '--c-border':   'rgba(255,255,255,0.08)',
-      '--c-border2':  'rgba(255,255,255,0.16)',
-      '--c-text':     '#E4F5E7',
-      '--c-muted':    '#5E9467',
-      '--c-hint':     '#365C3C',
-      '--c-accent':   '#F0A500',
-      '--c-accent2':  '#FFD54F',
-      '--c-success':  '#4ADE80',
-      '--c-warn':     '#FB923C',
-      '--c-danger':   '#F87171',
-      '--c-info':     '#38BDF8',
-      '--c-gold':     '#F0A500',
-      '--c-silver':   '#94A3B8',
-      '--c-bronze':   '#92400E',
-      '--fifa-red':   '#F87171',
-      '--fifa-blue':  '#38BDF8',
-      '--fifa-gold':  '#F0A500',
+      '--c-bg':       '#C5E1C7',
+      '--c-surface':  '#357035',
+      '--c-surface2': '#3D7A3D',
+      '--c-surface3': '#468446',
+      '--c-border':   'rgba(255,255,255,0.12)',
+      '--c-border2':  'rgba(255,255,255,0.22)',
+      '--c-text':     '#F0FFF0',
+      '--c-muted':    '#A8D5A8',
+      '--c-hint':     '#7AB87A',
+      '--c-accent':   '#FFD700',
+      '--c-accent2':  '#FFF176',
+      '--c-success':  '#B9F6CA',
+      '--c-warn':     '#FFE082',
+      '--c-danger':   '#FF8A80',
+      '--c-info':     '#80D8FF',
+      '--c-gold':     '#FFD700',
+      '--c-silver':   '#CFD8DC',
+      '--c-bronze':   '#FFAB91',
+      '--fifa-red':   '#FF8A80',
+      '--fifa-blue':  '#80D8FF',
+      '--fifa-gold':  '#FFD700',
     }
   }
 }
 
-export function applyTheme(themeName) {
-  const theme = THEMES[themeName] || THEMES.dark
-  const root = document.documentElement
-  Object.entries(theme.vars).forEach(([k,v]) => root.style.setProperty(k, v))
-  localStorage.setItem('wc26_theme', themeName)
+export function applyTheme(name) {
+  const t = THEMES[name] || THEMES.dark
+  Object.entries(t.vars).forEach(([k,v]) => document.documentElement.style.setProperty(k,v))
+  localStorage.setItem('wc26_theme', name)
 }
 
 export function getStoredTheme() {

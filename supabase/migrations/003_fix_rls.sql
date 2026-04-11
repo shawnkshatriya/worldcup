@@ -43,3 +43,8 @@ create table if not exists feedback (
 );
 
 alter table feedback disable row level security;
+
+-- Also disable RLS on matches and rooms so count queries work for all users
+alter table matches          disable row level security;
+alter table rooms            disable row level security;
+alter table scoring_weights  disable row level security;

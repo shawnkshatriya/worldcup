@@ -11,42 +11,36 @@ const PHASE_LABELS = {
 }
 
 export default function Scores() {
-  const [matches, setMatches] = useState([])
-  const [filter, setFilter] = useState('finished')
-  const [loading, setLoading] = useState(true)
+  const [matches, setMatches]   = useState([])
+  const [filter, setFilter]     = useState('finished')
+  const [loading, setLoading]   = useState(true)
   const [lastSync, setLastSync] = useState(null)
-  const [syncing, setSyncing] = useState(false)
-  const [apiKey] = useState(!!import.meta.env.VITE_FOOTBALL_API_KEY)
+  const [syncing, setSyncing]   = useState(false)
+  const [demoMode, setDemoMode] = useState(false)
+  const hasApiKey = !!import.meta.env.VITE_FOOTBALL_API_KEY
 
-  useEffect(() => {
-    loadMatches()
-    const interval = setInterval(loadMatches, 60000)
-    return () => clearInterval(interval)
-  }, [filter])
+  useEffect(() => { loadMatches() }, [filter])
 
   async function loadMatches() {
     setLoading(true)
-    let query = supabase.from('matches').select('*').order('kickoff')
+    let query = supabase.from('matches').select('*').order('match_number')
 
-    if (filter === 'today') {
-      const today = new Date()
-      const start = new Date(today.setHours(0,0,0,0)).toISOString()
-      const end   = new Date(today.setHours(23,59,59,999)).toISOString()
-      query = query.gte('kickoff', start).lte('kickoff', end)
-    } else if (filter === 'live') {
-      query = query.eq('status', 'IN_PLAY')
+    if (filter === 'live') {
+      query = query.eq('status','IN_PLAY')
     } else if (filter === 'finished') {
-      query = query.eq('status', 'FINISHED').order('kickoff', {ascending:false}).limit(30)
+      query = query.eq('status','FINISHED').order('kickoff',{ascending:false}).limit(30)
     } else if (filter === 'upcoming') {
-      const now = new Date().toISOString()
-      query = query.eq('status','SCHEDULED').gte('kickoff', now).limit(20)
-    } else if (filter === 'all') {
-      // Show finished first (sorted desc), then upcoming — best for demo mode
-      query = query.order('status', {ascending:true}).order('kickoff', {ascending:false})
+      query = query.eq('status','SCHEDULED').order('kickoff').limit(20)
     }
+    // 'all' = no extra filter, all matches
 
     const { data } = await query
-    setMatches(data || [])
+    const matches = data||[]
+    setMatches(matches)
+
+    // Detect demo mode: any finished matches exist
+    const hasFinished = matches.some(m=>m.status==='FINISHED')
+    setDemoMode(hasFinished)
     setLoading(false)
   }
 
@@ -54,58 +48,72 @@ export default function Scores() {
     setSyncing(true)
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+      const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY
       const res = await fetch(`${supabaseUrl}/functions/v1/sync-scores`, {
         method: 'POST',
         headers: { 'apikey': anonKey, 'Content-Type': 'application/json' }
       })
       const result = await res.json()
       if (result.ok) {
-        setLastSync(new Date().toLocaleTimeString() + (result.cached ? ' (cached)' : ''))
+        setLastSync(new Date().toLocaleTimeString() + (result.cached?' (cached)':''))
         await loadMatches()
       } else {
         alert('Sync failed: ' + result.error)
       }
-    } catch(e) {
-      alert('Network error syncing scores')
-    }
+    } catch { alert('Network error syncing scores') }
     setSyncing(false)
   }
 
-  const grouped = matches.reduce((acc, m) => {
-    const key = m.phase
-    if (!acc[key]) acc[key] = []
-    acc[key].push(m)
+  // Group matches by phase
+  const grouped = matches.reduce((acc,m) => {
+    if (!acc[m.phase]) acc[m.phase] = []
+    acc[m.phase].push(m)
     return acc
   }, {})
+
+  const finishedCount = matches.filter(m=>m.status==='FINISHED').length
+  const totalGoals    = matches.filter(m=>m.home_goals!=null).reduce((a,m)=>a+m.home_goals+m.away_goals,0)
 
   return (
     <div>
       <div className="page-header">
-        <h1>Live scores</h1>
-        <p>
-          Powered by football-data.org
-          {lastSync && <span style={{color:'var(--c-muted)',marginLeft:8}}>Last sync: {lastSync}</span>}
-        </p>
+        <div className="page-header-inner">
+          <h1>Live Scores</h1>
+          <p>
+            {demoMode
+              ? `Demo mode — ${finishedCount} matches played · ${totalGoals} total goals`
+              : 'Powered by football-data.org · Tournament starts June 11, 2026'}
+            {lastSync && <span style={{color:'var(--c-muted)',marginLeft:8}}>· Synced {lastSync}</span>}
+          </p>
+        </div>
       </div>
       <div className="page-body">
-        {!apiKey && (
-          <div className="alert alert-warn">
-            Add <code>VITE_FOOTBALL_API_KEY</code> to your <code>.env</code> to enable live sync from football-data.org (free at football-data.org/client/register).
-            Scores can also be entered manually in the Admin panel.
+
+        {!hasApiKey && !demoMode && (
+          <div className="alert alert-warn" style={{marginBottom:'1.25rem'}}>
+            Add <code>VITE_FOOTBALL_API_KEY</code> to Vercel env vars for live sync. Get a free key at football-data.org.
+            Or seed demo data from Admin → Dev to test this page.
           </div>
         )}
 
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem',flexWrap:'wrap',gap:8}}>
+        {demoMode && (
+          <div className="alert alert-info" style={{marginBottom:'1.25rem'}}>
+            Demo mode active — showing generated match results. Clear demo data to reset.
+          </div>
+        )}
+
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.25rem',flexWrap:'wrap',gap:8}}>
           <div className="tabs" style={{marginBottom:0}}>
-            {['today','live','upcoming','finished','all'].map(f => (
-              <button key={f} className={`tab${filter===f?' active':''}`} onClick={() => setFilter(f)}>
-                {f.charAt(0).toUpperCase()+f.slice(1)}
+            {['finished','upcoming','all'].map(f=>(
+              <button key={f} className={`tab${filter===f?' active':''}`} onClick={()=>setFilter(f)}>
+                {f==='finished'?'Finished':f==='upcoming'?'Upcoming':'All'}
               </button>
             ))}
           </div>
-          {apiKey && (
-            <button className="btn btn-sm" onClick={handleSync} disabled={syncing}>{syncing ? "Syncing..." : "Sync from API"}</button>
+          {hasApiKey && (
+            <button className="btn btn-sm" onClick={handleSync} disabled={syncing}>
+              {syncing?'Syncing...':'Sync from API'}
+            </button>
           )}
         </div>
 
@@ -113,47 +121,51 @@ export default function Scores() {
 
         {!loading && matches.length === 0 && (
           <div className="alert alert-info">
-            {filter === 'today' ? 'No matches today. Check back on June 11, 2026!' : 'No matches found for this filter.'}
+            {filter==='finished'
+              ? 'No finished matches yet. Tournament starts June 11 — or seed demo data to preview.'
+              : 'No matches found for this filter.'}
           </div>
         )}
 
-        {Object.entries(grouped).map(([phase, ms]) => (
-          <div className="card" key={phase}>
-            <div className="card-title">{PHASE_LABELS[phase] || phase}</div>
+        {!loading && Object.entries(grouped).map(([phase, ms]) => (
+          <div className="card" key={phase} style={{marginBottom:'1rem'}}>
+            <div className="card-title">{PHASE_LABELS[phase]||phase}</div>
             {ms.map(m => (
               <div key={m.id} className="match-row">
                 <div className="team-home">
-                  <div style={{fontWeight:500}}>{m.home_team}</div>
-                  <div style={{fontSize:12,color:'var(--c-muted)'}}>
-                    {m.kickoff && new Date(m.kickoff).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
-                  </div>
-                </div>
-
-                <div style={{fontFamily:'var(--font-display)',fontSize:26,fontWeight:700,minWidth:32,textAlign:'center'}}>
-                  {m.home_goals ?? '—'}
-                </div>
-
-                <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-                  <span className="score-sep">vs</span>
-                  <span className={`match-status status-${m.status==='IN_PLAY'?'live':m.status==='FINISHED'?'finished':'upcoming'}`}>
-                    {m.status === 'IN_PLAY' ? 'LIVE' : m.status === 'FINISHED' ? 'FT' : 'Soon'}
-                  </span>
-                  {m.home_goals_pen != null && (
-                    <span style={{fontSize:11,color:'var(--c-muted)'}}>
-                      (pen: {m.home_goals_pen}–{m.away_goals_pen})
-                    </span>
+                  <div style={{fontWeight:600,fontSize:13}}>{m.home_team}</div>
+                  {m.kickoff && (
+                    <div style={{fontSize:11,color:'var(--c-muted)',marginTop:2}}>
+                      {new Date(m.kickoff).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
+                      {' '}
+                      {new Date(m.kickoff).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
+                    </div>
                   )}
                 </div>
 
-                <div style={{fontFamily:'var(--font-display)',fontSize:26,fontWeight:700,minWidth:32,textAlign:'center'}}>
-                  {m.away_goals ?? '—'}
+                <div style={{fontFamily:'var(--font-display)',fontSize:28,fontWeight:400,minWidth:32,textAlign:'center',color:'var(--c-text)'}}>
+                  {m.home_goals!=null ? m.home_goals : <span style={{color:'var(--c-hint)',fontSize:16}}>?</span>}
+                </div>
+
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+                  <span style={{color:'var(--c-hint)',fontSize:13}}>–</span>
+                  <span className={`match-status ${m.status==='IN_PLAY'?'status-live':m.status==='FINISHED'?'status-finished':'status-upcoming'}`}>
+                    {m.status==='IN_PLAY'?'LIVE':m.status==='FINISHED'?'FT':'Soon'}
+                  </span>
+                  {m.home_goals_pen!=null && (
+                    <span style={{fontSize:10,color:'var(--c-muted)'}}>pen {m.home_goals_pen}–{m.away_goals_pen}</span>
+                  )}
+                </div>
+
+                <div style={{fontFamily:'var(--font-display)',fontSize:28,fontWeight:400,minWidth:32,textAlign:'center',color:'var(--c-text)'}}>
+                  {m.away_goals!=null ? m.away_goals : <span style={{color:'var(--c-hint)',fontSize:16}}>?</span>}
                 </div>
 
                 <div className="team-away" style={{textAlign:'right'}}>
-                  <div style={{fontWeight:500}}>{m.away_team}</div>
-                  <div style={{fontSize:12,color:'var(--c-muted)',marginTop:2}}>
-                    {m.home_goals_et != null && <span>AET: {m.home_goals_et}–{m.away_goals_et}</span>}
-                  </div>
+                  <div style={{fontWeight:600,fontSize:13}}>{m.away_team}</div>
+                  {m.home_goals_et!=null && (
+                    <div style={{fontSize:10,color:'var(--c-muted)',marginTop:2}}>AET: {m.home_goals_et}–{m.away_goals_et}</div>
+                  )}
                 </div>
               </div>
             ))}

@@ -11,21 +11,61 @@ export const DEMO_PLAYERS = [
   { name:'Drew',         email:'demo+drew@wc26.test'   },
 ]
 
-// All 104 matches seeded with realistic results
-function makeResult(id) {
-  // Seeded results so they're consistent and varied
-  const s = Math.sin(id * 13.7) * 100
-  const hg = Math.abs(Math.floor(s % 4))
-  const ag = Math.abs(Math.floor(Math.sin(id * 7.3) * 100 % 3))
-  return { id, hg, ag }
+// All 104 matches with seeded realistic results
+function makeResult(id, hg, ag) {
+  if (hg !== undefined) return { id, hg, ag }
+  // Seeded formula for consistent variety
+  const s  = Math.abs(Math.floor(Math.sin(id * 13.7) * 100))
+  const s2 = Math.abs(Math.floor(Math.sin(id * 7.3) * 100))
+  return { id, hg: s % 4, ag: s2 % 3 }
 }
 
-// Generate all 104 match results
-const ALL_RESULTS = []
-// Group stage: 1-72
-for (let id = 1; id <= 72; id++) ALL_RESULTS.push(makeResult(id))
-// KO rounds: 73-104
-for (let id = 73; id <= 104; id++) ALL_RESULTS.push(makeResult(id))
+// Group stage (seeded auto)
+const GROUP_RESULTS = []
+for (let id = 1; id <= 72; id++) GROUP_RESULTS.push(makeResult(id))
+
+// KO rounds with realistic scores and team names for demo
+const KO_RESULTS = [
+  // Round of 32
+  {id:73, hg:2,ag:1, home:'Brazil',      away:'Senegal'},
+  {id:74, hg:1,ag:0, home:'France',       away:'USA'},
+  {id:75, hg:3,ag:2, home:'Argentina',    away:'Poland'},
+  {id:76, hg:0,ag:1, home:'Germany',      away:'England'},
+  {id:77, hg:2,ag:2, home:'Spain',        away:'Morocco', hpen:4, apen:3},
+  {id:78, hg:1,ag:0, home:'Portugal',     away:'Mexico'},
+  {id:79, hg:0,ag:1, home:'Netherlands',  away:'Japan'},
+  {id:80, hg:2,ag:0, home:'Canada',       away:'Denmark'},
+  {id:81, hg:1,ag:1, home:'Uruguay',      away:'Colombia', hpen:5, apen:4},
+  {id:82, hg:2,ag:1, home:'Croatia',      away:'Ivory Coast'},
+  {id:83, hg:0,ag:2, home:'Belgium',      away:'South Korea'},
+  {id:84, hg:1,ag:0, home:'Ecuador',      away:'Sweden'},
+  {id:85, hg:3,ag:1, home:'Italy',        away:'Australia'},
+  {id:86, hg:0,ag:0, home:'Switzerland',  away:'Serbia', hpen:4, apen:2},
+  {id:87, hg:1,ag:2, home:'Chile',        away:'Ghana'},
+  {id:88, hg:2,ag:1, home:'Turkey',       away:'New Zealand'},
+  // Round of 16
+  {id:89, hg:2,ag:1, home:'Brazil',       away:'France'},
+  {id:90, hg:1,ag:2, home:'Argentina',    away:'England'},
+  {id:91, hg:2,ag:0, home:'Spain',        away:'Portugal'},
+  {id:92, hg:1,ag:1, home:'Japan',        away:'Canada', hpen:3, apen:5},
+  {id:93, hg:2,ag:1, home:'Uruguay',      away:'Croatia'},
+  {id:94, hg:1,ag:0, home:'South Korea',  away:'Ecuador'},
+  {id:95, hg:3,ag:0, home:'Italy',        away:'Switzerland'},
+  {id:96, hg:1,ag:2, home:'Turkey',       away:'Ghana'},
+  // Quarter-finals
+  {id:97,  hg:2,ag:1, home:'Brazil',      away:'England'},
+  {id:98,  hg:1,ag:2, home:'Spain',       away:'Canada'},
+  {id:99,  hg:2,ag:0, home:'Uruguay',     away:'South Korea'},
+  {id:100, hg:2,ag:1, home:'Italy',       away:'Ghana'},
+  // Semi-finals
+  {id:101, hg:1,ag:2, home:'Brazil',      away:'Canada'},
+  {id:102, hg:3,ag:1, home:'Uruguay',     away:'Italy'},
+  // 3rd place + Final
+  {id:103, hg:2,ag:1, home:'Brazil',      away:'Italy'},
+  {id:104, hg:2,ag:1, home:'Canada',      away:'Uruguay'},
+]
+
+const ALL_RESULTS = [...GROUP_RESULTS, ...KO_RESULTS]
 
 function seededRand(seed) {
   const x = Math.sin(seed + 1) * 10000
@@ -76,12 +116,14 @@ export async function seedDemoData(onProgress) {
   for (let i = 0; i < ALL_RESULTS.length; i += BATCH) {
     const batch = ALL_RESULTS.slice(i, i + BATCH)
     for (const r of batch) {
-      const { error } = await supabase.from('matches').update({
+      const updateData = {
         home_goals: r.hg, away_goals: r.ag,
         home_goals_et: null, away_goals_et: null,
-        home_goals_pen: null, away_goals_pen: null,
+        home_goals_pen: r.hpen ?? null, away_goals_pen: r.apen ?? null,
         status: 'FINISHED', updated_at: new Date().toISOString()
-      }).eq('id', r.id)
+      }
+      if (r.home) { updateData.home_team = r.home; updateData.away_team = r.away }
+      const { error } = await supabase.from('matches').update(updateData).eq('id', r.id)
       if (!error) written++
     }
   }

@@ -65,13 +65,18 @@ export default function Dashboard() {
   useEffect(() => { loadData() }, [player])
 
   async function loadData() {
-    const [{ count:playerCount }, { data:finished }, { count:totalMatches }, { data:w }] = await Promise.all([
-      supabase.from('players').select('*',{count:'exact',head:true}).eq('room_code','DEFAULT'),
-      supabase.from('matches').select('id').eq('status','FINISHED'),
-      supabase.from('matches').select('id',{count:'exact',head:true}),
+    const [
+      { data:allPlayers },
+      { data:allMatches },
+      { data:w }
+    ] = await Promise.all([
+      supabase.from('players').select('id').eq('room_code','DEFAULT'),
+      supabase.from('matches').select('id,status'),
       supabase.from('scoring_weights').select('*').eq('room_code','DEFAULT').single(),
     ])
-    setStats({ players:playerCount||0, played:finished?.length||0, total:totalMatches||104 })
+    const played = allMatches?.filter(m=>m.status==='FINISHED').length||0
+    const total  = allMatches?.length||104
+    setStats({ players:allPlayers?.length||0, played, total })
     setWeights(w)
 
     const { data:players } = await supabase.from('players').select('id,name').eq('room_code','DEFAULT')
@@ -171,12 +176,10 @@ export default function Dashboard() {
           <div style={{height:3,background:'var(--c-surface2)'}}>
             <div style={{height:'100%',width:`${pct}%`,background:'linear-gradient(90deg,#C8102E,#003DA5)',transition:'width 1s ease'}} />
           </div>
-          {played > 0 && (
-            <div style={{padding:'6px 1.5rem',fontSize:11,color:'var(--c-muted)',display:'flex',justifyContent:'space-between'}}>
-              <span>{played} matches played</span>
+          <div style={{padding:'6px 1.5rem',fontSize:11,color:'var(--c-muted)',display:'flex',justifyContent:'space-between'}}>
+              <span>{played > 0 ? `${played} matches played` : 'Tournament starts June 11, 2026'}</span>
               <span>{stats.total - played} remaining</span>
             </div>
-          )}
         </div>
 
         {/* ── Metric cards ── */}

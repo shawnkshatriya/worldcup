@@ -149,7 +149,7 @@ export default function Stats() {
     setLoading(false)
   }
 
-  const finished = useMemo(() => matches.filter(m=>m.home_goals!=null), [matches])
+  const finished = useMemo(() => matches.filter(m=>m.status==='FINISHED'&&m.home_goals!=null), [matches])
 
   // Player stats
   const playerStats = useMemo(() => {
@@ -452,7 +452,7 @@ export default function Stats() {
             </div>
 
             <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">Points breakdown (pool total)</div>
+              <div className="card-title">How points are earned (pool total)</div>
               {scores.length===0?<p style={{color:'var(--c-muted)',fontSize:13}}>No scores yet</p>:(() => {
                 const totResult=scores.reduce((a,s)=>a+(s.pts_result||0),0)
                 const totDiff  =scores.reduce((a,s)=>a+(s.pts_diff||0),0)
@@ -509,6 +509,12 @@ export default function Stats() {
             mostExact?.exact===1&&{icon:'💎',text:`${mostExact.name} has exactly one exact score. Cherish it.`},
             mostCorr?.correct>0&&{icon:'🎯',text:`${mostCorr.name} picks winners best — ${mostCorr.correct} correct results`},
             avgPts>0&&{icon:'📊',text:`Pool average is ${avgPts} pts. Above that? You're winning the vibe.`},
+            (() => {
+              const totCorrect = playerStats.reduce((a,p)=>a+p.correct,0)
+              const totExact   = playerStats.reduce((a,p)=>a+p.exact,0)
+              const ratio = totCorrect>0?Math.round(totCorrect/Math.max(totExact,1)):0
+              return totExact>0&&{icon:'📐',text:`For every exact score there are ~${ratio} correct results — W/L is easier to guess than the exact scoreline`}
+            })(),
             totalGoals>0&&{icon:'⚽',text:`${totalGoals} goals in ${finished.length} matches — ${avgGoals} per game`},
             scoreless>0&&{icon:'🥱',text:`${scoreless} match${scoreless>1?'es have':' has'} ended 0-0. Boring.`},
             highScoring>0&&{icon:'🔥',text:`${highScoring} high-scoring match${highScoring>1?'es':''} with 4+ goals`},
