@@ -562,26 +562,90 @@ export default function Stats() {
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Fun facts</div>
               {(() => {
+                const sorted      = [...playerStats].sort((a,b)=>b.total-a.total)
+                const leader      = sorted[0]
+                const second      = sorted[1]
+                const last        = sorted[sorted.length-1]
                 const mostCorrect = [...playerStats].sort((a,b)=>b.correct-a.correct)[0]
                 const mostExact   = [...playerStats].sort((a,b)=>b.exact-a.exact)[0]
+                const mostDiff    = [...playerStats].sort((a,b)=>b.diff-a.diff)[0]
+                const mostApprox  = [...playerStats].sort((a,b)=>b.approx-a.approx)[0]
                 const fewestPreds = [...playerStats].filter(p=>p.preds>0).sort((a,b)=>a.preds-b.preds)[0]
-                const leader      = [...playerStats].sort((a,b)=>b.total-a.total)[0]
-                const last        = [...playerStats].sort((a,b)=>a.total-b.total)[0]
+                const mostPreds   = [...playerStats].sort((a,b)=>b.preds-a.preds)[0]
+                const gap         = leader && second ? leader.total - second.total : 0
+                const totalExact  = playerStats.reduce((a,p)=>a+p.exact,0)
+                const totalCorrect= playerStats.reduce((a,p)=>a+p.correct,0)
+                const avgPts      = playerStats.length ? Math.round(playerStats.reduce((a,p)=>a+p.total,0)/playerStats.length) : 0
+
                 const facts = [
-                  leader && { icon:'🏆', text:`${leader.name} is leading with ${leader.total} pts` },
-                  mostCorrect?.correct > 0 && { icon:'🎯', text:`${mostCorrect.name} is the best result predictor (${mostCorrect.correct} correct)` },
-                  mostExact?.exact > 0 && { icon:'💎', text:`${mostExact.name} has nailed the most exact scores (${mostExact.exact})` },
-                  fewestPreds && fewestPreds !== leader && { icon:'😴', text:`${fewestPreds.name} has submitted the fewest predictions (${fewestPreds.preds})` },
-                  matchStats.totalGoals > 0 && { icon:'⚽', text:`${matchStats.totalGoals} goals in ${matchStats.totalMatches} matches — ${matchStats.avgGoals} per game` },
-                  matchStats.scoreless > 0 && { icon:'🥱', text:`${matchStats.scoreless} match${matchStats.scoreless>1?'es':''} ended 0-0` },
-                  last && last !== leader && leader?.total > 0 && { icon:'📉', text:`${last.name} is last — ${leader.total - last.total} pts behind the leader` },
+                  leader?.total > 0 && {
+                    icon:'🏆',
+                    text: gap > 5
+                      ? `${leader.name} is running away with it — ${gap} points clear of ${second?.name || 'second place'}`
+                      : gap === 0 && second
+                      ? `${leader.name} and ${second.name} are neck and neck at the top!`
+                      : `${leader.name} leads with ${leader.total} pts, just ${gap} ahead of ${second?.name || 'the pack'}`
+                  },
+                  last && last.id !== leader?.id && leader?.total > 0 && {
+                    icon:'📉',
+                    text: `${last.name} is propping up the table — ${leader.total - last.total} pts off the pace. Time to panic.`
+                  },
+                  mostExact?.exact >= 3 && {
+                    icon:'💎',
+                    text: `${mostExact.name} is a psychic — ${mostExact.exact} exact scores. That's just ridiculous.`
+                  },
+                  mostExact?.exact === 1 && {
+                    icon:'💎',
+                    text: `${mostExact.name} got lucky with an exact score. Once.`
+                  },
+                  mostCorrect?.correct > 0 && mostCorrect.id !== leader?.id && {
+                    icon:'🎯',
+                    text: `${mostCorrect.name} picks winners best (${mostCorrect.correct} correct results) but isn't converting that into points`
+                  },
+                  mostCorrect?.correct > 0 && mostCorrect.id === leader?.id && {
+                    icon:'🎯',
+                    text: `${leader.name} leads AND has the most correct results (${mostCorrect.correct}). Dominant.`
+                  },
+                  mostDiff?.diff > 0 && mostDiff.id !== mostCorrect?.id && {
+                    icon:'📐',
+                    text: `${mostDiff.name} nails the margin most often — ${mostDiff.diff} correct goal differences`
+                  },
+                  fewestPreds && fewestPreds.id !== last?.id && fewestPreds.preds < (mostPreds?.preds || 0) * 0.7 && {
+                    icon:'😴',
+                    text: `${fewestPreds.name} has only submitted ${fewestPreds.preds} predictions. Are they even watching?`
+                  },
+                  matchStats.totalGoals > 0 && {
+                    icon:'⚽',
+                    text: `${matchStats.totalGoals} goals across ${matchStats.totalMatches} matches — ${matchStats.avgGoals} per game average`
+                  },
+                  matchStats.scoreless > 0 && {
+                    icon:'🥱',
+                    text: `${matchStats.scoreless} match${matchStats.scoreless>1?'es have':' has'} ended 0–0. Boring.`
+                  },
+                  matchStats.highScoring.length > 0 && {
+                    icon:'🔥',
+                    text: `Highest scoring game so far: ${matchStats.highScoring[0]?.label} (${matchStats.highScoring[0]?.badge})`
+                  },
+                  totalExact > 0 && playerStats.length > 0 && {
+                    icon:'🎰',
+                    text: `${totalExact} exact scores across the whole pool out of ${(matchStats.totalMatches * playerStats.length) || '?'} predictions — ${matchStats.totalMatches > 0 ? ((totalExact/(matchStats.totalMatches*playerStats.length))*100).toFixed(1) : 0}% hit rate`
+                  },
+                  avgPts > 0 && {
+                    icon:'📊',
+                    text: `Pool average is ${avgPts} pts. If you're above that, you're winning the vibe.`
+                  },
+                  mostApprox?.approx > 0 && {
+                    icon:'🤏',
+                    text: `${mostApprox.name} claims ${mostApprox.approx} approx bonuses — close but no cigar on exact scores`
+                  },
                 ].filter(Boolean)
+
                 return facts.length === 0
-                  ? <p style={{color:'var(--c-muted)',fontSize:13}}>Facts will appear as the tournament progresses.</p>
-                  : facts.map((f,i) => (
-                    <div key={i} style={{display:'flex',gap:10,padding:'8px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
-                      <span style={{fontSize:16,flexShrink:0}}>{f.icon}</span>
-                      <span style={{color:'var(--c-muted)'}}>{f.text}</span>
+                  ? <p style={{color:'var(--c-muted)',fontSize:13}}>Predictions and match results will unlock fun facts as the tournament progresses.</p>
+                  : facts.slice(0, 8).map((f,i) => (
+                    <div key={i} style={{display:'flex',gap:10,padding:'9px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
+                      <span style={{fontSize:15,flexShrink:0,marginTop:1}}>{f.icon}</span>
+                      <span style={{color:'var(--c-muted)',lineHeight:1.55}}>{f.text}</span>
                     </div>
                   ))
               })()}

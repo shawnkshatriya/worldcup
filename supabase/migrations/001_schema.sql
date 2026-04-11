@@ -17,7 +17,7 @@ create table if not exists rooms (
   code text primary key,
   name text not null,
   invite_token text not null default substring(md5(random()::text), 1, 12),
-  max_players int default 50,
+  max_players int default 250,
   lock_rule text default 'kickoff', -- 'kickoff' | '48h' | 'matchday'
   created_at timestamptz default now()
 );
@@ -199,8 +199,8 @@ insert into matches (id, phase, match_number, home_team, away_team, kickoff) val
 on conflict (id) do nothing;
 
 -- Seed default room
-insert into rooms (code, name, invite_token) values
-  ('DEFAULT', 'Friends Cup 2026', 'changeme123')
+insert into rooms (code, name, invite_token, max_players) values
+  ('DEFAULT', 'Friends Cup 2026', 'changeme123', 250)
 on conflict (code) do nothing;
 
 insert into scoring_weights (room_code) values ('DEFAULT')

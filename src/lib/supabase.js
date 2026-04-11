@@ -36,8 +36,8 @@ export function calcMatchPoints(prediction, result, weights, phase) {
   } else {
     // Correct W/D/L
     if (predResult === realResult) pts_result = w.result
-    // Correct goal difference (but not exact score)
-    if (predDiff === realDiff && predResult === realResult) pts_diff = w.diff
+    // Correct goal difference (but not exact score) — only when result direction also matches
+    if (predResult === realResult && predDiff === realDiff) pts_diff = w.diff
     // Approximation bonus: predicted within 1 goal each in high-scoring games (>=4 total goals)
     if (!isKO && w.approx > 0) {
       const totalReal = rh + ra

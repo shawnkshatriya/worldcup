@@ -16,6 +16,7 @@ export default function Scores() {
   const [filter, setFilter] = useState('today')
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
+  const [syncing, setSyncing] = useState(false)
   const [apiKey] = useState(!!import.meta.env.VITE_FOOTBALL_API_KEY)
 
   useEffect(() => {
@@ -48,9 +49,25 @@ export default function Scores() {
   }
 
   async function handleSync() {
-    await syncMatchResults()
-    setLastSync(new Date().toLocaleTimeString())
-    await loadMatches()
+    setSyncing(true)
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+      const res = await fetch(`${supabaseUrl}/functions/v1/sync-scores`, {
+        method: 'POST',
+        headers: { 'apikey': anonKey, 'Content-Type': 'application/json' }
+      })
+      const result = await res.json()
+      if (result.ok) {
+        setLastSync(new Date().toLocaleTimeString() + (result.cached ? ' (cached)' : ''))
+        await loadMatches()
+      } else {
+        alert('Sync failed: ' + result.error)
+      }
+    } catch(e) {
+      alert('Network error syncing scores')
+    }
+    setSyncing(false)
   }
 
   const grouped = matches.reduce((acc, m) => {
@@ -86,7 +103,7 @@ export default function Scores() {
             ))}
           </div>
           {apiKey && (
-            <button className="btn btn-sm" onClick={handleSync}>Sync from API</button>
+            <button className="btn btn-sm" onClick={handleSync} disabled={syncing}>{syncing ? "Syncing..." : "Sync from API"}</button>
           )}
         </div>
 

@@ -109,16 +109,38 @@ export default function Dashboard() {
                 <div className="wc-banner-sub">June 11 – July 19, 2026 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches</div>
                 <div className="wc-banner-hosts">
                   {[
-                    { label: 'USA',    colors: ['#B22234','#fff','#3C3B6E'] },
-                    { label: 'Canada', colors: ['#FF0000','#fff','#FF0000'] },
-                    { label: 'Mexico', colors: ['#006847','#fff','#CE1126'] },
+                    {
+                      label: 'USA',
+                      // Stars & stripes simplified: red top, white mid, blue bottom
+                      swatch: <div style={{display:'flex',flexDirection:'column',width:20,height:14,borderRadius:2,overflow:'hidden',border:'1px solid rgba(255,255,255,0.1)',flexShrink:0}}>
+                        <div style={{flex:1,background:'#B22234'}}/>
+                        <div style={{flex:1,background:'#fff'}}/>
+                        <div style={{flex:1,background:'#B22234'}}/>
+                        <div style={{flex:1,background:'#fff'}}/>
+                        <div style={{flex:1,background:'#3C3B6E'}}/>
+                      </div>
+                    },
+                    {
+                      label: 'Canada',
+                      // Vertical triband: red | white (2x) | red
+                      swatch: <div style={{display:'flex',width:20,height:14,borderRadius:2,overflow:'hidden',border:'1px solid rgba(255,255,255,0.1)',flexShrink:0}}>
+                        <div style={{flex:1,background:'#FF0000'}}/>
+                        <div style={{flex:2,background:'#fff'}}/>
+                        <div style={{flex:1,background:'#FF0000'}}/>
+                      </div>
+                    },
+                    {
+                      label: 'Mexico',
+                      // Vertical triband: green | white | red
+                      swatch: <div style={{display:'flex',width:20,height:14,borderRadius:2,overflow:'hidden',border:'1px solid rgba(255,255,255,0.1)',flexShrink:0}}>
+                        <div style={{flex:1,background:'#006847'}}/>
+                        <div style={{flex:1,background:'#fff'}}/>
+                        <div style={{flex:1,background:'#CE1126'}}/>
+                      </div>
+                    },
                   ].map(h => (
                     <div key={h.label} className="host-flag">
-                      <div className="flag-swatch" style={{ display: 'flex' }}>
-                        {h.colors.map((c, i) => (
-                          <div key={i} style={{ flex: 1, background: c }} />
-                        ))}
-                      </div>
+                      {h.swatch}
                       {h.label}
                     </div>
                   ))}

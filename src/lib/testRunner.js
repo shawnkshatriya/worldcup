@@ -49,10 +49,18 @@ export function runScoringTests() {
     expect(pts.pts_total).toBe(5)
   }))
 
-  results.push(test('Correct result only (different diff)', () => {
+  results.push(test('Correct result + correct diff (pred 2-0, result 3-1 both +2)', () => {
     const pts = calcMatchPoints({ home_goals: 2, away_goals: 0 }, { home_goals: 3, away_goals: 1 }, w, 'GROUP_C')
     expect(pts.pts_result).toBe(3)
-    expect(pts.pts_diff).toBe(0)
+    expect(pts.pts_diff).toBe(2)  // same diff (+2), correct result = gets diff pts
+    expect(pts.pts_exact).toBe(0)
+    expect(pts.pts_total).toBe(5)
+  }))
+
+  results.push(test('Correct result only (truly different diff)', () => {
+    const pts = calcMatchPoints({ home_goals: 2, away_goals: 0 }, { home_goals: 3, away_goals: 0 }, w, 'GROUP_C')
+    expect(pts.pts_result).toBe(3)
+    expect(pts.pts_diff).toBe(0)  // diff is +2 vs +3, no diff pts
     expect(pts.pts_exact).toBe(0)
     expect(pts.pts_total).toBe(3)
   }))

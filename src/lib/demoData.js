@@ -32,25 +32,34 @@ const DEMO_RESULTS = [
   { id: 23, hg: 1, ag: 1 }, { id: 24, hg: 4, ag: 0 },
 ]
 
-// Each player predicts with varying accuracy
-function generatePrediction(result, playerIndex) {
-  const accuracy = [0.85, 0.75, 0.65, 0.60, 0.55, 0.50, 0.45, 0.40][playerIndex]
-  const rnd = Math.random()
+// Seeded random so results are deterministic per player+match combo
+function seededRand(seed) {
+  const x = Math.sin(seed + 1) * 10000
+  return x - Math.floor(x)
+}
 
-  if (rnd < accuracy * 0.3) {
+// Each player predicts with varying accuracy
+function generatePrediction(result, playerIndex, matchId) {
+  const accuracies = [0.82, 0.70, 0.62, 0.58, 0.50, 0.44, 0.38, 0.30]
+  const accuracy = accuracies[playerIndex] || 0.40
+  const rnd = seededRand(playerIndex * 1000 + matchId)
+  const rnd2 = seededRand(playerIndex * 2000 + matchId)
+
+  if (rnd < accuracy * 0.25) {
     // Exact score
     return { hg: result.hg, ag: result.ag }
   } else if (rnd < accuracy) {
     // Correct result, different score
-    const offset = Math.floor(Math.random() * 2) + 1
-    if (result.hg > result.ag) return { hg: result.hg + offset - 1, ag: result.ag }
-    if (result.hg < result.ag) return { hg: result.hg, ag: result.ag + offset - 1 }
-    return { hg: result.hg + 1, ag: result.ag + 1 }
+    const offset = Math.floor(rnd2 * 2)
+    if (result.hg > result.ag) return { hg: Math.max(1, result.hg - offset), ag: Math.max(0, result.ag) }
+    if (result.hg < result.ag) return { hg: Math.max(0, result.hg), ag: Math.max(1, result.ag - offset) }
+    const v = Math.floor(rnd2 * 3) + 1
+    return { hg: v, ag: v }
   } else {
     // Wrong result
-    if (result.hg > result.ag) return { hg: 0, ag: Math.floor(Math.random() * 2) + 1 }
-    if (result.hg < result.ag) return { hg: Math.floor(Math.random() * 2) + 1, ag: 0 }
-    return { hg: Math.floor(Math.random() * 3) + 1, ag: 0 }
+    if (result.hg > result.ag) return { hg: Math.floor(rnd2 * 2), ag: Math.floor(rnd2 * 3) + 1 }
+    if (result.hg < result.ag) return { hg: Math.floor(rnd2 * 3) + 1, ag: Math.floor(rnd2 * 2) }
+    return { hg: Math.floor(rnd2 * 3) + 1, ag: 0 }
   }
 }
 
@@ -105,7 +114,7 @@ export async function seedDemoData(onProgress) {
       const match = finishedMatches.find(m => m.id === result.id)
       if (!match) continue
 
-      const pred = generatePrediction(result, pi)
+      const pred = generatePrediction(result, pi, result.id)
       allPredictions.push({
         player_id: player.id,
         match_id: result.id,
@@ -141,7 +150,9 @@ export async function seedDemoData(onProgress) {
     await supabase.from('scores').upsert(allScores.slice(i, i + CHUNK), { onConflict: 'player_id,match_id' })
   }
 
-  log('Done! Demo data seeded.')
+  // Ensure scores are fully upserted before returning
+  log('Scores computed and saved.')
+  log('Done! Navigate to Leaderboard and Stats to see live data.')
   return { players: insertedPlayers.length, predictions: allPredictions.length, scores: allScores.length }
 }
 
