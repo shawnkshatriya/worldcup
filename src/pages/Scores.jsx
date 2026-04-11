@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { fetchTodayMatches, fetchLiveScores, syncMatchResults } from '../lib/supabase'
 
 const PHASE_LABELS = {
   GROUP_A:'Group A', GROUP_B:'Group B', GROUP_C:'Group C', GROUP_D:'Group D',

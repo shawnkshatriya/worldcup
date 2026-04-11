@@ -126,6 +126,100 @@ export default function Admin() {
     }
   }
 
+  async function purgeAllPlayers() {
+    const confirmText = 'PURGE ALL'
+    const input = prompt(`This will permanently delete ALL players, predictions and scores.\n\nType "${confirmText}" to confirm:`)
+    if (input !== confirmText) { alert('Purge cancelled.'); return }
+
+    setPlayers(ps => ps.map(p => ({...p, _removing: true})))
+
+    try {
+      // Delete scores first, then predictions, then players
+      const ids = players.map(p => p.id)
+      if (ids.length === 0) { alert('No players to purge.'); return }
+
+      await supabase.from('scores').delete().in('player_id', ids)
+      await supabase.from('predictions').delete().in('player_id', ids)
+
+      // For players with auth, call edge function; for others, delete directly
+      const { data: { session } } = await supabase.auth.getSession()
+      for (const p of players) {
+        if (p.auth_id) {
+          await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-player`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token || ''}`,
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ playerId: p.id, adminSecret: import.meta.env.VITE_ADMIN_SECRET })
+          })
+        }
+      }
+
+      // Delete remaining (no auth_id) directly
+      const noAuthIds = players.filter(p => !p.auth_id).map(p => p.id)
+      if (noAuthIds.length) {
+        await supabase.from('players').delete().in('id', noAuthIds)
+      }
+
+      setPlayers([])
+      alert(`Purged ${ids.length} players successfully.`)
+    } catch (err) {
+      alert('Purge failed: ' + err.message)
+      await loadAll()
+    }
+  }
+
+  async function purgeAllPlayers() {
+    const confirmed = prompt(
+      `This will PERMANENTLY DELETE all ${players.length} players, their predictions, and scores.\n\nType DELETE to confirm:`
+    )
+    if (confirmed !== 'DELETE') { alert('Cancelled — nothing was deleted.'); return }
+
+    const toDelete = [...players]
+    setPlayers([])
+
+    // Separate auth players (need edge function) from legacy players (direct delete)
+    const authPlayers    = toDelete.filter(p => p.auth_id)
+    const legacyPlayers  = toDelete.filter(p => !p.auth_id)
+
+    let failed = 0
+
+    // Legacy players — direct DB delete
+    if (legacyPlayers.length > 0) {
+      const ids = legacyPlayers.map(p => p.id)
+      await supabase.from('scores').delete().in('player_id', ids)
+      await supabase.from('predictions').delete().in('player_id', ids)
+      const { error } = await supabase.from('players').delete().in('id', ids)
+      if (error) failed += legacyPlayers.length
+    }
+
+    // Auth players — via edge function
+    for (const p of authPlayers) {
+      try {
+        const { data:{ session } } = await supabase.auth.getSession()
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-player`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ playerId: p.id, adminSecret: import.meta.env.VITE_ADMIN_SECRET })
+        })
+        if (!res.ok) failed++
+      } catch { failed++ }
+    }
+
+    if (failed > 0) {
+      alert(`Purge complete with ${failed} error(s). Refresh to check remaining players.`)
+    } else {
+      alert(`All ${toDelete.length} players purged successfully.`)
+    }
+    loadAll()
+  }
+
   const inviteUrl = room ? `${window.location.origin}/join?code=${room.invite_token}` : ''
 
   // Detect duplicates — players sharing the same name (case-insensitive)
@@ -190,7 +284,7 @@ export default function Admin() {
           <div className="card">
             <div className="card-title">Invite link</div>
             <p style={{fontSize:14,color:'var(--c-muted)',marginBottom:'1rem'}}>Share this link. Anyone who opens it can join your pool.</p>
-            <div style={{background:'var(--c-surface2)',borderRadius:'var(--radius)',padding:'12px 16px',fontFamily:'var(--font-mono)',fontSize:13,wordBreak:'break-all',border:'1px solid var(--c-border)',marginBottom:10}}>
+            <div style={{background:'var(--c-surface2)',borderRadius:'var(--radius)',padding:'12px 16px',fontFamily:'monospace',fontSize:13,wordBreak:'break-all',border:'1px solid var(--c-border)',marginBottom:10}}>
               {inviteUrl}
             </div>
             <div style={{display:'flex',gap:8,marginBottom:'1.5rem'}}>
@@ -245,9 +339,17 @@ export default function Admin() {
           <div className="card" style={{padding:0,overflow:'hidden'}}>
             <div style={{padding:'1.25rem',borderBottom:'1px solid var(--c-border)',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
               <div className="card-title" style={{marginBottom:0}}>Players ({players.length})</div>
-              {dupeCount > 0 && (
-                <span className="badge badge-amber">{dupeCount} duplicate{dupeCount > 1 ? 's' : ''} detected</span>
-              )}
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                {dupeCount > 0 && (
+                  <span className="badge badge-amber">{dupeCount} dupe{dupeCount > 1 ? 's' : ''}</span>
+                )}
+                {players.length > 0 && (
+                  <button className="btn btn-danger btn-sm" onClick={purgeAllPlayers}
+                    style={{fontSize:11,padding:'4px 10px'}}>
+                    Purge all
+                  </button>
+                )}
+              </div>
             </div>
             {dupeCount > 0 && (
               <div className="alert alert-warn" style={{margin:'0.75rem 1.25rem',fontSize:13}}>

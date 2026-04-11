@@ -5,21 +5,38 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 )
 
-// ─── Scoring engine (mirrors Excel Variant 2 logic) ─────────────────────────
+// ─── Scoring engine — mirrors Hermann Baum Excel Variant 2 logic ─────────────
+//
+// Points are mutually exclusive tiers — you earn the HIGHEST tier you hit,
+// plus the approx bonus only when you don't already have result+diff correct:
+//
+//  Exact score                 → exact pts only (no result, no diff, no approx)
+//  Correct result + correct diff → result + diff pts (no approx)
+//  Correct result only          → result pts (+ approx if applicable)
+//  Wrong result                 → 0 (+ approx if applicable)
+//
+// Approx bonus fires when ALL of:
+//   1. Not an exact score
+//   2. Not a correct goal difference (to avoid rewarding twice for close misses)
+//   3. Total real goals >= 4 (high-scoring game)
+//   4. Both predicted goals within 1 of actual (each)
 
 export function calcMatchPoints(prediction, result, weights, phase) {
   if (!prediction || result.home_goals == null || result.away_goals == null) return null
   if (prediction.home_goals == null || prediction.away_goals == null) return null
 
-  const ph = prediction.home_goals
-  const pa = prediction.away_goals
-  const rh = result.home_goals
-  const ra = result.away_goals
+  const ph = Number(prediction.home_goals)
+  const pa = Number(prediction.away_goals)
+  const rh = Number(result.home_goals)
+  const ra = Number(result.away_goals)
 
-  const predResult = Math.sign(ph - pa)   // -1 | 0 | 1
+  const predResult = Math.sign(ph - pa)  // -1 | 0 | 1
   const realResult = Math.sign(rh - ra)
   const predDiff   = ph - pa
   const realDiff   = rh - ra
+  const isExact    = ph === rh && pa === ra
+  const isCorrectResult = predResult === realResult
+  const isCorrectDiff   = isCorrectResult && predDiff === realDiff
 
   const isKO = !phase.startsWith('GROUP')
   const w = isKO
@@ -28,18 +45,23 @@ export function calcMatchPoints(prediction, result, weights, phase) {
 
   let pts_result = 0, pts_diff = 0, pts_exact = 0, pts_approx = 0
 
-  // Exact score
-  if (ph === rh && pa === ra) {
-    pts_exact  = w.exact
-    pts_result = 0   // exact implies correct result — no double-dip
-    pts_diff   = 0
+  if (isExact) {
+    // Tier 1: Exact score — top prize, nothing else stacks
+    pts_exact = w.exact
+
+  } else if (isCorrectDiff) {
+    // Tier 2: Correct result + correct goal diff (not exact)
+    pts_result = w.result
+    pts_diff   = w.diff
+    // No approx — you already nailed the margin
+
   } else {
-    // Correct W/D/L
-    if (predResult === realResult) pts_result = w.result
-    // Correct goal difference (but not exact score) — only when result direction also matches
-    if (predResult === realResult && predDiff === realDiff) pts_diff = w.diff
-    // Approximation bonus: predicted within 1 goal each in high-scoring games (>=4 total goals)
-    if (!isKO && w.approx > 0) {
+    // Tier 3: Correct result only, or wrong result
+    if (isCorrectResult) pts_result = w.result
+
+    // Approx bonus: only group stage, only high-scoring, only within 1 each,
+    // and only when you did NOT get the diff right (avoid double-rewarding)
+    if (!isKO && w.approx > 0 && !isCorrectDiff) {
       const totalReal = rh + ra
       if (totalReal >= 4 && Math.abs(ph - rh) <= 1 && Math.abs(pa - ra) <= 1) {
         pts_approx = w.approx
@@ -47,25 +69,24 @@ export function calcMatchPoints(prediction, result, weights, phase) {
     }
   }
 
-  return { pts_result, pts_diff, pts_exact, pts_approx, pts_total: pts_result + pts_diff + pts_exact + pts_approx }
+  return {
+    pts_result,
+    pts_diff,
+    pts_exact,
+    pts_approx,
+    pts_total: pts_result + pts_diff + pts_exact + pts_approx
+  }
 }
 
 export async function recalcPlayerScores(roomCode) {
   const { data: weights } = await supabase
-    .from('scoring_weights')
-    .select('*')
-    .eq('room_code', roomCode)
-    .single()
+    .from('scoring_weights').select('*').eq('room_code', roomCode).single()
 
   const { data: matches } = await supabase
-    .from('matches')
-    .select('*')
-    .eq('status', 'FINISHED')
+    .from('matches').select('*').eq('status', 'FINISHED')
 
   const { data: predictions } = await supabase
-    .from('predictions')
-    .select('*, players!inner(room_code)')
-    .eq('players.room_code', roomCode)
+    .from('predictions').select('*, players!inner(room_code)').eq('players.room_code', roomCode)
 
   if (!weights || !matches || !predictions) return
 
@@ -77,8 +98,13 @@ export async function recalcPlayerScores(roomCode) {
     if (!pts) continue
     upserts.push({
       player_id: pred.player_id,
-      match_id: pred.match_id,
-      ...pts,
+      match_id:  pred.match_id,
+      pts_result:  pts.pts_result,
+      pts_diff:    pts.pts_diff,
+      pts_exact:   pts.pts_exact,
+      pts_approx:  pts.pts_approx,
+      pts_ko_team: 0,
+      pts_total:   pts.pts_total,
       calculated_at: new Date().toISOString()
     })
   }
@@ -88,56 +114,13 @@ export async function recalcPlayerScores(roomCode) {
   }
 }
 
-// ─── football-data.org API wrapper ──────────────────────────────────────────
-
-const FD_BASE = 'https://api.football-data.org/v4'
-const FD_KEY  = import.meta.env.VITE_FOOTBALL_API_KEY
-const WC2026  = 2000  // football-data.org competition ID for WC 2026
-
-export async function fetchLiveScores() {
-  const res = await fetch(`${FD_BASE}/competitions/${WC2026}/matches?status=LIVE`, {
-    headers: { 'X-Auth-Token': FD_KEY }
-  })
-  if (!res.ok) return []
-  const { matches } = await res.json()
-  return matches
-}
-
-export async function fetchTodayMatches() {
-  const today = new Date().toISOString().split('T')[0]
-  const res = await fetch(`${FD_BASE}/competitions/${WC2026}/matches?dateFrom=${today}&dateTo=${today}`, {
-    headers: { 'X-Auth-Token': FD_KEY }
-  })
-  if (!res.ok) return []
-  const { matches } = await res.json()
-  return matches
-}
-
-export async function fetchAllMatches() {
-  const res = await fetch(`${FD_BASE}/competitions/${WC2026}/matches`, {
-    headers: { 'X-Auth-Token': FD_KEY }
-  })
-  if (!res.ok) return []
-  const { matches } = await res.json()
-  return matches
-}
-
-// Push football-data.org results into Supabase matches table
+// ─── Cached API sync (calls edge function, not football-data directly) ───────
 export async function syncMatchResults() {
-  const matches = await fetchAllMatches()
-  for (const m of matches) {
-    if (m.status !== 'FINISHED') continue
-    const score = m.score?.fullTime
-    if (!score) continue
-    await supabase.from('matches').update({
-      home_goals: score.home,
-      away_goals: score.away,
-      home_goals_et: m.score?.extraTime?.home ?? null,
-      away_goals_et: m.score?.extraTime?.away ?? null,
-      home_goals_pen: m.score?.penalties?.home ?? null,
-      away_goals_pen: m.score?.penalties?.away ?? null,
-      status: m.status,
-      updated_at: new Date().toISOString()
-    }).eq('id', m.id)
-  }
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY
+  const res = await fetch(`${supabaseUrl}/functions/v1/sync-scores`, {
+    method: 'POST',
+    headers: { 'apikey': anonKey, 'Content-Type': 'application/json' }
+  })
+  return res.json()
 }

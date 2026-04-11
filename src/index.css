@@ -3,6 +3,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
   /* FIFA WC 2026 brand palette */
   --fifa-red:      #C8102E;
   --fifa-red-dim:  rgba(200,16,46,0.12);
