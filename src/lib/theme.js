@@ -68,7 +68,7 @@ export const THEMES = {
       '--c-success':  '#B9F6CA',
       '--c-warn':     '#FFE082',
       '--c-danger':   '#FF8A80',
-      '--c-info':     '#80D8FF',
+      '--c-info':     '#C5E1C7',
       '--c-gold':     '#FFD700',
       '--c-silver':   '#CFD8DC',
       '--c-bronze':   '#FFAB91',
