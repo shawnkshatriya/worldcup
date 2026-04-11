@@ -1,54 +1,31 @@
 import { supabase, calcMatchPoints } from './supabase'
 
 export const DEMO_PLAYERS = [
-  { name: 'Shawn (Demo)', email: 'demo+shawn@wc26.test'  },
-  { name: 'Alex',         email: 'demo+alex@wc26.test'   },
-  { name: 'Jordan',       email: 'demo+jordan@wc26.test' },
-  { name: 'Sam',          email: 'demo+sam@wc26.test'    },
-  { name: 'Morgan',       email: 'demo+morgan@wc26.test' },
-  { name: 'Casey',        email: 'demo+casey@wc26.test'  },
-  { name: 'Riley',        email: 'demo+riley@wc26.test'  },
-  { name: 'Drew',         email: 'demo+drew@wc26.test'   },
+  { name:'Shawn (Demo)', email:'demo+shawn@wc26.test'  },
+  { name:'Alex',         email:'demo+alex@wc26.test'   },
+  { name:'Jordan',       email:'demo+jordan@wc26.test' },
+  { name:'Sam',          email:'demo+sam@wc26.test'    },
+  { name:'Morgan',       email:'demo+morgan@wc26.test' },
+  { name:'Casey',        email:'demo+casey@wc26.test'  },
+  { name:'Riley',        email:'demo+riley@wc26.test'  },
+  { name:'Drew',         email:'demo+drew@wc26.test'   },
 ]
 
-// All 72 group stage matches + 16 KO matches for full coverage
-// Group stage: ids 1-72, KO round of 32: ids 73-88
-const GROUP_RESULTS = [
-  // Group A (ids 1-6)
-  {id:1,hg:2,ag:0},{id:2,hg:1,ag:1},{id:3,hg:0,ag:2},{id:4,hg:3,ag:1},{id:5,hg:2,ag:2},{id:6,hg:1,ag:0},
-  // Group B (ids 7-12)
-  {id:7,hg:4,ag:1},{id:8,hg:0,ag:0},{id:9,hg:1,ag:3},{id:10,hg:2,ag:1},{id:11,hg:0,ag:1},{id:12,hg:3,ag:0},
-  // Group C (ids 13-18)
-  {id:13,hg:1,ag:1},{id:14,hg:2,ag:0},{id:15,hg:1,ag:2},{id:16,hg:0,ag:3},{id:17,hg:2,ag:1},{id:18,hg:1,ag:0},
-  // Group D (ids 19-24)
-  {id:19,hg:3,ag:2},{id:20,hg:1,ag:1},{id:21,hg:0,ag:2},{id:22,hg:2,ag:0},{id:23,hg:1,ag:1},{id:24,hg:4,ag:0},
-  // Group E (ids 25-30)
-  {id:25,hg:2,ag:1},{id:26,hg:0,ag:1},{id:27,hg:3,ag:3},{id:28,hg:1,ag:2},{id:29,hg:2,ag:0},{id:30,hg:1,ag:1},
-  // Group F (ids 31-36)
-  {id:31,hg:1,ag:0},{id:32,hg:2,ag:2},{id:33,hg:0,ag:1},{id:34,hg:3,ag:1},{id:35,hg:1,ag:1},{id:36,hg:2,ag:0},
-  // Group G (ids 37-42)
-  {id:37,hg:3,ag:0},{id:38,hg:1,ag:1},{id:39,hg:2,ag:1},{id:40,hg:0,ag:2},{id:41,hg:1,ag:0},{id:42,hg:2,ag:3},
-  // Group H (ids 43-48)
-  {id:43,hg:1,ag:0},{id:44,hg:2,ag:1},{id:45,hg:0,ag:0},{id:46,hg:3,ag:2},{id:47,hg:1,ag:2},{id:48,hg:0,ag:1},
-  // Group I (ids 49-54)
-  {id:49,hg:2,ag:0},{id:50,hg:1,ag:1},{id:51,hg:3,ag:1},{id:52,hg:0,ag:2},{id:53,hg:1,ag:0},{id:54,hg:2,ag:2},
-  // Group J (ids 55-60)
-  {id:55,hg:4,ag:2},{id:56,hg:1,ag:0},{id:57,hg:0,ag:1},{id:58,hg:2,ag:1},{id:59,hg:1,ag:1},{id:60,hg:3,ag:0},
-  // Group K (ids 61-66)
-  {id:61,hg:1,ag:1},{id:62,hg:2,ag:0},{id:63,hg:0,ag:2},{id:64,hg:1,ag:0},{id:65,hg:3,ag:1},{id:66,hg:1,ag:2},
-  // Group L (ids 67-72)
-  {id:67,hg:2,ag:1},{id:68,hg:0,ag:0},{id:69,hg:1,ag:2},{id:70,hg:3,ag:0},{id:71,hg:1,ag:1},{id:72,hg:2,ag:0},
-]
+// All 104 matches seeded with realistic results
+function makeResult(id) {
+  // Seeded results so they're consistent and varied
+  const s = Math.sin(id * 13.7) * 100
+  const hg = Math.abs(Math.floor(s % 4))
+  const ag = Math.abs(Math.floor(Math.sin(id * 7.3) * 100 % 3))
+  return { id, hg, ag }
+}
 
-// Round of 32 (ids 73-88) — use update on these as they're KO
-const KO_RESULTS = [
-  {id:73,hg:2,ag:1},{id:74,hg:0,ag:1},{id:75,hg:3,ag:2},{id:76,hg:1,ag:0},
-  {id:77,hg:2,ag:2},{id:78,hg:1,ag:0},{id:79,hg:0,ag:1},{id:80,hg:2,ag:0},
-  {id:81,hg:1,ag:1},{id:82,hg:2,ag:1},{id:83,hg:0,ag:2},{id:84,hg:1,ag:0},
-  {id:85,hg:3,ag:1},{id:86,hg:0,ag:0},{id:87,hg:1,ag:2},{id:88,hg:2,ag:1},
-]
-
-const ALL_RESULTS = [...GROUP_RESULTS, ...KO_RESULTS]
+// Generate all 104 match results
+const ALL_RESULTS = []
+// Group stage: 1-72
+for (let id = 1; id <= 72; id++) ALL_RESULTS.push(makeResult(id))
+// KO rounds: 73-104
+for (let id = 73; id <= 104; id++) ALL_RESULTS.push(makeResult(id))
 
 function seededRand(seed) {
   const x = Math.sin(seed + 1) * 10000
@@ -60,7 +37,6 @@ function generatePrediction(result, playerIndex, matchId) {
   const acc  = accuracies[Math.min(playerIndex, 7)]
   const rnd  = seededRand(playerIndex * 1337 + matchId * 7)
   const rnd2 = seededRand(playerIndex * 2671 + matchId * 13)
-
   if (rnd < acc * 0.22) {
     return { hg: result.hg, ag: result.ag }
   } else if (rnd < acc) {
@@ -94,23 +70,27 @@ export async function seedDemoData(onProgress) {
   }
   log(`  Created ${insertedPlayers.length} players`)
 
-  log('Step 3/5 — Writing match results...')
+  log('Step 3/5 — Writing all 104 match results...')
   let written = 0
-  for (const r of ALL_RESULTS) {
-    const { error } = await supabase.from('matches').update({
-      home_goals: r.hg, away_goals: r.ag,
-      home_goals_et: null, away_goals_et: null,
-      home_goals_pen: null, away_goals_pen: null,
-      status: 'FINISHED', updated_at: new Date().toISOString()
-    }).eq('id', r.id)
-    if (!error) written++
+  const BATCH = 10
+  for (let i = 0; i < ALL_RESULTS.length; i += BATCH) {
+    const batch = ALL_RESULTS.slice(i, i + BATCH)
+    for (const r of batch) {
+      const { error } = await supabase.from('matches').update({
+        home_goals: r.hg, away_goals: r.ag,
+        home_goals_et: null, away_goals_et: null,
+        home_goals_pen: null, away_goals_pen: null,
+        status: 'FINISHED', updated_at: new Date().toISOString()
+      }).eq('id', r.id)
+      if (!error) written++
+    }
   }
-  log(`  Set ${written} match results (${GROUP_RESULTS.length} group + ${KO_RESULTS.length} KO)`)
+  log(`  Set ${written} / 104 match results`)
 
-  log('Step 4/5 — Generating predictions...')
+  log('Step 4/5 — Generating predictions for all 104 matches...')
   const { data: weights } = await supabase
     .from('scoring_weights').select('*').eq('room_code','DEFAULT').single()
-  if (!weights) throw new Error('No scoring weights found')
+  if (!weights) throw new Error('No scoring weights — run migrations first')
 
   const { data: allMatches } = await supabase
     .from('matches').select('*').in('id', ALL_RESULTS.map(r => r.id))
@@ -142,9 +122,9 @@ export async function seedDemoData(onProgress) {
   const CHUNK = 50
   for (let i = 0; i < allPreds.length; i += CHUNK) {
     const { error } = await supabase.from('predictions').insert(allPreds.slice(i, i + CHUNK))
-    if (error) throw new Error(`Prediction insert failed: ${error.message}`)
+    if (error) throw new Error(`Prediction insert failed at chunk ${i}: ${error.message}`)
   }
-  log(`  Inserted ${allPreds.length} predictions`)
+  log(`  Inserted ${allPreds.length} predictions (${insertedPlayers.length} players × 104 matches)`)
 
   log('Step 5/5 — Saving scores...')
   for (let i = 0; i < allScores.length; i += CHUNK) {
@@ -154,7 +134,7 @@ export async function seedDemoData(onProgress) {
   }
   log(`  Saved ${allScores.length} score records`)
   log('')
-  log('Done! Check Leaderboard, Stats, Fun Zone, and All Predictions.')
+  log('Done! Check all pages — full 104-match demo is live.')
 
   return { players: insertedPlayers.length, predictions: allPreds.length, scores: allScores.length }
 }
@@ -168,11 +148,13 @@ export async function clearDemoData() {
     await supabase.from('predictions').delete().in('player_id', ids)
     await supabase.from('players').delete().in('id', ids)
   }
-  // Reset all match results (group + KO)
+  // Reset ALL matches back to scheduled
   const allIds = ALL_RESULTS.map(r => r.id)
-  await supabase.from('matches').update({
-    home_goals: null, away_goals: null, home_goals_et: null,
-    away_goals_et: null, home_goals_pen: null, away_goals_pen: null,
-    status: 'SCHEDULED'
-  }).in('id', allIds)
+  for (let i = 0; i < allIds.length; i += 20) {
+    await supabase.from('matches').update({
+      home_goals: null, away_goals: null, home_goals_et: null,
+      away_goals_et: null, home_goals_pen: null, away_goals_pen: null,
+      status: 'SCHEDULED'
+    }).in('id', allIds.slice(i, i + 20))
+  }
 }

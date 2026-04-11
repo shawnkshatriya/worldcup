@@ -65,10 +65,10 @@ export default function Dashboard() {
   useEffect(() => { loadData() }, [player])
 
   async function loadData() {
-    const [{ count:playerCount }, { data:finished }, { data:w }, { count:totalMatches }] = await Promise.all([
+    const [{ count:playerCount }, { data:finished }, { count:totalMatches }, { data:w }] = await Promise.all([
       supabase.from('players').select('*',{count:'exact',head:true}).eq('room_code','DEFAULT'),
       supabase.from('matches').select('id').eq('status','FINISHED'),
-      supabase.from('matches').select('id', {count:'exact',head:true}),
+      supabase.from('matches').select('id',{count:'exact',head:true}),
       supabase.from('scoring_weights').select('*').eq('room_code','DEFAULT').single(),
     ])
     setStats({ players:playerCount||0, played:finished?.length||0, total:totalMatches||104 })

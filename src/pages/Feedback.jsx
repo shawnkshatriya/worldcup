@@ -89,7 +89,7 @@ export default function Feedback() {
                   </div>
                   <div>
                     <div style={{fontSize:13,fontWeight:600}}>{player?.name || 'Admin'}</div>
-                    <div style={{fontSize:11,color:'var(--c-muted)'}}>{authUser?.email}</div>
+                    <div style={{fontSize:11,color:'var(--c-muted)'}}>{authUser?.email || 'skshatriya7@gmail.com'}</div>
                   </div>
                   <div className="badge badge-green" style={{marginLeft:'auto'}}>Logged in</div>
                 </div>

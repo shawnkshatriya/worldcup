@@ -1,5 +1,3 @@
-// Theme system — dark | light | worldcup
-
 export const THEMES = {
   dark: {
     label: 'Dark',
@@ -32,53 +30,53 @@ export const THEMES = {
     label: 'Light',
     icon: '☀️',
     vars: {
-      '--c-bg':       '#F4F6FB',
-      '--c-surface':  '#FFFFFF',
-      '--c-surface2': '#F0F2F8',
-      '--c-surface3': '#E4E8F4',
-      '--c-border':   'rgba(0,0,0,0.08)',
-      '--c-border2':  'rgba(0,0,0,0.14)',
-      '--c-text':     '#111827',
-      '--c-muted':    '#6B7280',
-      '--c-hint':     '#9CA3AF',
-      '--c-accent':   '#C8102E',
-      '--c-accent2':  '#D97706',
-      '--c-success':  '#16A34A',
-      '--c-warn':     '#D97706',
-      '--c-danger':   '#DC2626',
-      '--c-info':     '#2563EB',
-      '--c-gold':     '#D97706',
-      '--c-silver':   '#6B7280',
-      '--c-bronze':   '#92400E',
-      '--fifa-red':   '#C8102E',
+      '--c-bg':       '#E8ECF4',
+      '--c-surface':  '#F2F5FA',
+      '--c-surface2': '#E2E7F0',
+      '--c-surface3': '#D4DBE8',
+      '--c-border':   'rgba(0,0,0,0.09)',
+      '--c-border2':  'rgba(0,0,0,0.15)',
+      '--c-text':     '#1A1F2E',
+      '--c-muted':    '#5A6380',
+      '--c-hint':     '#8A94B0',
+      '--c-accent':   '#B50D26',
+      '--c-accent2':  '#C07800',
+      '--c-success':  '#167A3A',
+      '--c-warn':     '#B45309',
+      '--c-danger':   '#C41E1E',
+      '--c-info':     '#1D4ED8',
+      '--c-gold':     '#B45309',
+      '--c-silver':   '#4B5563',
+      '--c-bronze':   '#78350F',
+      '--fifa-red':   '#B50D26',
       '--fifa-blue':  '#003DA5',
-      '--fifa-gold':  '#D97706',
+      '--fifa-gold':  '#C07800',
     }
   },
   worldcup: {
     label: 'World Cup',
     icon: '⚽',
     vars: {
-      '--c-bg':       '#0A1A0E',
-      '--c-surface':  '#0F2314',
-      '--c-surface2': '#162D1B',
-      '--c-surface3': '#1E3A23',
+      '--c-bg':       '#071A09',
+      '--c-surface':  '#0C2410',
+      '--c-surface2': '#122E17',
+      '--c-surface3': '#193D1F',
       '--c-border':   'rgba(255,255,255,0.08)',
-      '--c-border2':  'rgba(255,255,255,0.15)',
-      '--c-text':     '#E8F5E9',
-      '--c-muted':    '#6B9E74',
-      '--c-hint':     '#3D6645',
+      '--c-border2':  'rgba(255,255,255,0.16)',
+      '--c-text':     '#E4F5E7',
+      '--c-muted':    '#5E9467',
+      '--c-hint':     '#365C3C',
       '--c-accent':   '#F0A500',
       '--c-accent2':  '#FFD54F',
-      '--c-success':  '#4CAF50',
-      '--c-warn':     '#FF9800',
-      '--c-danger':   '#EF5350',
-      '--c-info':     '#29B6F6',
+      '--c-success':  '#4ADE80',
+      '--c-warn':     '#FB923C',
+      '--c-danger':   '#F87171',
+      '--c-info':     '#38BDF8',
       '--c-gold':     '#F0A500',
-      '--c-silver':   '#90A4AE',
-      '--c-bronze':   '#8D6E63',
-      '--fifa-red':   '#EF5350',
-      '--fifa-blue':  '#29B6F6',
+      '--c-silver':   '#94A3B8',
+      '--c-bronze':   '#92400E',
+      '--fifa-red':   '#F87171',
+      '--fifa-blue':  '#38BDF8',
       '--fifa-gold':  '#F0A500',
     }
   }
@@ -87,7 +85,7 @@ export const THEMES = {
 export function applyTheme(themeName) {
   const theme = THEMES[themeName] || THEMES.dark
   const root = document.documentElement
-  Object.entries(theme.vars).forEach(([k, v]) => root.style.setProperty(k, v))
+  Object.entries(theme.vars).forEach(([k,v]) => root.style.setProperty(k, v))
   localStorage.setItem('wc26_theme', themeName)
 }
 

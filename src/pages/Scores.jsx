@@ -12,7 +12,7 @@ const PHASE_LABELS = {
 
 export default function Scores() {
   const [matches, setMatches] = useState([])
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState('finished')
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
   const [syncing, setSyncing] = useState(false)
@@ -36,10 +36,13 @@ export default function Scores() {
     } else if (filter === 'live') {
       query = query.eq('status', 'IN_PLAY')
     } else if (filter === 'finished') {
-      query = query.eq('status', 'FINISHED').order('kickoff', {ascending:false}).limit(20)
+      query = query.eq('status', 'FINISHED').order('kickoff', {ascending:false}).limit(30)
     } else if (filter === 'upcoming') {
       const now = new Date().toISOString()
       query = query.eq('status','SCHEDULED').gte('kickoff', now).limit(20)
+    } else if (filter === 'all') {
+      // Show finished first (sorted desc), then upcoming — best for demo mode
+      query = query.order('status', {ascending:true}).order('kickoff', {ascending:false})
     }
 
     const { data } = await query

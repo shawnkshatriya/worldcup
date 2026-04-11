@@ -439,7 +439,7 @@ function DevPanel({ onRefresh }) {
       <div className="card" style={{marginBottom:0}}>
         <div className="card-title">Scoring engine tests</div>
         <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem',lineHeight:1.7}}>
-          Runs {15} unit tests against the scoring logic — exact scores, goal diff, approx bonus,
+          Runs {18} unit tests against the scoring logic — exact scores, goal diff, approx bonus,
           KO rounds, edge cases. All tests run in-browser against the live code.
         </p>
 
