@@ -9,6 +9,7 @@ import Stats from './pages/Stats'
 import AllPredictions from './pages/AllPredictions'
 import Fun from './pages/Fun'
 import Feedback from './pages/Feedback'
+import Support from './pages/Support'
 import Admin from './pages/Admin'
 import Join from './pages/Join'
 import AuthCallback from './pages/AuthCallback'
@@ -28,6 +29,7 @@ function AppShell() {
           <Route path="/predictions/all" element={<AllPredictions />} />
           <Route path="/fun" element={<Fun />} />
           <Route path="/feedback" element={<Feedback />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/admin"       element={<Admin />} />
         </Routes>
       </main>
