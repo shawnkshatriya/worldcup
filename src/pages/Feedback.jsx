@@ -93,7 +93,7 @@ export default function Feedback() {
                   </div>
                   <div>
                     <div style={{fontSize:13,fontWeight:600}}>{player?.name || 'Admin'}</div>
-                    <div style={{fontSize:11,color:'var(--c-muted)'}}>{player?.name ? 'Logged in' : 'Admin'}</div>
+
                   </div>
                   <div className="badge badge-green" style={{marginLeft:'auto'}}>Logged in</div>
                 </div>
@@ -152,7 +152,6 @@ export default function Feedback() {
               </button>
 
               <p style={{fontSize:11,color:'var(--c-hint)',marginTop:12,textAlign:'center'}}>
-                Your feedback is saved and reviewed by the pool admin.
               </p>
             </div>
           )}

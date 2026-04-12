@@ -29,7 +29,7 @@ export default function Scores() {
     let query = supabase.from('matches').select('*').order('match_number')
 
     if (filter === 'finished') {
-      query = query.eq('status','FINISHED').order('match_number', {ascending:false})
+      query = query.eq('status','FINISHED').order('match_number', {ascending:true})
     } else if (filter === 'live') {
       query = query.eq('status','IN_PLAY')
     } else if (filter === 'upcoming') {
@@ -37,7 +37,7 @@ export default function Scores() {
     }
     // 'all' — no extra filter
 
-    const { data } = await query.limit(filter==='all'?200:50)
+    const { data } = await query.limit(200)
     const results = data || []
     setMatches(results)
 

@@ -132,7 +132,7 @@ export default function Leaderboard() {
                       <th style={{textAlign:'right'}}>Diff count</th>
                       <th style={{textAlign:'right'}}>% Exact</th>
                       <th style={{textAlign:'right'}}>Exact count</th>
-                      <th style={{textAlign:'right'}}>Approx</th>
+                      <th style={{textAlign:'right'}}>Approx Bonus</th>
                     </tr>
                   </thead>
                   <tbody>

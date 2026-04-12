@@ -106,7 +106,7 @@ export default function Dashboard() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>Dashboard</h1>
-          <p>FIFA World Cup 2026 — Canada · Mexico · USA</p>
+          <p>June 11 – July 19, 2026 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches</p>
         </div>
       </div>
       <div className="page-body">
@@ -138,9 +138,9 @@ export default function Dashboard() {
                 June 11 – July 19 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <FlagPill emoji="🇺🇸" label="USA" />
-                <FlagPill emoji="🇨🇦" label="Canada" />
-                <FlagPill emoji="🇲🇽" label="Mexico" />
+                <FlagPill emoji="🇺🇸" />
+                <FlagPill emoji="🇨🇦" />
+                <FlagPill emoji="🇲🇽" />
               </div>
             </div>
 

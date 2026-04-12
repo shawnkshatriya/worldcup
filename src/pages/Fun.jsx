@@ -146,8 +146,13 @@ export default function Fun() {
     if (!commentMatch) return []
     const m = matches.find(x=>x.id===commentMatch)
     if (!m) return []
-    const preds = predictions.filter(p=>p.match_id===commentMatch&&p.home_goals!=null)
-      .map(p=>({...p, name:players.find(pl=>pl.id===p.player_id)?.name||'Unknown'}))
+    const preds = predictions
+      .filter(p=>p.match_id===commentMatch&&p.home_goals!=null)
+      .map(p=>({
+        hg: p.home_goals,
+        ag: p.away_goals,
+        name: players.find(pl=>pl.id===p.player_id)?.name||'Unknown'
+      }))
     return generateMatchCommentary(m, preds)
   }, [commentMatch, predictions, matches, players])
 
