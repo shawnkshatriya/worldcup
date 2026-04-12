@@ -55,6 +55,7 @@ function FlagPill({ emoji, label }) {
 
 export default function Dashboard() {
   const { player } = usePlayer()
+  const roomCode = player?.room_code || 'DEFAULT'
   const [stats, setStats]   = useState({ players:0, played:0, total:104 })
   const [leaders, setLeaders] = useState([])
   const [myRank, setMyRank]   = useState(null)
@@ -71,15 +72,15 @@ export default function Dashboard() {
       { count:totalCount },
       { data:w }
     ] = await Promise.all([
-      supabase.from('players').select('*',{count:'exact',head:true}).eq('room_code','DEFAULT'),
+      supabase.from('players').select('*',{count:'exact',head:true}).eq('room_code', roomCode),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
       supabase.from('matches').select('*',{count:'exact',head:true}),
-      supabase.from('scoring_weights').select('*').eq('room_code','DEFAULT').single(),
+      supabase.from('scoring_weights').select('*').eq('room_code', roomCode).single(),
     ])
     setStats({ players:playerCount||0, played:playedCount||0, total:104 })
     setWeights(w)
 
-    const { data:players } = await supabase.from('players').select('id,name').eq('room_code','DEFAULT')
+    const { data:players } = await supabase.from('players').select('id,name').eq('room_code', roomCode)
     const { data:scores }  = await supabase.from('scores').select('player_id,pts_total')
     if (!players) return
 

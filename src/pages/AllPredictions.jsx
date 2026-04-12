@@ -25,6 +25,7 @@ function isTournamentLive() {
 
 export default function AllPredictions() {
   const { player, isAdmin } = usePlayer()
+  const roomCode = player?.room_code || 'DEFAULT'
   const [phase, setPhase] = useState('GROUP_A')
   const [matches, setMatches] = useState([])
   const [players, setPlayers] = useState([])
@@ -41,7 +42,7 @@ export default function AllPredictions() {
     setLoading(true)
     const [{ data: matchData }, { data: playerData }, { data: predData }, { data: scoreData }] = await Promise.all([
       supabase.from('matches').select('*').eq('phase', phase).order('match_number'),
-      supabase.from('players').select('id,name').eq('room_code','DEFAULT').limit(500).order('created_at').limit(500),
+      supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500).order('created_at').limit(500),
       supabase.from('predictions').select('*').limit(5000),
       supabase.from('scores').select('*').limit(5000),
     ])

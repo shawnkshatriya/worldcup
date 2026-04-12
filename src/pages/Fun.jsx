@@ -69,6 +69,7 @@ function BingoCard({ playerId, predictions, matches }) {
 
 export default function Fun() {
   const { player, isAdmin } = usePlayer()
+  const roomCode = player?.room_code || 'DEFAULT'
   const [tab, setTab]           = useState('achievements')
   const [players, setPlayers]   = useState([])
   const [scores, setScores]     = useState([])
@@ -83,7 +84,7 @@ export default function Fun() {
   async function loadAll() {
     setLoading(true)
     const [{ data:pl },{ data:sc },{ data:pr },{ data:ma }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code','DEFAULT').limit(500).order('created_at').limit(500),
+      supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500).order('created_at').limit(500),
       supabase.from('scores').select('*').limit(5000),
       supabase.from('predictions').select('*').limit(5000),
       supabase.from('matches').select('*').order('match_number').limit(200),

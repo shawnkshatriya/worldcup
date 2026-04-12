@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import ThemeToggle from './ThemeToggle'
 import { usePlayer } from '../hooks/usePlayer'
+import { usePlayer } from '../hooks/usePlayer'
 
 const NAV = [
   { to:'/', end:true, label:'Dashboard',
@@ -73,7 +74,14 @@ function SidebarContent({ onNavClick }) {
         </>
       )}
 
-      <div style={{padding:'0 20px 12px'}}><ThemeToggle /></div>
+      <div style={{padding:'0 20px 12px',display:'flex',flexDirection:'column',gap:8}}>
+        <ThemeToggle />
+        {player?.room_code && player.room_code !== 'DEFAULT' && (
+          <div style={{fontSize:11,color:'var(--c-muted)',padding:'4px 8px',background:'var(--c-surface2)',borderRadius:20,textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+            {player.room_code}
+          </div>
+        )}
+      </div>
       <div className="sidebar-footer">
         {loading ? (
           <div style={{fontSize:12,color:'var(--c-hint)'}}>Loading...</div>
@@ -107,6 +115,7 @@ function SidebarContent({ onNavClick }) {
 }
 
 export default function Sidebar() {
+  const { player } = usePlayer()
   const [open, setOpen] = useState(false)
   const location = useLocation()
 

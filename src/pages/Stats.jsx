@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { usePlayer } from '../hooks/usePlayer'
 import { supabase } from '../lib/supabase'
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
@@ -135,6 +136,8 @@ function LineChart({ series, height=80, showLast=true }) {
 }
 
 export default function Stats() {
+  const { player, isAdmin } = usePlayer()
+  const roomCode = player?.room_code || 'DEFAULT'
   const [loading,setLoading] = useState(true)
   const [tab,setTab]         = useState('tournament')
   const [players,setPlayers] = useState([])
@@ -147,7 +150,7 @@ export default function Stats() {
   async function loadAll() {
     setLoading(true)
     const [{data:pl},{data:sc},{data:ma},{data:pr}] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code','DEFAULT').order('created_at'),
+      supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at'),
       supabase.from('scores').select('*'),
       supabase.from('matches').select('*').order('match_number'),
       supabase.from('predictions').select('*'),

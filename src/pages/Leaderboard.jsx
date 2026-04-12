@@ -8,6 +8,7 @@ const MEDAL_COLORS = ['var(--c-gold)','var(--c-silver)','var(--c-bronze)']
 
 export default function Leaderboard() {
   const { player } = usePlayer()
+  const roomCode = player?.room_code || 'DEFAULT'
   const [rows, setRows]             = useState([])
   const [loading, setLoading]       = useState(true)
   const [totalFinished, setFinished] = useState(0)
@@ -17,7 +18,7 @@ export default function Leaderboard() {
   async function load() {
     setLoading(true)
     const [{ data:players }, { data:scores }, { data:predictions }, { count:finished }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code','DEFAULT').limit(500),
+      supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500),
       supabase.from('scores').select('*').limit(5000),
       supabase.from('predictions').select('player_id,match_id,home_goals,away_goals').limit(5000),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
