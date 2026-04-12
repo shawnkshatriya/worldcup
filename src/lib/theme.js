@@ -77,6 +77,7 @@ export const THEMES = {
       '--fifa-gold':  '#FFD700',
     }
   }
+}
 
 export function applyTheme(name) {
   const t = THEMES[name] || THEMES.dark
