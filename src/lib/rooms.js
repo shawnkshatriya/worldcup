@@ -2,10 +2,11 @@
 import { supabase } from './supabase'
 
 export async function getAllRooms() {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('rooms')
-    .select('*, scoring_weights(*), players(count)')
+    .select('*')
     .order('created_at')
+  if (error) console.error('getAllRooms error:', error)
   return data || []
 }
 

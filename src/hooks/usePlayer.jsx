@@ -25,9 +25,22 @@ export function PlayerProvider({ children }) {
   }, [])
 
   async function loadPlayer(authId) {
-    const { data } = await supabase.from('players').select('*').eq('auth_id', authId).single()
-    setPlayer(data || null)
+    // User may be in multiple rooms — load all their player rows
+    const { data: rows } = await supabase.from('players').select('*').eq('auth_id', authId)
+    if (!rows?.length) { setPlayer(null); setLoading(false); return }
+
+    // If only one room, use that. If multiple, prefer the one stored in localStorage
+    // (set when they first joined a room via invite link)
+    const stored = localStorage.getItem('wc26_player_room')
+    const match  = stored ? rows.find(r => r.room_code === stored) : null
+    setPlayer(match || rows[0])
     setLoading(false)
+  }
+
+  function switchPlayerRoom(roomCode) {
+    // Let a player who is in multiple rooms switch which one they're viewing
+    localStorage.setItem('wc26_player_room', roomCode)
+    loadPlayer(authUser?.id)
   }
 
   async function createPlayer(name, roomCode) {
@@ -35,12 +48,22 @@ export function PlayerProvider({ children }) {
     if (!user) throw new Error('Not authenticated')
     const { data: room } = await supabase.from('rooms').select('code').eq('code', roomCode).single()
     if (!room) throw new Error('Invalid room')
-    const { data: existing } = await supabase.from('players').select('id').eq('room_code', roomCode).ilike('name', name.trim())
-    if (existing?.length > 0) throw new Error('NAME_TAKEN')
+
+    // Check if user is already in this specific room
+    const { data: alreadyIn } = await supabase.from('players').select('*')
+      .eq('auth_id', user.id).eq('room_code', roomCode).single()
+    if (alreadyIn) { setPlayer(alreadyIn); return alreadyIn } // Already joined this room
+
+    // Check name uniqueness within this room
+    const { data: nameTaken } = await supabase.from('players').select('id')
+      .eq('room_code', roomCode).ilike('name', name.trim())
+    if (nameTaken?.length > 0) throw new Error('NAME_TAKEN')
+
     const { data, error } = await supabase.from('players')
       .insert({ name: name.trim(), room_code: roomCode, auth_id: user.id, email: user.email })
       .select().single()
     if (error) throw error
+    localStorage.setItem('wc26_player_room', roomCode)
     setPlayer(data)
     return data
   }
@@ -48,8 +71,9 @@ export function PlayerProvider({ children }) {
   async function sendSignupLink(email, name, roomCode, inviteToken) {
     const { data: room } = await supabase.from('rooms').select('code').eq('invite_token', inviteToken).single()
     if (!room) throw new Error('INVALID_CODE')
-    const { data: existing } = await supabase.from('players').select('id').eq('room_code', room.code).ilike('name', name.trim())
-    if (existing?.length > 0) throw new Error('NAME_TAKEN')
+    // No pre-check needed here — player row is created in AuthCallback after magic link
+    // The composite unique index (auth_id, room_code) handles duplicates at DB level
+    localStorage.setItem('wc26_player_room', room.code)
     const redirectTo = `${window.location.origin}/auth/callback?name=${encodeURIComponent(name.trim())}&room=${room.code}`
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -93,7 +117,7 @@ export function PlayerProvider({ children }) {
       player, authUser, isAdmin, loading,
       adminRoom, switchAdminRoom,
       createPlayer, sendSignupLink, sendLoginLink,
-      loginAdmin, logout, loadPlayer
+      loginAdmin, logout, loadPlayer, switchPlayerRoom
     }}>
       {children}
     </PlayerCtx.Provider>

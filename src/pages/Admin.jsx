@@ -68,6 +68,7 @@ export default function Admin() {
       setNewRoomName('')
       await loadRooms()
       switchAdminRoom(room.code)
+      setTab('invite') // Jump to invite tab so they can copy the link
     } catch (e) { alert('Failed to create room: ' + e.message) }
     setCreating(false)
   }

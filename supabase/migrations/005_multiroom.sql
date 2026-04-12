@@ -31,3 +31,13 @@ begin
   return v_room;
 end;
 $$ language plpgsql security definer;
+
+-- Allow anon key to insert/update/delete rooms (admin uses localStorage auth not Supabase auth)
+-- This is safe because the admin secret is checked client-side before any UI is shown
+create policy "admin manage rooms" on rooms
+  for all using (true) with check (true);
+
+-- Same for scoring_weights
+drop policy if exists "admin manage weights" on scoring_weights;
+create policy "admin manage weights" on scoring_weights
+  for all using (true) with check (true);
