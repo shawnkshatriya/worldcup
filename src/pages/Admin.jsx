@@ -274,29 +274,70 @@ export default function Admin() {
 
         {/* ── INVITE ── */}
         {tab==='invite' && roomData && (
-          <div className="card">
-            <div className="card-title">Invite link — {currentRoom?.name}</div>
-            <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>Share this link. Anyone who opens it joins <strong>{currentRoom?.name}</strong>.</p>
-            <div style={{background:'var(--c-surface2)',borderRadius:'var(--radius)',padding:'12px 16px',fontFamily:'monospace',fontSize:12,wordBreak:'break-all',border:'1px solid var(--c-border)',marginBottom:10}}>
-              {inviteUrl}
-            </div>
-            <div style={{display:'flex',gap:8,marginBottom:'1.5rem',flexWrap:'wrap'}}>
-              <button className="btn btn-accent btn-sm" onClick={()=>navigator.clipboard?.writeText(inviteUrl)}>Copy link</button>
-              <button className="btn btn-sm" onClick={handleRegenToken}>Regenerate token</button>
-            </div>
-            <div style={{display:'grid',gap:12,maxWidth:400}}>
-              <div className="form-row">
-                <label>Room name</label>
-                <input type="text" value={roomData.name} onChange={e=>setRoomData(r=>({...r,name:e.target.value}))} />
+          <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+            <div className="card" style={{marginBottom:0}}>
+              <div className="card-title">Invite link — {currentRoom?.name}</div>
+              <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>Share this link. Anyone who opens it joins <strong>{currentRoom?.name}</strong>.</p>
+              <div style={{background:'var(--c-surface2)',borderRadius:'var(--radius)',padding:'12px 16px',fontFamily:'monospace',fontSize:12,wordBreak:'break-all',border:'1px solid var(--c-border)',marginBottom:10}}>
+                {inviteUrl}
               </div>
-              <div className="form-row">
-                <label>Max players</label>
-                <input type="number" min="2" max="500" value={roomData.max_players} onChange={e=>setRoomData(r=>({...r,max_players:parseInt(e.target.value)}))} />
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                <button className="btn btn-accent btn-sm" onClick={()=>{navigator.clipboard?.writeText(inviteUrl);alert('Copied!')}}>Copy link</button>
+                <button className="btn btn-sm" onClick={handleRegenToken}>Regenerate token</button>
               </div>
-              <button className="btn btn-accent" style={{width:'fit-content'}}
-                onClick={()=>updateRoom(adminRoom,{name:roomData.name,max_players:roomData.max_players})}>
-                Save settings
-              </button>
+            </div>
+
+            <div className="card" style={{marginBottom:0}}>
+              <div className="card-title">Custom invite code</div>
+              <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>
+                Set a memorable code your players can type in instead of the full link. Keep it short and easy — e.g. <code>LADS2026</code> or <code>WORKPOOL</code>.
+              </p>
+              <div style={{display:'flex',gap:10,alignItems:'flex-start',flexWrap:'wrap'}}>
+                <div style={{flex:1,minWidth:200}}>
+                  <input type="text"
+                    value={roomData.invite_token}
+                    onChange={e=>setRoomData(r=>({...r,invite_token:e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'')}))}
+                    placeholder="e.g. LADS2026"
+                    maxLength={20}
+                    style={{width:'100%',fontFamily:'monospace',letterSpacing:'0.08em'}}
+                  />
+                  <div style={{fontSize:11,color:'var(--c-muted)',marginTop:4}}>Letters and numbers only, max 20 characters</div>
+                </div>
+                <button className="btn btn-accent" onClick={async()=>{
+                  if (!roomData.invite_token.trim()) return
+                  // Check token not already taken by another room
+                  const {data:existing} = await (await import('../lib/supabase')).supabase
+                    .from('rooms').select('code').eq('invite_token', roomData.invite_token).neq('code', adminRoom)
+                  if (existing?.length) { alert('That code is already taken by another room. Pick a different one.'); return }
+                  await updateRoom(adminRoom, {invite_token: roomData.invite_token})
+                  setRoomData(r=>({...r,invite_token:roomData.invite_token}))
+                  alert('Code saved! New invite link: ' + window.location.origin + '/join?code=' + roomData.invite_token)
+                }}>
+                  Save code
+                </button>
+              </div>
+            </div>
+
+            <div className="card" style={{marginBottom:0}}>
+              <div className="card-title">Room settings</div>
+              <div style={{display:'grid',gap:12,maxWidth:400}}>
+                <div className="form-row">
+                  <label>Room name</label>
+                  <input type="text" value={roomData.name} onChange={e=>setRoomData(r=>({...r,name:e.target.value}))} />
+                </div>
+                <div className="form-row">
+                  <label>Max players</label>
+                  <input type="number" min="2" max="500" value={roomData.max_players} onChange={e=>setRoomData(r=>({...r,max_players:parseInt(e.target.value)}))} />
+                </div>
+                <button className="btn btn-accent" style={{width:'fit-content'}}
+                  onClick={async()=>{
+                    await updateRoom(adminRoom,{name:roomData.name,max_players:roomData.max_players})
+                    await loadRooms()
+                    alert('Saved!')
+                  }}>
+                  Save settings
+                </button>
+              </div>
             </div>
           </div>
         )}
