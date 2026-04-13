@@ -23,6 +23,7 @@ export const THEMES = {
       '--fifa-red':   '#C8102E',
       '--fifa-blue':  '#003DA5',
       '--fifa-gold':  '#F0A500',
+      '--c-accent-text': '#ffffff',
     }
   },
   light: {
@@ -49,6 +50,7 @@ export const THEMES = {
       '--fifa-red':   '#B50D26',
       '--fifa-blue':  '#003DA5',
       '--fifa-gold':  '#C07800',
+      '--c-accent-text': '#ffffff',
     }
   },
   worldcup: {
@@ -75,6 +77,7 @@ export const THEMES = {
       '--fifa-red':   '#FF6B6B',
       '--fifa-blue':  '#87CEEB',
       '--fifa-gold':  '#FFD700',
+      '--c-accent-text': '#1a1a1a',
     }
   }
 }

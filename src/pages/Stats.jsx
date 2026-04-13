@@ -9,7 +9,7 @@ function HBar({ label, value, max, color='var(--c-accent)', suffix='', note='' }
   const pct = max > 0 ? Math.max((value/max)*100, value>0?2:0) : 0
   return (
     <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-      <div style={{width:120,fontSize:12,color:'var(--c-muted)',textAlign:'right',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</div>
+      <div style={{minWidth:80,maxWidth:120,fontSize:12,color:'var(--c-muted)',textAlign:'right',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</div>
       <div style={{flex:1,height:20,background:'var(--c-surface2)',borderRadius:4,overflow:'hidden',position:'relative'}}>
         <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:4,transition:'width 0.6s'}}/>
       </div>
@@ -254,9 +254,7 @@ export default function Stats() {
           <div className="metric"><div className="metric-label">Matches played</div><div className="metric-value">{finished.length}<span style={{fontSize:16,color:'var(--c-muted)',fontWeight:400}}>/104</span></div></div>
           <div className="metric"><div className="metric-label">Total goals</div><div className="metric-value" style={{color:'var(--c-accent)'}}>{totalGoals}</div></div>
           <div className="metric"><div className="metric-label">Avg goals/match</div><div className="metric-value">{avgGoals}</div></div>
-          <div className="metric"><div className="metric-label">Pool accuracy</div><div className="metric-value" style={{color:'var(--c-success)'}}>{poolAccuracy}<span style={{fontSize:16,fontWeight:400}}>%</span></div></div>
           {topScorer && <div className="metric"><div className="metric-label">Top scoring nation</div><div className="metric-value" style={{fontSize:20}}>{topScorer.name}</div><div style={{fontSize:11,color:'var(--c-muted)'}}>{topScorer.goals} goals</div></div>}
-          {leader && <div className="metric"><div className="metric-label">Pool leader</div><div className="metric-value" style={{fontSize:20}}>{leader.name}</div><div style={{fontSize:11,color:'var(--c-muted)'}}>{leader.total} pts</div></div>}
         </div>
 
         <div className="tabs">
@@ -269,7 +267,7 @@ export default function Stats() {
 
         {/* TOURNAMENT */}
         {tab==='tournament' && (
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:'1.25rem'}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))',gap:'1.25rem'}}>
 
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Goals per match distribution</div>
@@ -427,7 +425,7 @@ export default function Stats() {
 
         {/* CHARTS */}
         {tab==='charts' && (
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:'1.25rem'}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))',gap:'1.25rem'}}>
 
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Pool accuracy over time</div>

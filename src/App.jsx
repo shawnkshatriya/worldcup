@@ -8,7 +8,6 @@ import Scores from './pages/Scores'
 import Stats from './pages/Stats'
 import AllPredictions from './pages/AllPredictions'
 import Fun from './pages/Fun'
-import Feedback from './pages/Feedback'
 import Support from './pages/Support'
 import Install from './pages/Install'
 import WinnerPick from './pages/WinnerPick'
@@ -32,7 +31,7 @@ function AppShell() {
           <Route path="/stats"       element={<Stats />} />
           <Route path="/predictions/all" element={<AllPredictions />} />
           <Route path="/fun" element={<Fun />} />
-          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/feedback" element={<Navigate to="/support" replace />} />
           <Route path="/support" element={<Support />} />
           <Route path="/install" element={<Install />} />
           <Route path="/winner" element={<WinnerPick />} />

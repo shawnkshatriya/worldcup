@@ -106,7 +106,7 @@ export default function Dashboard() {
     <div>
       <div className="page-header">
         <div className="page-header-inner">
-          <h1>Dashboard</h1>
+          <h1>Home</h1>
           <p>June 11 – July 19, 2026 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches</p>
         </div>
       </div>

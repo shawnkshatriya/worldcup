@@ -217,7 +217,7 @@ input:focus, select:focus {
 }
 
 .page-header-inner {
-  padding: 1.5rem 0 1rem;
+  padding: 1rem 0 0.75rem;
   position: relative;
   z-index: 1;
 }
@@ -243,7 +243,7 @@ input:focus, select:focus {
   font-size: 13px;
 }
 
-.page-body { padding: 1.75rem 2rem; }
+.page-body { padding: 1.25rem 2rem; }
 
 /* ═══════════════════════════════════════
    CARDS
@@ -746,6 +746,8 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
 .sidebar-mobile   { display: none; }
 
 @media (max-width: 768px) {
+  .page-header h1 { font-size: 24px; }
+  .page-header p { font-size: 12px; }
   /* Hide desktop sidebar */
   .sidebar-desktop { display: none; }
 
@@ -776,7 +778,7 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
 
   .page-body { padding: 1rem; }
   .page-header { padding: 0 1rem; }
-  .page-header-inner { padding: 1.5rem 0 0.75rem; }
+  .page-header-inner { padding: 0.75rem 0 0.5rem; }
   .metrics { grid-template-columns: 1fr 1fr; }
   .match-row { gap: 6px; font-size: 12px; }
   .wc-banner-title { font-size: 26px; }
