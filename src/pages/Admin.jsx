@@ -130,6 +130,14 @@ export default function Admin() {
     }
   }
 
+  async function toggleRoomAdmin(id) {
+    const p = players.find(x => x.id === id)
+    const newVal = !p.is_room_admin
+    const { error } = await supabase.from('players').update({ is_room_admin: newVal }).eq('id', id)
+    if (error) { alert('Failed: ' + error.message); return }
+    setPlayers(ps => ps.map(x => x.id === id ? { ...x, is_room_admin: newVal } : x))
+  }
+
   async function purgeAllPlayers() {
     if (!players.length) { alert('No players to purge.'); return }
     const input = prompt(`Type DELETE to permanently remove all ${players.length} players in this room:`)
@@ -399,7 +407,18 @@ export default function Admin() {
                         {' '}{new Date(p.created_at).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
                       </td>
                       <td><PlayerPredCount playerId={p.id}/></td>
-                      <td style={{textAlign:'right'}}>
+                      <td>
+                        {p.is_room_admin
+                          ? <span className="badge badge-amber">Room admin</span>
+                          : <span style={{fontSize:11,color:'var(--c-hint)'}}>Player</span>
+                        }
+                      </td>
+                      <td style={{textAlign:'right',display:'flex',gap:6,justifyContent:'flex-end',alignItems:'center'}}>
+                        <button className="btn btn-sm" onClick={()=>toggleRoomAdmin(p.id)}
+                          title={p.is_room_admin?'Remove room admin':'Make room admin'}
+                          style={{fontSize:11,color:p.is_room_admin?'var(--c-warn)':'var(--c-muted)'}}>
+                          {p.is_room_admin ? 'Demote' : 'Make admin'}
+                        </button>
                         <button className="btn btn-danger btn-sm" onClick={()=>removePlayer(p.id)}
                           disabled={p._removing} style={p._removing?{opacity:0.5}:{}}>
                           {p._removing?'Removing...':'Remove'}

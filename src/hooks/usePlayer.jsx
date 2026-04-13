@@ -8,7 +8,7 @@ export function PlayerProvider({ children }) {
   const [authUser, setAuthUser] = useState(null)
   const [isAdmin,  setIsAdmin]  = useState(() => localStorage.getItem('wc26_admin') === '1')
   const [loading,  setLoading]  = useState(true)
-  // Active room for admin — which room they're currently managing
+  // Active room for master admin — which room they're currently managing
   const [adminRoom, setAdminRoom] = useState(() => localStorage.getItem('wc26_admin_room') || 'DEFAULT')
 
   useEffect(() => {
@@ -116,6 +116,7 @@ export function PlayerProvider({ children }) {
     <PlayerCtx.Provider value={{
       player, authUser, isAdmin, loading,
       adminRoom, switchAdminRoom,
+      isRoomAdmin: player?.is_room_admin === true,
       createPlayer, sendSignupLink, sendLoginLink,
       loginAdmin, logout, loadPlayer, switchPlayerRoom
     }}>

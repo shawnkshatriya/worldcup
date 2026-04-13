@@ -12,6 +12,8 @@ import Feedback from './pages/Feedback'
 import Support from './pages/Support'
 import Install from './pages/Install'
 import WinnerPick from './pages/WinnerPick'
+import RoomAdmin from './pages/RoomAdmin'
+import Guide from './pages/Guide'
 import Admin from './pages/Admin'
 import Join from './pages/Join'
 import AuthCallback from './pages/AuthCallback'
@@ -34,6 +36,8 @@ function AppShell() {
           <Route path="/support" element={<Support />} />
           <Route path="/install" element={<Install />} />
           <Route path="/winner" element={<WinnerPick />} />
+          <Route path="/room-admin" element={<RoomAdmin />} />
+          <Route path="/guide" element={<Guide />} />
           <Route path="/admin"       element={<Admin />} />
         </Routes>
       </main>
