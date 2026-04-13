@@ -10,6 +10,8 @@ import AllPredictions from './pages/AllPredictions'
 import Fun from './pages/Fun'
 import Feedback from './pages/Feedback'
 import Support from './pages/Support'
+import Install from './pages/Install'
+import WinnerPick from './pages/WinnerPick'
 import Admin from './pages/Admin'
 import Join from './pages/Join'
 import AuthCallback from './pages/AuthCallback'
@@ -30,6 +32,8 @@ function AppShell() {
           <Route path="/fun" element={<Fun />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/install" element={<Install />} />
+          <Route path="/winner" element={<WinnerPick />} />
           <Route path="/admin"       element={<Admin />} />
         </Routes>
       </main>
