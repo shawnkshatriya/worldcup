@@ -431,7 +431,7 @@ export default function Stats() {
             </div>
 
             <div className="card" style={{marginBottom:0,overflow:'visible'}}>
-              <div className="card-title">Points race — top 3</div>
+              <div className="card-title">Points race - top 3</div>
               <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:12}}>Cumulative points per match for the top 3 players</p>
               <LineChart series={ptsOverTime} height={100} showLast={true}/>
               <div style={{display:'flex',gap:12,marginTop:8,flexWrap:'wrap'}}>
@@ -454,7 +454,7 @@ export default function Stats() {
                   {label:'Approx bonus',  value:scores.reduce((a,s)=>a+(s.pts_approx||0),0),color:'var(--c-success)'},
                 ].filter(s=>s.value>0)} size={140}/>
               }
-              <p style={{fontSize:11,color:'var(--c-muted)',marginTop:10}}>Correct results should outnumber exact scores — every exact score also counts as a correct result, so the donut shows where points actually came from.</p>
+              <p style={{fontSize:11,color:'var(--c-muted)',marginTop:10}}>Correct results should outnumber exact scores - every exact score also counts as a correct result, so the donut shows where points actually came from.</p>
             </div>
 
           </div>
@@ -472,10 +472,10 @@ export default function Stats() {
               :gap===0&&second?`${leader.name} and ${second.name} are level at the top!`
               :`${leader.name} leads with ${leader.total} pts, ${gap} ahead`},
             last&&last.id!==leader?.id&&leader?.total>0&&{icon:'📉',text:`${last.name} is last - ${leader.total-last.total} pts off the pace.`},
-            mostExact?.exact>=3&&{icon:'💎',text:`${mostExact.name} is a psychic — ${mostExact.exact} exact scores.`},
-            mostCorr?.correct>0&&{icon:'🎯',text:`${mostCorr.name} picks winners best — ${mostCorr.correct} correct results`},
+            mostExact?.exact>=3&&{icon:'💎',text:`${mostExact.name} is a psychic - ${mostExact.exact} exact scores.`},
+            mostCorr?.correct>0&&{icon:'🎯',text:`${mostCorr.name} picks winners best - ${mostCorr.correct} correct results`},
             avgPts>0&&{icon:'📊',text:`Pool average is ${avgPts} pts.`},
-            totalGoals>0&&{icon:'⚽',text:`${totalGoals} goals in ${finished.length} matches \u2014 ${avgGoals} per game`},
+            totalGoals>0&&{icon:'⚽',text:`${totalGoals} goals in ${finished.length} matches - ${avgGoals} per game`},
             topScorer&&{icon:'🔥',text:`${topScorer.name} leads the tournament with ${topScorer.goals} goals`},
           ].filter(Boolean)
           return (
