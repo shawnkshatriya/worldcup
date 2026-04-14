@@ -326,9 +326,6 @@ export default function Stats() {
                 ))
               }
             </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
@@ -463,5 +460,42 @@ export default function Stats() {
               }
               <p style={{fontSize:11,color:'var(--c-muted)',marginTop:10}}>Correct results should outnumber exact scores — every exact score also counts as a correct result, so the donut shows where points actually came from.</p>
             </div>
+
+          </div>
+        )}
+
+        {/* FUN FACTS */}
+        {tab==='funfacts' && (()=>{
+          const second=sorted[1], last=sorted[sorted.length-1]
+          const mostExact=[...playerStats].sort((a,b)=>b.exact-a.exact)[0]
+          const mostCorr=[...playerStats].sort((a,b)=>b.correct-a.correct)[0]
+          const gap=leader&&second?leader.total-second.total:0
+          const avgPts=playerStats.length?Math.round(playerStats.reduce((a,p)=>a+p.total,0)/playerStats.length):0
+          const facts=[
+            leader?.total>0&&{icon:'👑',text:gap>5?`${leader.name} is running away — ${gap} pts clear of ${second?.name||'second'}`
+              :gap===0&&second?`${leader.name} and ${second.name} are level at the top!`
+              :`${leader.name} leads with ${leader.total} pts, just ${gap} ahead`},
+            last&&last.id!==leader?.id&&leader?.total>0&&{icon:'📉',text:`${last.name} is last — ${leader.total-last.total} pts off the pace.`},
+            mostExact?.exact>=3&&{icon:'💎',text:`${mostExact.name} is a psychic — ${mostExact.exact} exact scores.`},
+            mostCorr?.correct>0&&{icon:'🎯',text:`${mostCorr.name} picks winners best — ${mostCorr.correct} correct results`},
+            avgPts>0&&{icon:'📊',text:`Pool average is ${avgPts} pts.`},
+            totalGoals>0&&{icon:'⚽',text:`${totalGoals} goals in ${finished.length} matches — ${avgGoals} per game`},
+            topScorer&&{icon:'🔥',text:`${topScorer.name} lead the tournament scoring with ${topScorer.goals} goals`},
+          ].filter(Boolean)
+          return (
+            <div className="card" style={{marginBottom:0}}>
+              <div className="card-title">Fun facts</div>
+              {!facts.length?<p style={{color:'var(--c-muted)',fontSize:13}}>Seed demo data to unlock facts.</p>
+                :facts.map((f,i)=>(
+                  <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
+                    <span style={{fontSize:18,flexShrink:0}}>{f.icon}</span>
+                    <span style={{color:'var(--c-muted)',lineHeight:1.6}}>{f.text}</span>
+                  </div>
+                ))}
+            </div>
+          )
+        })()}
+      </div>
+    </div>
   )
 }
