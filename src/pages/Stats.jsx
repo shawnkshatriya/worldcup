@@ -11,7 +11,7 @@ function HBar({ label, value, max, color='var(--c-accent)', suffix='', note='' }
     <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
       <div style={{minWidth:80,maxWidth:120,fontSize:12,color:'var(--c-muted)',textAlign:'right',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</div>
       <div style={{flex:1,height:20,background:'var(--c-surface2)',borderRadius:4,overflow:'hidden',position:'relative'}}>
-        <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:4,transition:'width 0.6s'}}/>
+        <div style={{height:'100%',width:pct+'%',background:color,borderRadius:4,transition:'width 0.6s'}}/>
       </div>
       <div style={{width:55,fontSize:12,fontWeight:700,color:'var(--c-text)',textAlign:'right',flexShrink:0}}>{value}{suffix}</div>
       {note && <div style={{fontSize:11,color:'var(--c-muted)',flexShrink:0}}>{note}</div>}
@@ -31,7 +31,8 @@ function Donut({ slices, size=130 }) {
     const xi1=cx+inner*Math.cos(cum-angle),yi1=cy+inner*Math.sin(cum-angle)
     const xi2=cx+inner*Math.cos(cum),yi2=cy+inner*Math.sin(cum)
     const large=angle>Math.PI?1:0
-    return {...s,d:`M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${inner} ${inner} 0 ${large} 0 ${xi1} ${yi1} Z`,pct:Math.round(s.value/total*100)}
+    const d = ['M',x1,y1,'A',r,r,0,large,1,x2,y2,'L',xi2,yi2,'A',inner,inner,0,large,0,xi1,yi1,'Z'].join(' ')
+    return {...s, d, pct:Math.round(s.value/total*100)}
   })
   return (
     <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
@@ -109,7 +110,7 @@ function LineChart({ series, height=80, showLast=true }) {
 
         {series.map((s,si)=>{
           const pts = s.points
-          const pathD = pts.map((p,i)=>`${i===0?'M':'L'} ${toX(i).toFixed(1)} ${toY(p.y).toFixed(1)}`).join(' ')
+          const pathD = pts.map((p,i)=>[(i===0?'M':'L'), toX(i).toFixed(1), toY(p.y).toFixed(1)].join(' ')).join(' ')
           const lastPt = pts[pts.length-1]
           const lx = toX(pts.length-1), ly = toY(lastPt.y)
           return (
@@ -218,7 +219,7 @@ export default function Stats() {
       const ids=new Set(finished.slice(0,i).map(m=>m.id))
       const rel=scores.filter(s=>ids.has(s.match_id))
       const corr=rel.filter(s=>s.pts_result>0||s.pts_exact>0).length
-      pts.push({label:`M${i}`,y:rel.length>0?Math.round(corr/rel.length*100):0})
+      pts.push({label:'M'+i, y:rel.length>0?Math.round(corr/rel.length*100):0})
     }
     return pts
   },[finished,scores])
@@ -308,7 +309,7 @@ export default function Stats() {
                 Object.entries(groupGoals).sort((a,b)=>b[1]-a[1]).map(([g,v])=>(
                   <HBar key={g} label={`Group ${g}`} value={v} max={Math.max(...Object.values(groupGoals))}
                     color="var(--c-accent2)" suffix=" gls"
-                    note={groupCounts[g]?`${(v/groupCounts[g]).toFixed(1)}/m`:''}/>
+                    note={groupCounts[g]?String((v/groupCounts[g]).toFixed(1))+'/m':''}/>
                 ))
               }
             </div>
@@ -349,7 +350,7 @@ export default function Stats() {
                       <span style={{fontSize:13,fontWeight:700,fontFamily:'var(--font-display)',marginLeft:8}}>{p.total} pts</span>
                     </div>
                     <div style={{height:8,background:'var(--c-surface2)',borderRadius:4,overflow:'hidden'}}>
-                      <div style={{height:'100%',width:`${maxPts>0?Math.max((p.total/maxPts)*100,p.total>0?2:0):0}%`,
+                      <div style={{height:'100%',width:(maxPts>0?Math.max((p.total/maxPts)*100,p.total>0?2:0):0)+'%',
                         background:i===0?'var(--c-gold)':i===1?'var(--c-silver)':i===2?'var(--c-bronze)':p.color,
                         borderRadius:4,transition:'width 0.6s'}}/>
                     </div>
