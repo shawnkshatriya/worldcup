@@ -113,7 +113,8 @@ export default function Guide() {
         {/* ── SCORING ── */}
         <Section title="How scoring works">
           <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem',lineHeight:1.7}}>
-            Points are awarded after each match result is entered. There are four ways to score:
+            Points are awarded after each match result is entered. All bonuses stack — earn every one you qualify for.
+            The exact point values are set by your pool admin and may differ from the defaults shown here. Check the Dashboard scoring rules for your room's actual values.
           </p>
           {[
             { pts:'4 pts', label:'Exact score', desc:'You predicted the exact scoreline — this is the top tier. E.g. you said 2-1 and the result was 2-1.' },

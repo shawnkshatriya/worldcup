@@ -30,11 +30,11 @@ export function calcMatchPoints(prediction, result, weights, phase) {
   const rh = Number(result.home_goals)
   const ra = Number(result.away_goals)
 
-  const predResult = Math.sign(ph - pa)  // -1 | 0 | 1
+  const predResult = Math.sign(ph - pa)
   const realResult = Math.sign(rh - ra)
   const predDiff   = ph - pa
   const realDiff   = rh - ra
-  const isExact    = ph === rh && pa === ra
+  const isExact         = ph === rh && pa === ra
   const isCorrectResult = predResult === realResult
   const isCorrectDiff   = isCorrectResult && predDiff === realDiff
 
@@ -43,25 +43,19 @@ export function calcMatchPoints(prediction, result, weights, phase) {
     ? { result: weights.ko_result, diff: weights.ko_diff, exact: weights.ko_exact, approx: 0 }
     : { result: weights.group_result, diff: weights.group_diff, exact: weights.group_exact, approx: weights.group_approx }
 
+  // All points STACK — earn every bonus you qualify for
   let pts_result = 0, pts_diff = 0, pts_exact = 0, pts_approx = 0
 
-  if (isExact) {
-    // Tier 1: Exact score — top prize, nothing else stacks
-    pts_exact = w.exact
-
-  } else if (isCorrectDiff) {
-    // Tier 2: Correct result + correct goal diff (not exact)
-    pts_result = w.result
-    pts_diff   = w.diff
-    // No approx — you already nailed the margin
-
-  } else {
-    // Tier 3: Correct result only, or wrong result
-    if (isCorrectResult) pts_result = w.result
-
-    // Approx bonus: only group stage, only high-scoring, only within 1 each,
-    // and only when you did NOT get the diff right (avoid double-rewarding)
-    if (!isKO && w.approx > 0 && !isCorrectDiff) {
+  if (isCorrectResult) {
+    pts_result = w.result          // Always award result pts if correct
+    if (isCorrectDiff) {
+      pts_diff = w.diff            // Stack diff pts on top
+    }
+    if (isExact) {
+      pts_exact = w.exact          // Stack exact pts on top of result + diff
+    }
+    // Approx bonus: group stage, high-scoring, within 1 each — stacks with result
+    if (!isKO && w.approx > 0 && !isExact) {
       const totalReal = rh + ra
       if (totalReal >= 4 && Math.abs(ph - rh) <= 1 && Math.abs(pa - ra) <= 1) {
         pts_approx = w.approx

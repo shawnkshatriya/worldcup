@@ -138,6 +138,7 @@ export default function Admin() {
     const { error } = await supabase.from('players').update({ is_room_admin: newVal }).eq('id', id)
     if (error) { alert('Failed: ' + error.message); return }
     setPlayers(ps => ps.map(x => x.id === id ? { ...x, is_room_admin: newVal } : x))
+    if (newVal) alert(`${p.name} is now a room admin. They need to refresh or re-login to see their Room Admin panel.`)
   }
 
   async function purgeAllPlayers() {
@@ -372,7 +373,7 @@ export default function Admin() {
 
         {/* ── PLAYERS ── */}
         {tab==='players' && (
-          <div className="card" style={{padding:0,overflow:'hidden'}}>
+          <div className="card" style={{padding:0,overflow:'auto',maxHeight:'70vh'}}>
             <div style={{padding:'1.25rem',borderBottom:'1px solid var(--c-border)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
               <div>
                 <div className="card-title" style={{marginBottom:2}}>Players — {currentRoom?.name} ({players.length})</div>

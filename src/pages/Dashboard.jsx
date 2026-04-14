@@ -4,19 +4,22 @@ import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
 
 const WEIGHT_LABELS = {
-  group_result: 'Correct W/D/L',
-  group_diff:   'Correct goal diff',
-  group_exact:  'Exact score',
-  group_approx: 'Approx bonus',
-  ko_team:      'KO team qualified',
-  ko_result:    'KO correct result',
-  ko_diff:      'KO goal difference',
-  ko_exact:     'KO exact score',
+  group_result:   'Group — correct W/D/L',
+  group_diff:     'Group — correct goal diff (stacks)',
+  group_exact:    'Group — exact score (stacks)',
+  group_approx:   'Group — approx bonus (stacks)',
+  ko_result:      'KO — correct result',
+  ko_diff:        'KO — correct goal diff (stacks)',
+  ko_exact:       'KO — exact score (stacks)',
+  ko_team:        'KO — team qualified',
+  winner_bonus:   'Tournament winner pick',
+  finalist_bonus: 'Finalist bonus',
 }
 const WEIGHT_COLORS = {
   group_result:'#C8102E', group_diff:'#003DA5', group_exact:'#F0A500',
   group_approx:'#22C55E', ko_team:'#a855f7',   ko_result:'#C8102E',
   ko_diff:'#003DA5',      ko_exact:'#F0A500',
+  winner_bonus:'#F0A500', finalist_bonus:'#22C55E',
 }
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899']
 
@@ -226,6 +229,7 @@ export default function Dashboard() {
           {/* Scoring rules */}
           <div className="card" style={{marginBottom:0}}>
             <div className="card-title">Scoring rules</div>
+            <p style={{fontSize:11,color:'var(--c-muted)',marginBottom:'0.75rem'}}>All points stack per match. Admin can adjust values per room.</p>
             {weights ? Object.entries(WEIGHT_LABELS).map(([k,v]) => (
               <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--c-border)',fontSize:13}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>

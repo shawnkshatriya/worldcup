@@ -93,7 +93,7 @@ function LineChart({ series, height=80, showLast=true }) {
   function toY(v) { return H - pad - ((v-minV)/range)*(H-pad*2) }
 
   return (
-    <div style={{width:'100%',overflowX:'auto'}}>
+    <div style={{width:'100%',overflowX:'auto',paddingRight:32}}>
       <svg width="100%" viewBox={`0 0 ${W} ${H+20}`} style={{overflow:'visible',display:'block'}}>
         {/* Y axis labels */}
         {[0,50,100].map(v=>{
@@ -248,10 +248,6 @@ export default function Stats() {
         </div>
       </div>
       <div className="page-body">
-
-        {/* Summary banner */}
-        <div className="metrics" style={{marginBottom:'1.25rem'}}>
-          <div className="metric"><div className="metric-label">Matches played</div><div className="metric-value">{finished.length}<span style={{fontSize:16,color:'var(--c-muted)',fontWeight:400}}>/104</span></div></div>
           <div className="metric"><div className="metric-label">Total goals</div><div className="metric-value" style={{color:'var(--c-accent)'}}>{totalGoals}</div></div>
           <div className="metric"><div className="metric-label">Avg goals/match</div><div className="metric-value">{avgGoals}</div></div>
           {topScorer && <div className="metric"><div className="metric-label">Top scoring nation</div><div className="metric-value" style={{fontSize:20}}>{topScorer.name}</div><div style={{fontSize:11,color:'var(--c-muted)'}}>{topScorer.goals} goals</div></div>}
@@ -279,8 +275,8 @@ export default function Stats() {
                   {label:'Avg/match',  value:avgGoals},
                   {label:'High-scoring (4+)',value:highScoring},
                   {label:'Scoreless (0-0)',   value:scoreless},
-                  {label:'Pool predictions',  value:predictions.filter(p=>p.home_goals!=null).length},
-                ].map(s=>(
+                  topScorer && {label:'Top scoring nation', value:`${topScorer.name} (${topScorer.goals} gls)`},
+                ].filter(Boolean).map(s=>(
                   <div key={s.label} className="metric" style={{marginBottom:0}}>
                     <div className="metric-label">{s.label}</div>
                     <div className="metric-value" style={{fontSize:28}}>{s.value}</div>
@@ -428,13 +424,13 @@ export default function Stats() {
         {tab==='charts' && (
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))',gap:'1.25rem'}}>
 
-            <div className="card" style={{marginBottom:0}}>
+            <div className="card" style={{marginBottom:0,overflow:'visible'}}>
               <div className="card-title">Pool accuracy over time</div>
               <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:12}}>% of predictions that were correct across all players, match by match</p>
               <LineChart series={[{label:'Accuracy',color:'var(--c-success)',points:accuracyOverTime}]} showLast={true}/>
             </div>
 
-            <div className="card" style={{marginBottom:0}}>
+            <div className="card" style={{marginBottom:0,overflow:'visible'}}>
               <div className="card-title">Points race — top 3</div>
               <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:12}}>Cumulative points per match for the top 3 players</p>
               <LineChart series={ptsOverTime} height={100} showLast={true}/>

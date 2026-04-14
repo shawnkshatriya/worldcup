@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
 
-const TOURNAMENT_START = new Date('2026-06-11T22:00:00Z')
+const TOURNAMENT_START = new Date('2026-06-11T22:00:00Z')  // Group stage deadline
+const KO_DEADLINE      = new Date('2026-07-04T18:00:00Z')  // KO stage deadline (first R32 kickoff)
 const TEAMS = [
   {name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},{name:'Belgium',flag:'🇧🇪'},
   {name:'Brazil',flag:'🇧🇷'},{name:'Canada',flag:'🇨🇦'},{name:'Chile',flag:'🇨🇱'},
@@ -115,11 +116,18 @@ const PHASE_LABELS = {
   THIRD_PLACE:'3rd place', FINAL:'Final',
 }
 
-const TOURNEY_LOCKED = new Date() >= TOURNAMENT_START
-function isLocked(kickoff) {
-  if (TOURNEY_LOCKED) return true
-  if (!kickoff) return false
-  return new Date(kickoff) < new Date()
+const KO_PHASES = ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']
+function isLocked(kickoff, phase) {
+  const now = new Date()
+  if (!phase || !KO_PHASES.includes(phase)) {
+    // Group stage: hard lock at June 11
+    return now >= TOURNAMENT_START
+  } else {
+    // KO stage: locked during group stage, opens after groups, hard locks at KO deadline
+    const groupsRunning = now >= TOURNAMENT_START && now < KO_DEADLINE
+    if (groupsRunning) return true   // groups still playing — KO predictions locked
+    return now >= KO_DEADLINE        // hard lock once KO deadline passes
+  }
 }
 
 export default function Predictions() {
@@ -203,7 +211,7 @@ export default function Predictions() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>My predictions</h1>
-          <p>Predictions lock at tournament kickoff on June 11. Enter your score for every match.</p>
+          <p>Group predictions lock June 11. KO predictions open after group stage and lock July 4.</p>
         </div>
       </div>
       <div className="page-body">
@@ -239,7 +247,7 @@ export default function Predictions() {
 
           {matches.map(m => {
             const pred = preds[m.id] || {}
-            const locked = isLocked(m.kickoff)
+            const locked = isLocked(m.kickoff, m.phase)
             const isSaving = saving[m.id]
             const isSaved = saved[m.id]
             const hasBothGoals = pred.home_goals != null && pred.away_goals != null

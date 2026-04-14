@@ -1,4 +1,4 @@
-const CACHE = 'wc26-v1'
+const CACHE = 'wc26-v3'
 const PRECACHE = ['/', '/index.html']
 
 self.addEventListener('install', e => {
