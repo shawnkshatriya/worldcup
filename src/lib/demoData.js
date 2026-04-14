@@ -212,7 +212,7 @@ export async function seedDemoData(onProgress) {
   log(`  Saved ${allScores.length} score records`)
   log('')
   log('v Done! All 104 matches, 8 players, predictions + scores loaded.')
-  log('  -> Check Dashboard, Leaderboard, Stats, Fun Zone, All Predictions, Live Scores')
+  log('  &rarr; Check Dashboard, Leaderboard, Stats, Fun Zone, All Predictions, Live Scores')
 
   return {
     players:     insertedPlayers.length,

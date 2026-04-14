@@ -136,6 +136,42 @@ function LineChart({ series, height=80, showLast=true }) {
   )
 }
 
+
+function FunFacts({ sorted, playerStats, leader, totalGoals, finished, avgGoals, topScorer }) {
+  const second = sorted[1]
+  const last = sorted[sorted.length - 1]
+  const mostExact = [...playerStats].sort((a, b) => b.exact - a.exact)[0]
+  const mostCorr = [...playerStats].sort((a, b) => b.correct - a.correct)[0]
+  const gap = leader && second ? leader.total - second.total : 0
+  const totalPts = playerStats.reduce((a, p) => a + p.total, 0)
+  const avgPts = playerStats.length ? Math.round(totalPts / playerStats.length) : 0
+
+  const facts = [
+    leader && leader.total > 0 && { icon: '\u{1F451}', text: gap > 5 ? leader.name + ' is running away - ' + gap + ' pts clear of ' + (second ? second.name : 'second') : gap === 0 && second ? leader.name + ' and ' + second.name + ' are level at the top!' : leader.name + ' leads with ' + leader.total + ' pts, ' + gap + ' ahead' },
+    last && last.id !== leader?.id && leader && leader.total > 0 && { icon: '\u{1F4C9}', text: last.name + ' is last - ' + (leader.total - last.total) + ' pts off the pace.' },
+    mostExact && mostExact.exact >= 3 && { icon: '\u{1F48E}', text: mostExact.name + ' is a psychic - ' + mostExact.exact + ' exact scores.' },
+    mostCorr && mostCorr.correct > 0 && { icon: '\u{1F3AF}', text: mostCorr.name + ' picks winners best - ' + mostCorr.correct + ' correct results' },
+    avgPts > 0 && { icon: '\u{1F4CA}', text: 'Pool average is ' + avgPts + ' pts.' },
+    totalGoals > 0 && { icon: '\u{26BD}', text: totalGoals + ' goals in ' + finished.length + ' matches - ' + avgGoals + ' per game' },
+    topScorer && { icon: '\u{1F525}', text: topScorer.name + ' leads with ' + topScorer.goals + ' goals' },
+  ].filter(Boolean)
+
+  return (
+    <div className="card" style={{marginBottom:0}}>
+      <div className="card-title">Fun facts</div>
+      {!facts.length
+        ? <p style={{color:'var(--c-muted)',fontSize:13}}>Seed demo data to unlock facts.</p>
+        : facts.map((fact, i) => (
+          <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
+            <span style={{fontSize:18,flexShrink:0}}>{fact.icon}</span>
+            <span style={{color:'var(--c-muted)',lineHeight:1.6}}>{fact.text}</span>
+          </div>
+        ))
+      }
+    </div>
+  )
+}
+
 export default function Stats() {
   const { player, isAdmin } = usePlayer()
   const roomCode = player?.room_code || 'DEFAULT'
@@ -462,36 +498,7 @@ export default function Stats() {
         )}
 
         {/* FUN FACTS */}
-        {tab==='funfacts' && (()=>{
-          const second=sorted[1], last=sorted[sorted.length-1]
-          const mostExact=[...playerStats].sort((a,b)=>b.exact-a.exact)[0]
-          const mostCorr=[...playerStats].sort((a,b)=>b.correct-a.correct)[0]
-          const gap=leader&&second?leader.total-second.total:0
-          const avgPts=playerStats.length?Math.round(playerStats.reduce((a,p)=>a+p.total,0)/playerStats.length):0
-          const facts=[
-            leader?.total>0&&{icon:'\u{1F451}',text:gap>5?`${leader.name} is running away - ${gap} pts clear of ${second?.name||'second'}`
-              :gap===0&&second?`${leader.name} and ${second.name} are level at the top!`
-              :`${leader.name} leads with ${leader.total} pts, ${gap} ahead`},
-            last&&last.id!==leader?.id&&leader?.total>0&&{icon:'\u{1F4C9}',text:`${last.name} is last - ${leader.total-last.total} pts off the pace.`},
-            mostExact?.exact>=3&&{icon:'\u{1F48E}',text:`${mostExact.name} is a psychic - ${mostExact.exact} exact scores.`},
-            mostCorr?.correct>0&&{icon:'\u{1F3AF}',text:`${mostCorr.name} picks winners best - ${mostCorr.correct} correct results`},
-            avgPts>0&&{icon:'\u{1F4CA}',text:`Pool average is ${avgPts} pts.`},
-            totalGoals>0&&{icon:'\u{26BD}',text:`${totalGoals} goals in ${finished.length} matches - ${avgGoals} per game`},
-            topScorer&&{icon:'\u{1F525}',text:`${topScorer.name} leads the tournament with ${topScorer.goals} goals`},
-          ].filter(Boolean)
-          return (
-            <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">Fun facts</div>
-              {!facts.length?<p style={{color:'var(--c-muted)',fontSize:13}}>Seed demo data to unlock facts.</p>
-                :facts.map((f,i)=>(
-                  <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
-                    <span style={{fontSize:18,flexShrink:0}}>{f.icon}</span>
-                    <span style={{color:'var(--c-muted)',lineHeight:1.6}}>{f.text}</span>
-                  </div>
-                ))}
-            </div>
-          )
-        })()}
+        {tab==='funfacts' && <FunFacts sorted={sorted} playerStats={playerStats} leader={leader} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} />}
       </div>
     </div>
   )

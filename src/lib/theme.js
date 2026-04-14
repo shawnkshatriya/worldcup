@@ -1,6 +1,6 @@
 export const THEMES = {
   dark: {
-    label: 'Dark', icon: '🌙',
+    label: 'Dark', icon: '\u{1F319}',
     vars: {
       '--c-bg':       '#080B12',
       '--c-surface':  '#0E1220',
@@ -27,7 +27,7 @@ export const THEMES = {
     }
   },
   light: {
-    label: 'Light', icon: '☀',
+    label: 'Light', icon: '\u2600',
     vars: {
       '--c-bg':       '#E8ECF4',
       '--c-surface':  '#F2F5FA',
@@ -54,7 +54,7 @@ export const THEMES = {
     }
   },
   worldcup: {
-    label: 'World Cup', icon: '⚽',
+    label: 'World Cup', icon: '\u26BD',
     vars: {
       '--c-bg':       '#2D6A2D',
       '--c-surface':  '#357035',

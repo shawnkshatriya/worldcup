@@ -89,7 +89,7 @@ function Phone({ children, bg='#f5f5f5' }) {
 }
 
 function IOSBar() {
-  return <div style={{height:14,background:'inherit',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 6px',fontSize:7,color:'#333',flexShrink:0}}><span>9:41</span><span>●●●</span></div>
+  return <div style={{height:14,background:'inherit',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 6px',fontSize:7,color:'#333',flexShrink:0}}><span>9:41</span><span>\u25CF\u25CF\u25CF</span></div>
 }
 
 function IOSUrlBar() {
@@ -116,7 +116,7 @@ function IOSStep1() {
       <IOSUrlBar/>
       <AppContent/>
       <div style={{height:26,background:'#f5f5f5',borderTop:'0.5px solid #ddd',display:'flex',alignItems:'center',justifyContent:'space-around',flexShrink:0}}>
-        {['\u2190','->','\u25A1','\u2B06','\u22EF'].map((s,i)=><span key={i} style={{fontSize:10,color:'#007AFF'}}>{s}</span>)}
+        {['\u2190',' &rarr;','\u25A1','\u2B06','\u22EF'].map((s,i)=><span key={i} style={{fontSize:10,color:'#007AFF'}}>{s}</span>)}
       </div>
     </Phone>
   )
@@ -129,7 +129,7 @@ function IOSStep2() {
       <IOSUrlBar/>
       <AppContent/>
       <div style={{height:26,background:'#f5f5f5',borderTop:'0.5px solid #ddd',display:'flex',alignItems:'center',justifyContent:'space-around',flexShrink:0,position:'relative'}}>
-        {['\u2190','->','\u25A1','\u2B06','\u22EF'].map((s,i)=><span key={i} style={{fontSize:10,color:s==='\u2B06'?'#C8102E':'#007AFF',fontWeight:s==='\u2B06'?700:400}}>{s}</span>)}
+        {['\u2190',' &rarr;','\u25A1','\u2B06','\u22EF'].map((s,i)=><span key={i} style={{fontSize:10,color:s==='\u2B06'?'#C8102E':'#007AFF',fontWeight:s==='\u2B06'?700:400}}>{s}</span>)}
         <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',background:'#C8102E',color:'#fff',fontSize:7,padding:'2px 6px',borderRadius:8,whiteSpace:'nowrap'}}>Tap this</div>
       </div>
     </Phone>
@@ -219,7 +219,7 @@ function AndroidStep1() {
         <div style={{flex:1,background:'rgba(255,255,255,0.15)',borderRadius:8,height:12,display:'flex',alignItems:'center',padding:'0 5px'}}>
           <span style={{fontSize:6,color:'rgba(255,255,255,0.9)'}}>wc26predictor.app</span>
         </div>
-        <span style={{color:'#fff',fontSize:10}}>⋮</span>
+        <span style={{color:'#fff',fontSize:10}}>\u22EE</span>
       </div>
       <AppContent/>
     </Phone>
@@ -233,7 +233,7 @@ function AndroidStep2() {
         <div style={{flex:1,background:'rgba(255,255,255,0.15)',borderRadius:8,height:12,display:'flex',alignItems:'center',padding:'0 5px'}}>
           <span style={{fontSize:6,color:'rgba(255,255,255,0.9)'}}>wc26predictor.app</span>
         </div>
-        <span style={{color:'#fff',fontSize:10}}>⋮</span>
+        <span style={{color:'#fff',fontSize:10}}>\u22EE</span>
       </div>
       <div style={{flex:1,padding:5,position:'relative'}}>
         <div style={{background:'#C8102E',height:25,borderRadius:4,marginBottom:4,opacity:0.4}}/>

@@ -154,7 +154,7 @@ export default function Join() {
           {/* -- Sent confirmation -- */}
           {status === 'sent' && (
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📬</div>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>\u{1F4EC}</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, letterSpacing: '0.06em', marginBottom: 8 }}>Check your inbox</div>
               <p style={{ fontSize: 13, color: 'var(--c-muted)', lineHeight: 1.7, marginBottom: 20 }}>
                 We sent a magic link to <strong style={{ color: 'var(--c-text)' }}>{email}</strong>.

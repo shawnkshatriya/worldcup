@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
-const MEDALS = ['🥇','🥈','🥉']
+const MEDALS = ['\u{1F947}','\u{1F948}','\u{1F949}']
 const MEDAL_COLORS = ['var(--c-gold)','var(--c-silver)','var(--c-bronze)']
 
 export default function Leaderboard() {

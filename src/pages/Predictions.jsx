@@ -199,7 +199,7 @@ export default function Predictions() {
         <div className="page-header"><h1>My predictions</h1></div>
         <div className="page-body">
           <div className="alert alert-info">
-            You need to join the pool first. <Link to="/join" style={{color:'var(--c-accent)'}}>Join now -></Link>
+            You need to join the pool first. <Link to="/join" style={{color:'var(--c-accent)'}}>Join now &rarr;</Link>
           </div>
         </div>
       </div>

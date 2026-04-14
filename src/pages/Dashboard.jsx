@@ -138,9 +138,9 @@ export default function Dashboard() {
                 June 11 - July 19 &nbsp;.&nbsp; 48 teams &nbsp;.&nbsp; 104 matches
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <FlagPill emoji="🇨🇦" label="Canada" />
-                <FlagPill emoji="🇲🇽" label="Mexico" />
-                <FlagPill emoji="🇺🇸" label="USA" />
+                <FlagPill emoji="\u{1F1E8}\u{1F1E6}" label="Canada" />
+                <FlagPill emoji="\u{1F1F2}\u{1F1FD}" label="Mexico" />
+                <FlagPill emoji="\u{1F1FA}\u{1F1F8}" label="USA" />
               </div>
             </div>
 
@@ -222,7 +222,7 @@ export default function Dashboard() {
               </div>
             ))}
             <Link to="/leaderboard" style={{display:'block',marginTop:12,fontSize:12,color:'var(--c-accent)',fontWeight:700,letterSpacing:'0.04em'}}>
-              Full leaderboard ->
+              Full leaderboard &rarr;
             </Link>
           </div>
 
@@ -244,7 +244,7 @@ export default function Dashboard() {
 
         {!player && (
           <div className="alert alert-info" style={{marginTop:'1.25rem'}}>
-            You haven't joined the pool yet. <Link to="/join" style={{color:'var(--c-accent)',fontWeight:700}}>Join now -></Link>
+            You haven't joined the pool yet. <Link to="/join" style={{color:'var(--c-accent)',fontWeight:700}}>Join now &rarr;</Link>
           </div>
         )}
       </div>

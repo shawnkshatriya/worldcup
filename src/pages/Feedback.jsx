@@ -72,7 +72,7 @@ export default function Feedback() {
 
           {status === 'done' ? (
             <div className="card" style={{textAlign:'center',padding:'3rem 2rem'}}>
-              <div style={{fontSize:48,marginBottom:16}}>🙏</div>
+              <div style={{fontSize:48,marginBottom:16}}>\u{1F64F}</div>
               <div style={{fontFamily:'var(--font-display)',fontSize:28,letterSpacing:'0.04em',marginBottom:8}}>Thanks!</div>
               <p style={{color:'var(--c-muted)',fontSize:14,lineHeight:1.7,marginBottom:'1.5rem'}}>
                 Your feedback has been sent to Shawn and saved to the database. It genuinely helps.
@@ -107,7 +107,7 @@ export default function Feedback() {
                     <button key={n} onClick={()=>setRating(n===rating?0:n)}
                       onMouseEnter={()=>setHover(n)} onMouseLeave={()=>setHover(0)}
                       style={{fontSize:28,background:'none',border:'none',cursor:'pointer',opacity:(hoverRating||rating)>=n?1:0.25,transition:'opacity 0.1s,transform 0.1s',transform:(hoverRating||rating)>=n?'scale(1.1)':'scale(1)'}}>
-                      ⭐
+                      \u2B50
                     </button>
                   ))}
                   {rating > 0 && <span style={{fontSize:12,color:'var(--c-muted)',alignSelf:'center',marginLeft:4}}>{['','Terrible','Bad','OK','Good','Great!'][rating]}</span>}

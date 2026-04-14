@@ -93,14 +93,14 @@ export default function Scores() {
 
         {demoMode && (
           <div className="alert alert-warn" style={{marginBottom:'1.25rem'}}>
-            Demo mode active - showing simulated match results. Clear demo data from Admin -> Dev tab to return to real data.
+            Demo mode active - showing simulated match results. Clear demo data from Admin &rarr; Dev tab to return to real data.
           </div>
         )}
 
         {!demoMode && !apiKey && (
           <div className="alert alert-info" style={{marginBottom:'1.25rem'}}>
             Add <code>VITE_FOOTBALL_API_KEY</code> to Vercel environment variables to enable live score sync (free at football-data.org).
-            Scores can also be entered manually in Admin -> Results.
+            Scores can also be entered manually in Admin &rarr; Results.
           </div>
         )}
 

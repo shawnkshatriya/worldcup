@@ -10,10 +10,10 @@ export const supabase = createClient(
 // Points are mutually exclusive tiers - you earn the HIGHEST tier you hit,
 // plus the approx bonus only when you don't already have result+diff correct:
 //
-//  Exact score                 -> exact pts only (no result, no diff, no approx)
-//  Correct result + correct diff -> result + diff pts (no approx)
-//  Correct result only          -> result pts (+ approx if applicable)
-//  Wrong result                 -> 0 (+ approx if applicable)
+//  Exact score                  &rarr; exact pts only (no result, no diff, no approx)
+//  Correct result + correct diff  &rarr; result + diff pts (no approx)
+//  Correct result only           &rarr; result pts (+ approx if applicable)
+//  Wrong result                  &rarr; 0 (+ approx if applicable)
 //
 // Approx bonus fires when ALL of:
 //   1. Not an exact score

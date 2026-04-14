@@ -291,7 +291,7 @@ export default function WinnerPick() {
         {/* Picks hidden before tournament */}
         {!locked && !isAdmin && allPicks.length > 0 && (
           <div className="card" style={{marginBottom:0,textAlign:'center',padding:'2rem'}}>
-            <div style={{fontSize:32,marginBottom:8}}>🔒</div>
+            <div style={{fontSize:32,marginBottom:8}}>\u{1F512}</div>
             <div style={{fontWeight:600,marginBottom:6}}>Picks hidden until kickoff</div>
             <p style={{fontSize:13,color:'var(--c-muted)'}}>
               {picked} player{picked!==1?'s':''} have made their pick. You'll see everyone's choice when the tournament starts on June 11.

@@ -218,8 +218,8 @@ export default function Guide() {
             <Section title="Match day workflow">
               {[
                 { title:'During the match', desc:'Nothing to do - players are locked from editing their prediction for this match from kickoff.' },
-                { title:'After the final whistle', desc:'Go to Admin -> Results, select the right phase, enter the score and hit Save.' },
-                { title:'Recalculate scores', desc:'Go to Admin -> Weights and click Recalculate. This re-runs the scoring engine for all players and updates the leaderboard.' },
+                { title:'After the final whistle', desc:'Go to Admin &rarr; Results, select the right phase, enter the score and hit Save.' },
+                { title:'Recalculate scores', desc:'Go to Admin &rarr; Weights and click Recalculate. This re-runs the scoring engine for all players and updates the leaderboard.' },
                 { title:'Repeat for each match', desc:'If multiple matches finish on the same day, enter all results first then recalculate once at the end.' },
               ].map((s,i,arr) => (
                 <Step key={i} n={i+1} title={s.title} desc={s.desc} />
@@ -234,7 +234,7 @@ export default function Guide() {
                 'Confirm scoring weights are set correctly per room',
                 'Make sure everyone has submitted predictions',
                 'Set tournament winner picks are open',
-                'Clear any demo data from Admin -> Dev tab',
+                'Clear any demo data from Admin &rarr; Dev tab',
                 'Test the leaderboard with at least one real player',
               ].map((item, i) => (
                 <div key={i} style={{display:'flex',gap:12,padding:'8px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'center'}}>
@@ -248,7 +248,7 @@ export default function Guide() {
               <Section title="Multi-room tips">
                 {[
                   'Each room has its own invite token - Work Pool and Personal Pool players can\'t cross-join accidentally.',
-                  'You can promote any player to room admin from Admin -> Players -> Make admin. They\'ll see a Room Admin panel scoped to their room only.',
+                  'You can promote any player to room admin from Admin &rarr; Players &rarr; Make admin. They\'ll see a Room Admin panel scoped to their room only.',
                   'Scoring weights are per room - set them differently for each pool if you want.',
                   'Demo data only seeds into the DEFAULT room so it won\'t pollute real rooms.',
                   'If someone needs to join a second room, send them that room\'s invite link - they use the same email and magic link flow.',

@@ -38,7 +38,7 @@ function BingoCard({ playerId, predictions, matches }) {
           const bg     = cell.isExact   ? 'rgba(240,165,0,0.28)'   : cell.isCorrect ? 'rgba(34,197,94,0.18)'  : cell.isWrong ? 'rgba(239,68,68,0.14)' : 'var(--c-surface2)'
           const border = cell.isExact   ? '1.5px solid rgba(240,165,0,0.6)' : cell.isCorrect ? '1.5px solid rgba(34,197,94,0.4)' : cell.isWrong ? '1.5px solid rgba(239,68,68,0.3)' : '1px solid var(--c-border)'
           const textCol= cell.isExact   ? '#F0A500' : cell.isCorrect ? '#22C55E' : cell.isWrong ? '#EF4444' : 'var(--c-muted)'
-          const tick   = cell.isExact   ? '💎' : cell.isCorrect ? 'v' : cell.isWrong ? 'x' : ''
+          const tick   = cell.isExact   ? '\u{1F48E}' : cell.isCorrect ? 'v' : cell.isWrong ? 'x' : ''
           return (
             <div key={i} style={{aspectRatio:'1', background:bg, border, borderRadius:4, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:2, position:'relative'}}>
               {tick && <div style={{position:'absolute',top:2,right:3,fontSize:cell.isExact?9:8,color:textCol,fontWeight:700}}>{tick}</div>}
@@ -159,7 +159,7 @@ export default function Fun() {
 
   if (loading) return (
     <div>
-      <div className="page-header"><div className="page-header-inner"><h1>Fun Zone 🎪</h1></div></div>
+      <div className="page-header"><div className="page-header-inner"><h1>Fun Zone \u{1F3AA}</h1></div></div>
       <div className="page-body"><p style={{color:'var(--c-muted)'}}>Loading...</p></div>
     </div>
   )
@@ -170,14 +170,14 @@ export default function Fun() {
     <div>
       <div className="page-header">
         <div className="page-header-inner">
-          <h1>Fun Zone 🎪</h1>
+          <h1>Fun Zone \u{1F3AA}</h1>
           <p>Achievements, rivalries, bingo cards and match roasts</p>
         </div>
       </div>
       <div className="page-body">
         {noData && (
           <div className="alert alert-info" style={{marginBottom:'1.5rem'}}>
-            Seed demo data from <strong>Admin -> Dev tab</strong> to see everything come alive here.
+            Seed demo data from <strong>Admin &rarr; Dev tab</strong> to see everything come alive here.
           </div>
         )}
 
@@ -338,7 +338,7 @@ export default function Fun() {
         {tab==='bingo' && (
           <div>
             <div className="alert alert-info" style={{marginBottom:'1rem'}}>
-              Each cell shows your predicted score (top) and the actual result (bottom). 💎 gold = exact score, v green = correct result, x red = wrong.
+              Each cell shows your predicted score (top) and the actual result (bottom). \u{1F48E} gold = exact score, v green = correct result, x red = wrong.
             </div>
             <div style={{display:'flex',gap:8,marginBottom:'1.25rem',flexWrap:'wrap'}}>
               {players.map((p,i)=>(
@@ -404,7 +404,7 @@ export default function Fun() {
                         const color=pi>=0?AVATAR_COLORS[pi%AVATAR_COLORS.length]:'var(--c-muted)'
                         const bg=line.type==='exact'?'rgba(240,165,0,0.08)':line.type==='correct'?'rgba(34,197,94,0.06)':line.type==='nobody'?'rgba(255,255,255,0.02)':'rgba(239,68,68,0.06)'
                         const border=line.type==='exact'?'1px solid rgba(240,165,0,0.2)':line.type==='correct'?'1px solid rgba(34,197,94,0.15)':'1px solid var(--c-border)'
-                        const emoji=line.type==='exact'?'💎':line.type==='correct'?'ok':line.type==='close'?'🤏':line.type==='nobody'?'😶':'💀'
+                        const emoji=line.type==='exact'?'\u{1F48E}':line.type==='correct'?'ok':line.type==='close'?'\u{1F90F}':line.type==='nobody'?'\u{1F636}':'\u{1F480}'
                         return (
                           <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'12px 14px',borderRadius:'var(--radius)',background:bg,border}}>
                             <span style={{fontSize:20,flexShrink:0,marginTop:1}}>{emoji}</span>
