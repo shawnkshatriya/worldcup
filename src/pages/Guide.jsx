@@ -116,10 +116,12 @@ export default function Guide() {
             Points are awarded after each match result is entered. There are four ways to score:
           </p>
           {[
-            { pts:'4 pts', label:'Exact score', desc:'You predicted the exact scoreline. E.g. you said 2-1 and the result was 2-1.' },
-            { pts:'5 pts', label:'Correct goal difference', desc:'You got the right result and the right margin, but not the exact score — 3 pts for correct result + 2 pts for correct diff. E.g. you said 2-0, result was 3-1 (both +2).' },
+            { pts:'4 pts', label:'Exact score', desc:'You predicted the exact scoreline — this is the top tier. E.g. you said 2-1 and the result was 2-1.' },
+            { pts:'2 pts', label:'Correct goal difference', desc:'Stacks on top of the correct result bonus. You got the right margin too, but not the exact score. E.g. you said 2-0, result was 3-1 (both +2) — earns 3 + 2 = 5 pts total.' },
             { pts:'3 pts', label:'Correct result (W/D/L)', desc:'You picked the right winner or draw, but the margin was different. E.g. you said 2-0, result was 1-0.' },
-            { pts:'1 pt', label:'Approximation bonus', desc:'Group stage only, high-scoring matches (4+ goals total). Your prediction was within 1 goal of the actual result each way.' },
+            { pts:'1 pt',  label:'Approximation bonus', desc:'Group stage only, high-scoring matches (4+ goals total). Your prediction was within 1 goal of the actual result each way. Stacks with correct W/D/L.' },
+            { pts:'20 pts', label:'Tournament winner pick', desc:'Picked before June 11 — if your chosen team wins the whole tournament you get a big bonus. Check your room for the exact value.' },
+            { pts:'10 pts', label:'Finalist bonus', desc:'If your chosen winner reaches the Final (even if they don\'t win), you get a smaller bonus. Check your room for the exact value.' },
           ].map((s,i) => (
             <div key={i} style={{display:'flex',gap:14,padding:'12px 0',borderBottom: i<3?'1px solid var(--c-border)':'none',alignItems:'flex-start'}}>
               <div style={{
@@ -138,7 +140,7 @@ export default function Guide() {
               KO matches use higher weights — exact scores are worth more, and there's no approximation bonus. Check your room's scoring rules on the Dashboard for exact values.
             </div>
           </div>
-          <Tip>Tier 1 (exact) beats Tier 2 (correct diff) beats Tier 3 (correct result). Points don't stack — you get the highest tier you hit.</Tip>
+          <Tip>Points stack within tiers — correct W/D/L (3pts) + correct goal diff (2pts) = 5pts total. Exact score (4pts) is its own tier and replaces the others. Approx bonus stacks on top of W/D/L in high-scoring group games.</Tip>
         </Section>
 
         {/* ── PAGES ── */}

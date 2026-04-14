@@ -260,7 +260,7 @@ export default function Stats() {
         <div className="tabs">
           {['tournament','players','charts','funfacts'].map(t=>(
             <button key={t} className={`tab${tab===t?' active':''}`} onClick={()=>setTab(t)}>
-              {t==='funfacts'?'Fun Facts':t.charAt(0).toUpperCase()+t.slice(1)}
+              {t==='funfacts'?'Fun Facts':t==='players'?'Participants':t==='charts'?'Pool Trends':t.charAt(0).toUpperCase()+t.slice(1)}
             </button>
           ))}
         </div>

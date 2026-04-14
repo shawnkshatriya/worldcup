@@ -7,14 +7,16 @@ import { usePlayer } from '../hooks/usePlayer'
 import { Navigate } from 'react-router-dom'
 
 const WEIGHT_LABELS = {
-  group_result: 'Group stage — correct W/D/L',
-  group_diff:   'Group stage — correct goal difference',
-  group_exact:  'Group stage — exact score',
-  group_approx: 'Group stage — approximation bonus (4+ goal games)',
-  ko_team:      'KO round — correct team qualified',
-  ko_result:    'KO round — correct result',
-  ko_diff:      'KO round — correct goal difference',
-  ko_exact:     'KO round — exact score',
+  group_result:   'Group stage — correct W/D/L',
+  group_diff:     'Group stage — correct goal difference',
+  group_exact:    'Group stage — exact score',
+  group_approx:   'Group stage — approximation bonus (4+ goal games)',
+  ko_team:        'KO round — correct team qualified',
+  ko_result:      'KO round — correct result',
+  ko_diff:        'KO round — correct goal difference',
+  ko_exact:       'KO round — exact score',
+  winner_bonus:   'Tournament winner — correct pick bonus',
+  finalist_bonus: 'Tournament finalist — correct pick bonus',
 }
 
 const PHASES = ['GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F','GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L','ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']

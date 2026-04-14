@@ -131,16 +131,13 @@ export default function Dashboard() {
               <div style={{fontFamily:'var(--font-display)',fontSize:28,letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:4}}>
                 2026
               </div>
-              <div style={{fontSize:13,color:'var(--c-muted)',marginBottom:4}}>
-                Canada · Mexico · USA
-              </div>
               <div style={{fontSize:12,color:'var(--c-hint)',marginBottom:16}}>
                 June 11 – July 19 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <FlagPill emoji="🇺🇸" />
-                <FlagPill emoji="🇨🇦" />
-                <FlagPill emoji="🇲🇽" />
+                <FlagPill emoji="🇨🇦" label="Canada" />
+                <FlagPill emoji="🇲🇽" label="Mexico" />
+                <FlagPill emoji="🇺🇸" label="USA" />
               </div>
             </div>
 
