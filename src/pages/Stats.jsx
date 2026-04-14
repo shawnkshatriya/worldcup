@@ -468,15 +468,15 @@ export default function Stats() {
           const gap=leader&&second?leader.total-second.total:0
           const avgPts=playerStats.length?Math.round(playerStats.reduce((a,p)=>a+p.total,0)/playerStats.length):0
           const facts=[
-            leader?.total>0&&{icon:'👑',text:gap>5?`${leader.name} is running away — ${gap} pts clear of ${second?.name||'second'}`
+            leader?.total>0&&{icon:'👑',text:gap>5?`${leader.name} is running away - ${gap} pts clear of ${second?.name||'second'}`
               :gap===0&&second?`${leader.name} and ${second.name} are level at the top!`
-              :`${leader.name} leads with ${leader.total} pts, just ${gap} ahead`},
-            last&&last.id!==leader?.id&&leader?.total>0&&{icon:'📉',text:`${last.name} is last — ${leader.total-last.total} pts off the pace.`},
+              :`${leader.name} leads with ${leader.total} pts, ${gap} ahead`},
+            last&&last.id!==leader?.id&&leader?.total>0&&{icon:'📉',text:`${last.name} is last - ${leader.total-last.total} pts off the pace.`},
             mostExact?.exact>=3&&{icon:'💎',text:`${mostExact.name} is a psychic — ${mostExact.exact} exact scores.`},
             mostCorr?.correct>0&&{icon:'🎯',text:`${mostCorr.name} picks winners best — ${mostCorr.correct} correct results`},
             avgPts>0&&{icon:'📊',text:`Pool average is ${avgPts} pts.`},
-            totalGoals>0&&{icon:'⚽',text:`${totalGoals} goals in ${finished.length} matches — ${avgGoals} per game`},
-            topScorer&&{icon:'🔥',text:`${topScorer.name} lead the tournament scoring with ${topScorer.goals} goals`},
+            totalGoals>0&&{icon:'⚽',text:`${totalGoals} goals in ${finished.length} matches \u2014 ${avgGoals} per game`},
+            topScorer&&{icon:'🔥',text:`${topScorer.name} leads the tournament with ${topScorer.goals} goals`},
           ].filter(Boolean)
           return (
             <div className="card" style={{marginBottom:0}}>
