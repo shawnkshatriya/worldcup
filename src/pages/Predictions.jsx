@@ -115,7 +115,9 @@ const PHASE_LABELS = {
   THIRD_PLACE:'3rd place', FINAL:'Final',
 }
 
+const TOURNEY_LOCKED = new Date() >= TOURNAMENT_START
 function isLocked(kickoff) {
+  if (TOURNEY_LOCKED) return true
   if (!kickoff) return false
   return new Date(kickoff) < new Date()
 }
@@ -201,7 +203,7 @@ export default function Predictions() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>My predictions</h1>
-          <p>Predictions lock at kickoff. Enter your score for every match.</p>
+          <p>Predictions lock at tournament kickoff on June 11. Enter your score for every match.</p>
         </div>
       </div>
       <div className="page-body">

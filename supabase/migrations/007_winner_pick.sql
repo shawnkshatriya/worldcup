@@ -19,3 +19,7 @@ alter table winner_picks disable row level security;
 -- Add winner bonus points to scoring_weights
 alter table scoring_weights
   add column if not exists winner_bonus int default 20;
+
+-- Add finalist bonus (for predicting a team that reaches the final)
+alter table scoring_weights
+  add column if not exists finalist_bonus int default 10;

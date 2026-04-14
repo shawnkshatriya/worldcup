@@ -269,6 +269,23 @@ export default function Stats() {
         {tab==='tournament' && (
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))',gap:'1.25rem'}}>
 
+
+            <div className="card" style={{marginBottom:0,gridColumn:'span 2'}}>
+              <div className="card-title">Match facts</div>
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:10}}>
+                {[
+                  {label:'Finished',   value:finished.length},
+                  {label:'Total goals',value:totalGoals},
+                  {label:'Avg/match',  value:avgGoals},
+                  {label:'High-scoring (4+)',value:highScoring},
+                  {label:'Scoreless (0-0)',   value:scoreless},
+                  {label:'Pool predictions',  value:predictions.filter(p=>p.home_goals!=null).length},
+                ].map(s=>(
+                  <div key={s.label} className="metric" style={{marginBottom:0}}>
+                    <div className="metric-label">{s.label}</div>
+                    <div className="metric-value" style={{fontSize:28}}>{s.value}</div>
+                  </div>
+
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Goals per match distribution</div>
               {!finished.length?<p style={{color:'var(--c-muted)',fontSize:13}}>No results yet</p>:<ColChart data={goalsHist} color="var(--c-accent)" height={100}/>}
@@ -306,22 +323,6 @@ export default function Stats() {
                 ))
               }
             </div>
-
-            <div className="card" style={{marginBottom:0,gridColumn:'span 2'}}>
-              <div className="card-title">Match facts</div>
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:10}}>
-                {[
-                  {label:'Finished',   value:finished.length},
-                  {label:'Total goals',value:totalGoals},
-                  {label:'Avg/match',  value:avgGoals},
-                  {label:'High-scoring (4+)',value:highScoring},
-                  {label:'Scoreless (0-0)',   value:scoreless},
-                  {label:'Pool predictions',  value:predictions.filter(p=>p.home_goals!=null).length},
-                ].map(s=>(
-                  <div key={s.label} className="metric" style={{marginBottom:0}}>
-                    <div className="metric-label">{s.label}</div>
-                    <div className="metric-value" style={{fontSize:28}}>{s.value}</div>
-                  </div>
                 ))}
               </div>
             </div>
@@ -459,63 +460,5 @@ export default function Stats() {
               }
               <p style={{fontSize:11,color:'var(--c-muted)',marginTop:10}}>Correct results should outnumber exact scores — every exact score also counts as a correct result, so the donut shows where points actually came from.</p>
             </div>
-
-            <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">% W/L correct by player</div>
-              {[...playerStats].sort((a,b)=>b.pctWL-a.pctWL).map(p=>(
-                <HBar key={p.id} label={p.name} value={p.pctWL} max={100} color="var(--c-accent)" suffix="%"/>
-              ))}
-            </div>
-
-            <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">Exact score specialists</div>
-              {[...playerStats].sort((a,b)=>b.exact-a.exact).map(p=>(
-                <HBar key={p.id} label={p.name} value={p.exact} max={Math.max(...playerStats.map(x=>x.exact),1)} color="var(--c-accent2)"/>
-              ))}
-            </div>
-
-            <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">Goals per match histogram</div>
-              <ColChart data={goalsHist} color="var(--c-accent)" height={120}/>
-            </div>
-
-          </div>
-        )}
-
-        {/* FUN FACTS */}
-        {tab==='funfacts' && (()=>{
-          const second=sorted[1], last=sorted[sorted.length-1]
-          const mostExact=[...playerStats].sort((a,b)=>b.exact-a.exact)[0]
-          const mostCorr=[...playerStats].sort((a,b)=>b.correct-a.correct)[0]
-          const gap=leader&&second?leader.total-second.total:0
-          const avgPts=playerStats.length?Math.round(playerStats.reduce((a,p)=>a+p.total,0)/playerStats.length):0
-          const facts=[
-            leader?.total>0&&{icon:'👑',text:gap>5?`${leader.name} is running away — ${gap} pts clear of ${second?.name||'second'}`
-              :gap===0&&second?`${leader.name} and ${second.name} are level at the top!`
-              :`${leader.name} leads with ${leader.total} pts, just ${gap} ahead`},
-            last&&last.id!==leader?.id&&leader?.total>0&&{icon:'📉',text:`${last.name} is last — ${leader.total-last.total} pts off the pace. Prayers needed.`},
-            mostExact?.exact>=3&&{icon:'💎',text:`${mostExact.name} is a psychic — ${mostExact.exact} exact scores.`},
-            mostExact?.exact===1&&{icon:'💎',text:`${mostExact.name} has exactly one exact score. Cherish it.`},
-            mostCorr?.correct>0&&{icon:'🎯',text:`${mostCorr.name} picks winners best — ${mostCorr.correct} correct results`},
-            avgPts>0&&{icon:'📊',text:`Pool average is ${avgPts} pts.`},
-            totalGoals>0&&{icon:'⚽',text:`${totalGoals} goals in ${finished.length} matches — ${avgGoals} per game`},
-            scoreless>0&&{icon:'🥱',text:`${scoreless} match${scoreless>1?'es have':' has'} ended 0-0.`},
-            topScorer&&{icon:'🔥',text:`${topScorer.name} lead the tournament scoring with ${topScorer.goals} goals`},
-          ].filter(Boolean)
-          return (
-            <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">Fun facts</div>
-              {!facts.length?<p style={{color:'var(--c-muted)',fontSize:13}}>Seed demo data to unlock facts.</p>
-                :facts.map((f,i)=>(
-                  <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
-                    <span style={{fontSize:18,flexShrink:0}}>{f.icon}</span>
-                    <span style={{color:'var(--c-muted)',lineHeight:1.6}}>{f.text}</span>
-                  </div>
-                ))}
-            </div>
-          )
-        })()}
-      </div>
-    </div>
   )
 }

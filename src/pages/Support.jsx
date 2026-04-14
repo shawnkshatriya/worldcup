@@ -119,8 +119,8 @@ export default function Support() {
           <div className="card" style={{marginBottom:0,textAlign:'center'}}>
             <div className="card-title">Support the pool</div>
             <p style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.8,marginBottom:'1.5rem'}}>
-              This prediction pool is free — no ads, no paywalls.
-              If you're enjoying it and want to keep the lights on, a coffee helps.
+              This prediction pool is free to use — no ads, no paywalls, no catches.
+              If you're getting enjoyment out of it and want to help keep the lights on, a coffee genuinely helps and means a lot.
             </p>
             <a href="https://buymeacoffee.com/shawnkshatriya" target="_blank" rel="noopener noreferrer"
               style={{display:'inline-flex',alignItems:'center',gap:8,background:'#FFDD00',
@@ -132,7 +132,13 @@ export default function Support() {
             </a>
             <div style={{marginTop:'1.5rem',borderTop:'1px solid var(--c-border)',paddingTop:'1.25rem'}}>
               <div className="card-title" style={{fontSize:13}}>What it pays for</div>
-              {['Supabase — database and auth','Vercel — hosting','Resend — email delivery','Football API — live scores','Time — ongoing dev and fixes']
+              {[
+  'Supabase — powers the database, authentication, and real-time score updates for all players',
+  'Vercel — hosts the app and deploys every update instantly, globally',
+  'Resend — sends magic link login emails and feedback notifications',
+  'football-data.org — live score sync during the tournament so you don\'t have to enter results manually',
+  'Time — building features, fixing bugs, and keeping everything running through the Final on July 19',
+]
                 .map((item,i) => (
                   <div key={i} style={{fontSize:13,color:'var(--c-muted)',padding:'5px 0',
                     borderBottom:'1px solid var(--c-border)',textAlign:'left'}}>{item}</div>

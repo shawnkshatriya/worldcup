@@ -117,7 +117,7 @@ export default function Guide() {
           </p>
           {[
             { pts:'4 pts', label:'Exact score', desc:'You predicted the exact scoreline. E.g. you said 2-1 and the result was 2-1.' },
-            { pts:'3+2', label:'Correct goal difference', desc:'You got the right result and the right margin, but not the exact score. E.g. you said 2-0, result was 3-1 (both +2).' },
+            { pts:'5 pts', label:'Correct goal difference', desc:'You got the right result and the right margin, but not the exact score — 3 pts for correct result + 2 pts for correct diff. E.g. you said 2-0, result was 3-1 (both +2).' },
             { pts:'3 pts', label:'Correct result (W/D/L)', desc:'You picked the right winner or draw, but the margin was different. E.g. you said 2-0, result was 1-0.' },
             { pts:'1 pt', label:'Approximation bonus', desc:'Group stage only, high-scoring matches (4+ goals total). Your prediction was within 1 goal of the actual result each way.' },
           ].map((s,i) => (

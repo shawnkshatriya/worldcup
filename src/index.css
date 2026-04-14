@@ -354,7 +354,7 @@ input:focus, select:focus {
   font-weight: 700;
   letter-spacing: 0.04em;
 }
-.btn-accent:hover { background: #a50d25; }
+.btn-accent:hover { filter: brightness(0.88); }
 
 .btn-gold {
   background: var(--c-accent2);
@@ -505,7 +505,7 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
 .badge-amber { background: rgba(245,158,11,0.12); color: var(--c-warn); }
 .badge-red   { background: rgba(239,68,68,0.12);  color: var(--c-danger); }
 .badge-blue  { background: rgba(59,130,246,0.12); color: var(--c-info); }
-.badge-red-solid { background: var(--c-accent); color: #fff; }
+.badge-red-solid { background: var(--c-accent); color: var(--c-accent-text, #fff); }
 
 /* ═══════════════════════════════════════
    ALERTS

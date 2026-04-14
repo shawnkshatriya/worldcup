@@ -40,14 +40,13 @@ function useCountdown(target) {
 function FlagPill({ emoji, label }) {
   return (
     <div style={{
-      display:'flex', alignItems:'center', gap: label ? 8 : 0,
-      background:'rgba(255,255,255,0.05)',
-      border:'1px solid rgba(255,255,255,0.1)',
-      borderRadius:20,
-      padding: label ? '5px 12px 5px 8px' : '6px 10px',
+      display:'flex', alignItems:'center', gap:6,
+      background:'var(--c-surface2)',
+      border:'1px solid var(--c-border)',
+      borderRadius:20, padding:'5px 12px 5px 8px',
       fontSize:13, fontWeight:500, color:'var(--c-text)',
     }}>
-      <span style={{fontSize:22,lineHeight:1}}>{emoji}</span>
+      <span style={{fontSize:20,lineHeight:1}}>{emoji}</span>
       {label && <span>{label}</span>}
     </div>
   )
@@ -106,8 +105,8 @@ export default function Dashboard() {
     <div>
       <div className="page-header">
         <div className="page-header-inner">
-          <h1>Home</h1>
-          <p>June 11 – July 19, 2026 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches</p>
+          <h1>FIFA World Cup 2026 Predictions</h1>
+          <p>Tournament prediction pool</p>
         </div>
       </div>
       <div className="page-body">
@@ -203,7 +202,7 @@ export default function Dashboard() {
 
           {/* Top 5 leaderboard */}
           <div className="card" style={{marginBottom:0}}>
-            <div className="card-title">Top 5</div>
+            <div className="card-title">Top 5 Leaderboard</div>
             {leaders.length === 0 && (
               <p style={{color:'var(--c-muted)',fontSize:13,lineHeight:1.7}}>
                 No scores yet — leaderboard fills up once matches are played and results are entered.
