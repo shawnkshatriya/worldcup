@@ -50,7 +50,7 @@ export default function Support() {
         </div>
       </div>
       <div className="page-body">
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:'1.25rem',alignItems:'start'}}>
+        <div style={{display:'flex',flexDirection:'column',gap:'1.5rem',maxWidth:600}}>
 
           {/* Feedback form */}
           <div className="card" style={{marginBottom:0}}>

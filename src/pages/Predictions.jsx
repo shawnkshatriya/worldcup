@@ -199,8 +199,10 @@ export default function Predictions() {
   return (
     <div>
       <div className="page-header">
-        <h1>My predictions</h1>
-        <p>Predictions lock automatically at kickoff. Enter your predicted score for every match.</p>
+        <div className="page-header-inner">
+          <h1>My predictions</h1>
+          <p>Predictions lock at kickoff. Enter your score for every match.</p>
+        </div>
       </div>
       <div className="page-body">
         <div style={{marginBottom:8,fontSize:12,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Group stage</div>

@@ -372,7 +372,10 @@ export default function Admin() {
         {tab==='players' && (
           <div className="card" style={{padding:0,overflow:'hidden'}}>
             <div style={{padding:'1.25rem',borderBottom:'1px solid var(--c-border)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
-              <div className="card-title" style={{marginBottom:0}}>Players — {currentRoom?.name} ({players.length})</div>
+              <div>
+                <div className="card-title" style={{marginBottom:2}}>Players — {currentRoom?.name} ({players.length})</div>
+                <div style={{fontSize:12,color:'var(--c-muted)'}}>Click "Make admin" to give a player room admin access. They'll see a scoped admin panel for this room only.</div>
+              </div>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
                 {dupeCount>0&&<span className="badge badge-amber">{dupeCount} duplicate{dupeCount>1?'s':''}</span>}
                 {players.length>0&&<button className="btn btn-danger btn-sm" onClick={purgeAllPlayers}>Purge all</button>}

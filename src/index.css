@@ -349,7 +349,7 @@ input:focus, select:focus {
 
 .btn-accent {
   background: var(--c-accent);
-  color: #fff;
+  color: var(--c-accent-text, #fff);
   border-color: transparent;
   font-weight: 700;
   letter-spacing: 0.04em;
