@@ -285,6 +285,9 @@ export default function Stats() {
                     <div className="metric-label">{s.label}</div>
                     <div className="metric-value" style={{fontSize:28}}>{s.value}</div>
                   </div>
+                ))}
+              </div>
+            </div>
 
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Goals per match distribution</div>
