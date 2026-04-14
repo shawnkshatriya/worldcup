@@ -5,15 +5,15 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 )
 
-// ─── Scoring engine — mirrors Hermann Baum Excel Variant 2 logic ─────────────
+// --- Scoring engine - mirrors Hermann Baum Excel Variant 2 logic -------------
 //
-// Points are mutually exclusive tiers — you earn the HIGHEST tier you hit,
+// Points are mutually exclusive tiers - you earn the HIGHEST tier you hit,
 // plus the approx bonus only when you don't already have result+diff correct:
 //
-//  Exact score                 → exact pts only (no result, no diff, no approx)
-//  Correct result + correct diff → result + diff pts (no approx)
-//  Correct result only          → result pts (+ approx if applicable)
-//  Wrong result                 → 0 (+ approx if applicable)
+//  Exact score                 -> exact pts only (no result, no diff, no approx)
+//  Correct result + correct diff -> result + diff pts (no approx)
+//  Correct result only          -> result pts (+ approx if applicable)
+//  Wrong result                 -> 0 (+ approx if applicable)
 //
 // Approx bonus fires when ALL of:
 //   1. Not an exact score
@@ -43,7 +43,7 @@ export function calcMatchPoints(prediction, result, weights, phase) {
     ? { result: weights.ko_result, diff: weights.ko_diff, exact: weights.ko_exact, approx: 0 }
     : { result: weights.group_result, diff: weights.group_diff, exact: weights.group_exact, approx: weights.group_approx }
 
-  // All points STACK — earn every bonus you qualify for
+  // All points STACK - earn every bonus you qualify for
   let pts_result = 0, pts_diff = 0, pts_exact = 0, pts_approx = 0
 
   if (isCorrectResult) {
@@ -54,7 +54,7 @@ export function calcMatchPoints(prediction, result, weights, phase) {
     if (isExact) {
       pts_exact = w.exact          // Stack exact pts on top of result + diff
     }
-    // Approx bonus: group stage, high-scoring, within 1 each — stacks with result
+    // Approx bonus: group stage, high-scoring, within 1 each - stacks with result
     if (!isKO && w.approx > 0 && !isExact) {
       const totalReal = rh + ra
       if (totalReal >= 4 && Math.abs(ph - rh) <= 1 && Math.abs(pa - ra) <= 1) {
@@ -108,7 +108,7 @@ export async function recalcPlayerScores(roomCode) {
   }
 }
 
-// ─── Cached API sync (calls edge function, not football-data directly) ───────
+// --- Cached API sync (calls edge function, not football-data directly) -------
 export async function syncMatchResults() {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const anonKey     = import.meta.env.VITE_SUPABASE_ANON_KEY

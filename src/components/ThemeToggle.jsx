@@ -18,7 +18,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={cycle}
-      title={`Theme: ${theme.label} — click to switch`}
+      title={`Theme: ${theme.label} - click to switch`}
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
         padding: '5px 10px',

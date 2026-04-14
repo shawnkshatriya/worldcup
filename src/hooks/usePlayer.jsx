@@ -8,7 +8,7 @@ export function PlayerProvider({ children }) {
   const [authUser, setAuthUser] = useState(null)
   const [isAdmin,  setIsAdmin]  = useState(() => localStorage.getItem('wc26_admin') === '1')
   const [loading,  setLoading]  = useState(true)
-  // Active room for master admin — which room they're currently managing
+  // Active room for master admin - which room they're currently managing
   const [adminRoom, setAdminRoom] = useState(() => localStorage.getItem('wc26_admin_room') || 'DEFAULT')
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function PlayerProvider({ children }) {
   }, [])
 
   async function loadPlayer(authId) {
-    // User may be in multiple rooms — load all their player rows
+    // User may be in multiple rooms - load all their player rows
     const { data: rows } = await supabase.from('players').select('*').eq('auth_id', authId)
     if (!rows?.length) { setPlayer(null); setLoading(false); return }
 
@@ -71,7 +71,7 @@ export function PlayerProvider({ children }) {
   async function sendSignupLink(email, name, roomCode, inviteToken) {
     const { data: room } = await supabase.from('rooms').select('code').eq('invite_token', inviteToken).single()
     if (!room) throw new Error('INVALID_CODE')
-    // No pre-check needed here — player row is created in AuthCallback after magic link
+    // No pre-check needed here - player row is created in AuthCallback after magic link
     // The composite unique index (auth_id, room_code) handles duplicates at DB level
     localStorage.setItem('wc26_player_room', room.code)
     const redirectTo = `${window.location.origin}/auth/callback?name=${encodeURIComponent(name.trim())}&room=${room.code}`

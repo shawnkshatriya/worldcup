@@ -86,9 +86,9 @@ export default function AllPredictions() {
     if (!pred || pred.hg == null || match.home_goals == null) return 'transparent'
     const predResult = Math.sign(pred.hg - pred.ag)
     const realResult = Math.sign(match.home_goals - match.away_goals)
-    if (pred.hg === match.home_goals && pred.ag === match.away_goals) return 'rgba(240,165,0,0.18)' // exact — gold
-    if (predResult === realResult) return 'rgba(34,197,94,0.1)' // correct result — green
-    return 'rgba(239,68,68,0.08)' // wrong — red tint
+    if (pred.hg === match.home_goals && pred.ag === match.away_goals) return 'rgba(240,165,0,0.18)' // exact - gold
+    if (predResult === realResult) return 'rgba(34,197,94,0.1)' // correct result - green
+    return 'rgba(239,68,68,0.08)' // wrong - red tint
   }
 
   function getPredBorder(pred, match) {
@@ -106,7 +106,7 @@ export default function AllPredictions() {
         <div className="page-header-inner">
           <h1>All Predictions</h1>
           <p>
-            {isAdmin ? 'Admin view — visible before and during tournament' : 'Visible now that the tournament is live'}
+            {isAdmin ? 'Admin view - visible before and during tournament' : 'Visible now that the tournament is live'}
           </p>
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function AllPredictions() {
                       )}
                     </td>
                     <td style={{textAlign:'center',fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'var(--c-text)'}}>
-                      {m.home_goals != null ? `${m.home_goals}–${m.away_goals}` : <span style={{color:'var(--c-hint)',fontSize:12}}>TBD</span>}
+                      {m.home_goals != null ? `${m.home_goals}-${m.away_goals}` : <span style={{color:'var(--c-hint)',fontSize:12}}>TBD</span>}
                     </td>
                     {players.map(p => {
                       const pred = predictions[m.id]?.[p.id]
@@ -202,14 +202,14 @@ export default function AllPredictions() {
                           {pred && pred.hg != null ? (
                             <div>
                               <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,lineHeight:1}}>
-                                {pred.hg}–{pred.ag}
+                                {pred.hg}-{pred.ag}
                               </div>
                               {pts != null && (
                                 <div style={{fontSize:10,color:'var(--c-muted)',marginTop:2}}>+{pts}pts</div>
                               )}
                             </div>
                           ) : (
-                            <span style={{color:'var(--c-hint)',fontSize:11}}>—</span>
+                            <span style={{color:'var(--c-hint)',fontSize:11}}>-</span>
                           )}
                         </td>
                       )

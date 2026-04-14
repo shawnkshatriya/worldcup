@@ -4,14 +4,14 @@ import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
 
 const WEIGHT_LABELS = {
-  group_result:   'Group — correct W/D/L',
-  group_diff:     'Group — correct goal diff (stacks)',
-  group_exact:    'Group — exact score (stacks)',
-  group_approx:   'Group — approx bonus (stacks)',
-  ko_result:      'KO — correct result',
-  ko_diff:        'KO — correct goal diff (stacks)',
-  ko_exact:       'KO — exact score (stacks)',
-  ko_team:        'KO — team qualified',
+  group_result:   'Group - correct W/D/L',
+  group_diff:     'Group - correct goal diff (stacks)',
+  group_exact:    'Group - exact score (stacks)',
+  group_approx:   'Group - approx bonus (stacks)',
+  ko_result:      'KO - correct result',
+  ko_diff:        'KO - correct goal diff (stacks)',
+  ko_exact:       'KO - exact score (stacks)',
+  ko_team:        'KO - team qualified',
   winner_bonus:   'Tournament winner pick',
   finalist_bonus: 'Finalist bonus',
 }
@@ -39,7 +39,7 @@ function useCountdown(target) {
   return diff
 }
 
-// Real flag emojis rendered via unicode — crisp on all devices
+// Real flag emojis rendered via unicode - crisp on all devices
 function FlagPill({ emoji, label }) {
   return (
     <div style={{
@@ -114,7 +114,7 @@ export default function Dashboard() {
       </div>
       <div className="page-body">
 
-        {/* ── Hero Banner ── */}
+        {/* -- Hero Banner -- */}
         <div style={{
           background:'var(--c-surface)',
           border:'1px solid var(--c-border)',
@@ -135,7 +135,7 @@ export default function Dashboard() {
                 2026
               </div>
               <div style={{fontSize:12,color:'var(--c-hint)',marginBottom:16}}>
-                June 11 – July 19 &nbsp;·&nbsp; 48 teams &nbsp;·&nbsp; 104 matches
+                June 11 - July 19 &nbsp;.&nbsp; 48 teams &nbsp;.&nbsp; 104 matches
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                 <FlagPill emoji="🇨🇦" label="Canada" />
@@ -182,13 +182,13 @@ export default function Dashboard() {
             </div>
         </div>
 
-        {/* ── Metric cards ── */}
+        {/* -- Metric cards -- */}
         <div className="metrics" style={{marginBottom:'1.25rem'}}>
           {[
             { label:'Players in pool',  value:stats.players, color:'var(--c-text)' },
             { label:'Matches played',   value:`${stats.played} / ${stats.total}`, color:'var(--c-text)' },
-            { label:'Your rank',        value:myRank?`#${myRank}`:'—', color:myRank===1?'var(--c-gold)':myRank?'var(--c-accent)':'var(--c-muted)' },
-            { label:'Your points',      value:myPts??'—', color:'var(--c-text)' },
+            { label:'Your rank',        value:myRank?`#${myRank}`:'-', color:myRank===1?'var(--c-gold)':myRank?'var(--c-accent)':'var(--c-muted)' },
+            { label:'Your points',      value:myPts??'-', color:'var(--c-text)' },
           ].map(m=>(
             <div key={m.label} className="metric">
               <div className="metric-label">{m.label}</div>
@@ -197,7 +197,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── Two columns ── */}
+        {/* -- Two columns -- */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:'1.25rem'}}>
 
           {/* Top 5 leaderboard */}
@@ -205,7 +205,7 @@ export default function Dashboard() {
             <div className="card-title">Top 5 Leaderboard</div>
             {leaders.length === 0 && (
               <p style={{color:'var(--c-muted)',fontSize:13,lineHeight:1.7}}>
-                No scores yet — leaderboard fills up once matches are played and results are entered.
+                No scores yet - leaderboard fills up once matches are played and results are entered.
               </p>
             )}
             {leaders.map((p,i) => (
@@ -222,7 +222,7 @@ export default function Dashboard() {
               </div>
             ))}
             <Link to="/leaderboard" style={{display:'block',marginTop:12,fontSize:12,color:'var(--c-accent)',fontWeight:700,letterSpacing:'0.04em'}}>
-              Full leaderboard →
+              Full leaderboard ->
             </Link>
           </div>
 
@@ -244,7 +244,7 @@ export default function Dashboard() {
 
         {!player && (
           <div className="alert alert-info" style={{marginTop:'1.25rem'}}>
-            You haven't joined the pool yet. <Link to="/join" style={{color:'var(--c-accent)',fontWeight:700}}>Join now →</Link>
+            You haven't joined the pool yet. <Link to="/join" style={{color:'var(--c-accent)',fontWeight:700}}>Join now -></Link>
           </div>
         )}
       </div>

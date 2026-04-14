@@ -1,23 +1,23 @@
 // Achievement definitions + engine
 
 export const ACHIEVEMENTS = [
-  { id:'first_blood',   icon:'⚽', name:'First Blood',       desc:'Got your first correct result',                      tier:'bronze', check: s => s.correct >= 1 },
-  { id:'eager',         icon:'⚡', name:'Eager Beaver',      desc:'Submitted 50+ predictions',                         tier:'bronze', check: s => s.preds >= 50 },
-  { id:'hat_trick',     icon:'🎩', name:'Hat Trick',         desc:'3 exact scores',                                    tier:'silver', check: s => s.exact >= 3 },
-  { id:'diff_king',     icon:'📐', name:'Diff King',         desc:'10 correct goal differences',                       tier:'silver', check: s => s.diff >= 10 },
-  { id:'high_roller',   icon:'🎲', name:'High Roller',       desc:'5 approx bonuses on big-scoring games',             tier:'silver', check: s => s.approx >= 5 },
-  { id:'ko_hunter',     icon:'🎯', name:'KO Hunter',         desc:'5 KO round team bonuses',                           tier:'silver', check: s => s.ko >= 5 },
-  { id:'completionist', icon:'📋', name:'Completionist',     desc:'Predicted all 104 matches',                         tier:'gold',   check: s => s.preds >= 104 },
-  { id:'psychic',       icon:'🔮', name:'Psychic',           desc:'5 exact scores — seriously how',                    tier:'gold',   check: s => s.exact >= 5 },
-  { id:'consistent',   icon:'📈', name:'Mr Consistent',     desc:'100+ total points',                                 tier:'gold',   check: s => s.total >= 100 },
-  { id:'oracle',        icon:'🧿', name:'Oracle',            desc:'10 exact scores. Statistically impossible.',        tier:'gold',   check: s => s.exact >= 10 },
-  { id:'leader',        icon:'👑', name:'Leader',            desc:'Top of the table',                                  tier:'gold',   check: (_s, rank) => rank === 1 },
-  { id:'podium',        icon:'🏅', name:'Podium',            desc:'Top 3 in the standings',                            tier:'silver', check: (_s, rank) => rank <= 3 },
-  { id:'comeback',      icon:'🔥', name:'The Comeback',      desc:'Climbed 3+ places in one matchday',                 tier:'gold',   check: (_s, rank, prev) => prev && prev - rank >= 3 },
-  { id:'bottler',       icon:'😬', name:'The Bottler',       desc:'Was #1, then wasn\'t',                              tier:'bronze', check: (_s, rank, prev) => prev === 1 && rank > 1 },
-  { id:'unlucky',       icon:'💔', name:'Unlucky',           desc:'10 correct results, zero exact scores',             tier:'bronze', check: s => s.correct >= 10 && s.exact === 0 },
-  { id:'entertainer',  icon:'🎭', name:'Entertainer',       desc:'5 correct draws',                                   tier:'bronze', check: s => s.draws >= 5 },
-  { id:'nailed_nil',    icon:'🥅', name:'Nil Hero',          desc:'Predicted a 0-0 correctly',                         tier:'bronze', check: s => s.correct00 >= 1 },
+  { id:'first_blood',   icon:'\u26BD', name:'First Blood',       desc:'Got your first correct result',                      tier:'bronze', check: s => s.correct >= 1 },
+  { id:'eager',         icon:'\u26A1', name:'Eager Beaver',      desc:'Submitted 50+ predictions',                         tier:'bronze', check: s => s.preds >= 50 },
+  { id:'hat_trick',     icon:'\u{1F3A9}', name:'Hat Trick',         desc:'3 exact scores',                                    tier:'silver', check: s => s.exact >= 3 },
+  { id:'diff_king',     icon:'\u{1F4D0}', name:'Diff King',         desc:'10 correct goal differences',                       tier:'silver', check: s => s.diff >= 10 },
+  { id:'high_roller',   icon:'\u{1F3B2}', name:'High Roller',       desc:'5 approx bonuses on big-scoring games',             tier:'silver', check: s => s.approx >= 5 },
+  { id:'ko_hunter',     icon:'\u{1F3AF}', name:'KO Hunter',         desc:'5 KO round team bonuses',                           tier:'silver', check: s => s.ko >= 5 },
+  { id:'completionist', icon:'\u{1F4CB}', name:'Completionist',     desc:'Predicted all 104 matches',                         tier:'gold',   check: s => s.preds >= 104 },
+  { id:'psychic',       icon:'\u{1F52E}', name:'Psychic',           desc:'5 exact scores - seriously how',                    tier:'gold',   check: s => s.exact >= 5 },
+  { id:'consistent',   icon:'\u{1F4C8}', name:'Mr Consistent',     desc:'100+ total points',                                 tier:'gold',   check: s => s.total >= 100 },
+  { id:'oracle',        icon:'\u{1F9FF}', name:'Oracle',            desc:'10 exact scores. Statistically impossible.',        tier:'gold',   check: s => s.exact >= 10 },
+  { id:'leader',        icon:'\u{1F451}', name:'Leader',            desc:'Top of the table',                                  tier:'gold',   check: (_s, rank) => rank === 1 },
+  { id:'podium',        icon:'\u{1F3C5}', name:'Podium',            desc:'Top 3 in the standings',                            tier:'silver', check: (_s, rank) => rank <= 3 },
+  { id:'comeback',      icon:'\u{1F525}', name:'The Comeback',      desc:'Climbed 3+ places in one matchday',                 tier:'gold',   check: (_s, rank, prev) => prev && prev - rank >= 3 },
+  { id:'bottler',       icon:'\u{1F62C}', name:'The Bottler',       desc:'Was #1, then wasn\'t',                              tier:'bronze', check: (_s, rank, prev) => prev === 1 && rank > 1 },
+  { id:'unlucky',       icon:'\u{1F494}', name:'Unlucky',           desc:'10 correct results, zero exact scores',             tier:'bronze', check: s => s.correct >= 10 && s.exact === 0 },
+  { id:'entertainer',  icon:'\u{1F3AD}', name:'Entertainer',       desc:'5 correct draws',                                   tier:'bronze', check: s => s.draws >= 5 },
+  { id:'nailed_nil',    icon:'\u{1F945}', name:'Nil Hero',          desc:'Predicted a 0-0 correctly',                         tier:'bronze', check: s => s.correct00 >= 1 },
 ]
 
 export const TIER_COLORS = {
@@ -32,7 +32,7 @@ export function computeAchievements(playerStats, rank, prevRank) {
   })
 }
 
-// ── Commentary engine ────────────────────────────────────────────────────────
+// -- Commentary engine --------------------------------------------------------
 
 function pick(arr, seed) {
   const i = Math.abs(Math.floor(Math.sin(seed + 1) * 10000)) % arr.length
@@ -42,7 +42,7 @@ function pick(arr, seed) {
 const EXACT_LINES = [
   '{name} got {score} EXACTLY. How.',
   'Nobody tell {name}\'s boss they could be a professional tipster.',
-  '{name} called {score} to the letter. Retire — you\'ve peaked.',
+  '{name} called {score} to the letter. Retire - you\'ve peaked.',
   'Investigating {name}\'s sources. Got {score} exactly.',
   '{name}: {score}. Actual: {score}. Eerie.',
 ]
@@ -53,7 +53,7 @@ const CORRECT_LINES = [
   'Result goes to {name}. They knew.',
 ]
 const CLOSE_LINES = [
-  '{name} was closest — predicted {pred}, actual {score}.',
+  '{name} was closest - predicted {pred}, actual {score}.',
   'Nearest miss: {name} with {pred} vs the real {score}.',
   '{name} came closest with {pred}. So close yet so far.',
 ]
@@ -66,7 +66,7 @@ const WRONG_LINES = [
 ]
 const NOBODY_LINES = [
   'Nobody predicted {score}. Everyone loses equally. Beautiful.',
-  'The result was {score} — not a single person saw that coming.',
+  'The result was {score} - not a single person saw that coming.',
   '{score} and the whole pool is wrong. Football wins again.',
 ]
 

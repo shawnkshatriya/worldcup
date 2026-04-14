@@ -116,10 +116,10 @@ function generatePrediction(result, playerIndex, matchId) {
 export async function seedDemoData(onProgress) {
   const log = onProgress || (() => {})
 
-  log('Step 1/5 — Clearing old demo data...')
+  log('Step 1/5 - Clearing old demo data...')
   await clearDemoData()
 
-  log('Step 2/5 — Creating 8 demo players...')
+  log('Step 2/5 - Creating 8 demo players...')
   const insertedPlayers = []
   for (const p of DEMO_PLAYERS) {
     const { data, error } = await supabase
@@ -131,7 +131,7 @@ export async function seedDemoData(onProgress) {
   }
   log(`  Created ${insertedPlayers.length} players`)
 
-  log('Step 3/5 — Writing all 104 match results...')
+  log('Step 3/5 - Writing all 104 match results...')
   let written = 0
   for (const r of ALL_RESULTS) {
     const updateData = {
@@ -155,10 +155,10 @@ export async function seedDemoData(onProgress) {
   }
   log(`  Set ${written} / 104 match results`)
 
-  log('Step 4/5 — Generating predictions for all 104 matches...')
+  log('Step 4/5 - Generating predictions for all 104 matches...')
   const { data: weights } = await supabase
     .from('scoring_weights').select('*').eq('room_code','DEFAULT').single()
-  if (!weights) throw new Error('No scoring weights — run migrations first')
+  if (!weights) throw new Error('No scoring weights - run migrations first')
 
   const { data: allMatches } = await supabase
     .from('matches').select('*').in('id', ALL_RESULTS.map(r => r.id))
@@ -201,9 +201,9 @@ export async function seedDemoData(onProgress) {
     const { error } = await supabase.from('predictions').insert(allPreds.slice(i, i + CHUNK))
     if (error) throw new Error(`Prediction insert failed at chunk ${i}: ${error.message}`)
   }
-  log(`  Inserted ${allPreds.length} predictions (${insertedPlayers.length} players × ${allMatches.length} matches)`)
+  log(`  Inserted ${allPreds.length} predictions (${insertedPlayers.length} players x ${allMatches.length} matches)`)
 
-  log('Step 5/5 — Saving scores...')
+  log('Step 5/5 - Saving scores...')
   for (let i = 0; i < allScores.length; i += CHUNK) {
     const { error } = await supabase.from('scores')
       .upsert(allScores.slice(i, i + CHUNK), { onConflict: 'player_id,match_id' })
@@ -211,8 +211,8 @@ export async function seedDemoData(onProgress) {
   }
   log(`  Saved ${allScores.length} score records`)
   log('')
-  log('✓ Done! All 104 matches, 8 players, predictions + scores loaded.')
-  log('  → Check Dashboard, Leaderboard, Stats, Fun Zone, All Predictions, Live Scores')
+  log('v Done! All 104 matches, 8 players, predictions + scores loaded.')
+  log('  -> Check Dashboard, Leaderboard, Stats, Fun Zone, All Predictions, Live Scores')
 
   return {
     players:     insertedPlayers.length,

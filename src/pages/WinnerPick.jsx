@@ -6,30 +6,30 @@ const TOURNAMENT_START = new Date('2026-06-11T22:00:00Z')
 
 // All 48 qualified teams with flag emojis
 const TEAMS = [
-  { name:'Argentina',    flag:'🇦🇷' }, { name:'Australia',    flag:'🇦🇺' },
-  { name:'Belgium',      flag:'🇧🇪' }, { name:'Brazil',       flag:'🇧🇷' },
-  { name:'Cameroon',     flag:'🇨🇲' }, { name:'Canada',       flag:'🇨🇦' },
-  { name:'Chile',        flag:'🇨🇱' }, { name:'Colombia',     flag:'🇨🇴' },
-  { name:'Croatia',      flag:'🇭🇷' }, { name:'Denmark',      flag:'🇩🇰' },
-  { name:'Ecuador',      flag:'🇪🇨' }, { name:'Egypt',        flag:'🇪🇬' },
-  { name:'England',      flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿' }, { name:'France',       flag:'🇫🇷' },
-  { name:'Germany',      flag:'🇩🇪' }, { name:'Ghana',        flag:'🇬🇭' },
-  { name:'Hungary',      flag:'🇭🇺' }, { name:'Indonesia',    flag:'🇮🇩' },
-  { name:'Iran',         flag:'🇮🇷' }, { name:'Ivory Coast',  flag:'🇨🇮' },
-  { name:'Japan',        flag:'🇯🇵' }, { name:'Mexico',       flag:'🇲🇽' },
-  { name:'Morocco',      flag:'🇲🇦' }, { name:'Netherlands',  flag:'🇳🇱' },
-  { name:'New Zealand',  flag:'🇳🇿' }, { name:'Nigeria',      flag:'🇳🇬' },
-  { name:'Panama',       flag:'🇵🇦' }, { name:'Paraguay',     flag:'🇵🇾' },
-  { name:'Peru',         flag:'🇵🇪' }, { name:'Poland',       flag:'🇵🇱' },
-  { name:'Portugal',     flag:'🇵🇹' }, { name:'Saudi Arabia', flag:'🇸🇦' },
-  { name:'Senegal',      flag:'🇸🇳' }, { name:'Serbia',       flag:'🇷🇸' },
-  { name:'Slovenia',     flag:'🇸🇮' }, { name:'South Africa', flag:'🇿🇦' },
-  { name:'South Korea',  flag:'🇰🇷' }, { name:'Spain',        flag:'🇪🇸' },
-  { name:'Switzerland',  flag:'🇨🇭' }, { name:'Turkey',       flag:'🇹🇷' },
-  { name:'Ukraine',      flag:'🇺🇦' }, { name:'Uruguay',      flag:'🇺🇾' },
-  { name:'USA',          flag:'🇺🇸' }, { name:'Venezuela',    flag:'🇻🇪' },
-  { name:'Cuba',         flag:'🇨🇺' }, { name:'Guatemala',    flag:'🇬🇹' },
-  { name:'Costa Rica',   flag:'🇨🇷' }, { name:'Italy',        flag:'🇮🇹' },
+  { name:'Argentina',    flag:'\u{1F1E6}\u{1F1F7}' }, { name:'Australia',    flag:'\u{1F1E6}\u{1F1FA}' },
+  { name:'Belgium',      flag:'\u{1F1E7}\u{1F1EA}' }, { name:'Brazil',       flag:'\u{1F1E7}\u{1F1F7}' },
+  { name:'Cameroon',     flag:'\u{1F1E8}\u{1F1F2}' }, { name:'Canada',       flag:'\u{1F1E8}\u{1F1E6}' },
+  { name:'Chile',        flag:'\u{1F1E8}\u{1F1F1}' }, { name:'Colombia',     flag:'\u{1F1E8}\u{1F1F4}' },
+  { name:'Croatia',      flag:'\u{1F1ED}\u{1F1F7}' }, { name:'Denmark',      flag:'\u{1F1E9}\u{1F1F0}' },
+  { name:'Ecuador',      flag:'\u{1F1EA}\u{1F1E8}' }, { name:'Egypt',        flag:'\u{1F1EA}\u{1F1EC}' },
+  { name:'England',      flag:'\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}' }, { name:'France',       flag:'\u{1F1EB}\u{1F1F7}' },
+  { name:'Germany',      flag:'\u{1F1E9}\u{1F1EA}' }, { name:'Ghana',        flag:'\u{1F1EC}\u{1F1ED}' },
+  { name:'Hungary',      flag:'\u{1F1ED}\u{1F1FA}' }, { name:'Indonesia',    flag:'\u{1F1EE}\u{1F1E9}' },
+  { name:'Iran',         flag:'\u{1F1EE}\u{1F1F7}' }, { name:'Ivory Coast',  flag:'\u{1F1E8}\u{1F1EE}' },
+  { name:'Japan',        flag:'\u{1F1EF}\u{1F1F5}' }, { name:'Mexico',       flag:'\u{1F1F2}\u{1F1FD}' },
+  { name:'Morocco',      flag:'\u{1F1F2}\u{1F1E6}' }, { name:'Netherlands',  flag:'\u{1F1F3}\u{1F1F1}' },
+  { name:'New Zealand',  flag:'\u{1F1F3}\u{1F1FF}' }, { name:'Nigeria',      flag:'\u{1F1F3}\u{1F1EC}' },
+  { name:'Panama',       flag:'\u{1F1F5}\u{1F1E6}' }, { name:'Paraguay',     flag:'\u{1F1F5}\u{1F1FE}' },
+  { name:'Peru',         flag:'\u{1F1F5}\u{1F1EA}' }, { name:'Poland',       flag:'\u{1F1F5}\u{1F1F1}' },
+  { name:'Portugal',     flag:'\u{1F1F5}\u{1F1F9}' }, { name:'Saudi Arabia', flag:'\u{1F1F8}\u{1F1E6}' },
+  { name:'Senegal',      flag:'\u{1F1F8}\u{1F1F3}' }, { name:'Serbia',       flag:'\u{1F1F7}\u{1F1F8}' },
+  { name:'Slovenia',     flag:'\u{1F1F8}\u{1F1EE}' }, { name:'South Africa', flag:'\u{1F1FF}\u{1F1E6}' },
+  { name:'South Korea',  flag:'\u{1F1F0}\u{1F1F7}' }, { name:'Spain',        flag:'\u{1F1EA}\u{1F1F8}' },
+  { name:'Switzerland',  flag:'\u{1F1E8}\u{1F1ED}' }, { name:'Turkey',       flag:'\u{1F1F9}\u{1F1F7}' },
+  { name:'Ukraine',      flag:'\u{1F1FA}\u{1F1E6}' }, { name:'Uruguay',      flag:'\u{1F1FA}\u{1F1FE}' },
+  { name:'USA',          flag:'\u{1F1FA}\u{1F1F8}' }, { name:'Venezuela',    flag:'\u{1F1FB}\u{1F1EA}' },
+  { name:'Cuba',         flag:'\u{1F1E8}\u{1F1FA}' }, { name:'Guatemala',    flag:'\u{1F1EC}\u{1F1F9}' },
+  { name:'Costa Rica',   flag:'\u{1F1E8}\u{1F1F7}' }, { name:'Italy',        flag:'\u{1F1EE}\u{1F1F9}' },
 ]
 
 function isLocked() {
@@ -95,7 +95,7 @@ export default function WinnerPick() {
     // Award points to correct pickers
     for (const pick of winners) {
       await supabase.from('winner_picks').update({ pts_awarded: bonus }).eq('id', pick.id)
-      // Also add to scores table as a special score entry — match_id null
+      // Also add to scores table as a special score entry - match_id null
       await supabase.from('scores').upsert({
         player_id: pick.player_id,
         match_id: 104, // Final match
@@ -179,7 +179,7 @@ export default function WinnerPick() {
             <div>
               <strong>Your pick: {myPick.team}</strong>
               {locked
-                ? <span style={{color:'var(--c-muted)',marginLeft:8,fontSize:12}}>Locked — tournament has started</span>
+                ? <span style={{color:'var(--c-muted)',marginLeft:8,fontSize:12}}>Locked - tournament has started</span>
                 : <span style={{color:'var(--c-muted)',marginLeft:8,fontSize:12}}>You can change this until June 11</span>
               }
             </div>
@@ -267,7 +267,7 @@ export default function WinnerPick() {
                   const team = TEAMS.find(t => t.name === p.team)
                   return (
                     <tr key={p.id}>
-                      <td style={{fontWeight:500}}>{p.players?.name || '—'}</td>
+                      <td style={{fontWeight:500}}>{p.players?.name || '-'}</td>
                       <td>
                         <div style={{display:'flex',alignItems:'center',gap:8}}>
                           <span style={{fontSize:18}}>{team?.flag}</span>
@@ -277,7 +277,7 @@ export default function WinnerPick() {
                       <td style={{textAlign:'right'}}>
                         {p.pts_awarded > 0
                           ? <span style={{fontFamily:'var(--font-display)',fontSize:22,color:'var(--c-gold)'}}>+{p.pts_awarded}</span>
-                          : <span style={{color:'var(--c-hint)'}}>—</span>
+                          : <span style={{color:'var(--c-hint)'}}>-</span>
                         }
                       </td>
                     </tr>

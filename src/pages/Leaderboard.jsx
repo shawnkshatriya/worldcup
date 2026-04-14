@@ -74,12 +74,12 @@ export default function Leaderboard() {
         {loading && <p style={{color:'var(--c-muted)'}}>Loading...</p>}
 
         {!loading && rows.length === 0 && (
-          <div className="alert alert-info">No players yet — invite friends to join!</div>
+          <div className="alert alert-info">No players yet - invite friends to join!</div>
         )}
 
         {!loading && rows.length > 0 && (
           <>
-            {/* Podium — top 3 */}
+            {/* Podium - top 3 */}
             {rows.length >= 3 && (
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:'1.5rem',alignItems:'flex-end'}}>
                 {/* 2nd */}

@@ -7,16 +7,16 @@ import { usePlayer } from '../hooks/usePlayer'
 import { Navigate } from 'react-router-dom'
 
 const WEIGHT_LABELS = {
-  group_result:   'Group stage — correct W/D/L',
-  group_diff:     'Group stage — correct goal difference',
-  group_exact:    'Group stage — exact score',
-  group_approx:   'Group stage — approximation bonus (4+ goal games)',
-  ko_team:        'KO round — correct team qualified',
-  ko_result:      'KO round — correct result',
-  ko_diff:        'KO round — correct goal difference',
-  ko_exact:       'KO round — exact score',
-  winner_bonus:   'Tournament winner — correct pick bonus',
-  finalist_bonus: 'Tournament finalist — correct pick bonus',
+  group_result:   'Group stage - correct W/D/L',
+  group_diff:     'Group stage - correct goal difference',
+  group_exact:    'Group stage - exact score',
+  group_approx:   'Group stage - approximation bonus (4+ goal games)',
+  ko_team:        'KO round - correct team qualified',
+  ko_result:      'KO round - correct result',
+  ko_diff:        'KO round - correct goal difference',
+  ko_exact:       'KO round - exact score',
+  winner_bonus:   'Tournament winner - correct pick bonus',
+  finalist_bonus: 'Tournament finalist - correct pick bonus',
 }
 
 const PHASES = ['GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F','GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L','ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']
@@ -171,7 +171,7 @@ export default function Admin() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>Admin panel</h1>
-          <p>Managing: <strong>{currentRoom?.name || adminRoom}</strong> · {players.length} players</p>
+          <p>Managing: <strong>{currentRoom?.name || adminRoom}</strong> . {players.length} players</p>
         </div>
       </div>
       <div className="page-body">
@@ -190,7 +190,7 @@ export default function Admin() {
               }}>
               {r.name}
               <span style={{marginLeft:6,fontSize:10,opacity:0.7}}>
-                {/* player count would need join — skip for now */}
+                {/* player count would need join - skip for now */}
               </span>
             </button>
           ))}
@@ -207,12 +207,12 @@ export default function Admin() {
           ))}
         </div>
 
-        {/* ── ROOMS ── */}
+        {/* -- ROOMS -- */}
         {tab==='rooms' && (
           <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Create new room</div>
-              <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>Each room is a completely separate pool — own players, leaderboard, scoring weights, and invite link.</p>
+              <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>Each room is a completely separate pool - own players, leaderboard, scoring weights, and invite link.</p>
               <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
                 <input type="text" value={newRoomName} onChange={e=>setNewRoomName(e.target.value)}
                   placeholder="e.g. Work Pool 2026 or Lads FC"
@@ -257,10 +257,10 @@ export default function Admin() {
           </div>
         )}
 
-        {/* ── WEIGHTS ── */}
+        {/* -- WEIGHTS -- */}
         {tab==='weights' && weights && (
           <div className="card">
-            <div className="card-title">Scoring weights — {currentRoom?.name}</div>
+            <div className="card-title">Scoring weights - {currentRoom?.name}</div>
             <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1.25rem'}}>
               These weights apply only to <strong>{currentRoom?.name}</strong>. Each room can have different scoring rules.
             </p>
@@ -283,11 +283,11 @@ export default function Admin() {
           </div>
         )}
 
-        {/* ── INVITE ── */}
+        {/* -- INVITE -- */}
         {tab==='invite' && roomData && (
           <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
             <div className="card" style={{marginBottom:0}}>
-              <div className="card-title">Invite link — {currentRoom?.name}</div>
+              <div className="card-title">Invite link - {currentRoom?.name}</div>
               <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>Share this link. Anyone who opens it joins <strong>{currentRoom?.name}</strong>.</p>
               <div style={{background:'var(--c-surface2)',borderRadius:'var(--radius)',padding:'12px 16px',fontFamily:'monospace',fontSize:12,wordBreak:'break-all',border:'1px solid var(--c-border)',marginBottom:10}}>
                 {inviteUrl}
@@ -301,7 +301,7 @@ export default function Admin() {
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Custom invite code</div>
               <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>
-                Set a memorable code your players can type in instead of the full link. Keep it short and easy — e.g. <code>LADS2026</code> or <code>WORKPOOL</code>.
+                Set a memorable code your players can type in instead of the full link. Keep it short and easy - e.g. <code>LADS2026</code> or <code>WORKPOOL</code>.
               </p>
               <div style={{display:'flex',gap:10,alignItems:'flex-start',flexWrap:'wrap'}}>
                 <div style={{flex:1,minWidth:200}}>
@@ -353,7 +353,7 @@ export default function Admin() {
           </div>
         )}
 
-        {/* ── RESULTS ── */}
+        {/* -- RESULTS -- */}
         {tab==='results' && (
           <div className="card">
             <div className="card-title">Enter match results</div>
@@ -371,12 +371,12 @@ export default function Admin() {
           </div>
         )}
 
-        {/* ── PLAYERS ── */}
+        {/* -- PLAYERS -- */}
         {tab==='players' && (
           <div className="card" style={{padding:0,overflow:'auto',maxHeight:'70vh'}}>
             <div style={{padding:'1.25rem',borderBottom:'1px solid var(--c-border)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
               <div>
-                <div className="card-title" style={{marginBottom:2}}>Players — {currentRoom?.name} ({players.length})</div>
+                <div className="card-title" style={{marginBottom:2}}>Players - {currentRoom?.name} ({players.length})</div>
                 <div style={{fontSize:12,color:'var(--c-muted)'}}>Click "Make admin" to give a player room admin access. They'll see a scoped admin panel for this room only.</div>
               </div>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -386,7 +386,7 @@ export default function Admin() {
             </div>
             {dupeCount>0&&(
               <div className="alert alert-warn" style={{margin:'0.75rem 1.25rem',fontSize:13}}>
-                Duplicate names found. Keep the earliest join date — remove the newer duplicate.
+                Duplicate names found. Keep the earliest join date - remove the newer duplicate.
               </div>
             )}
             <table>
@@ -407,7 +407,7 @@ export default function Admin() {
                           </div>
                         </div>
                       </td>
-                      <td style={{fontSize:12,color:'var(--c-muted)'}}>{p.email||'—'}</td>
+                      <td style={{fontSize:12,color:'var(--c-muted)'}}>{p.email||'-'}</td>
                       <td style={{fontSize:12,color:'var(--c-muted)'}}>
                         {new Date(p.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
                         {' '}{new Date(p.created_at).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
@@ -438,7 +438,7 @@ export default function Admin() {
           </div>
         )}
 
-        {/* ── DEV ── */}
+        {/* -- DEV -- */}
         {tab==='dev' && <DevPanel onRefresh={loadRoomData} roomCode={adminRoom} roomName={currentRoom?.name}/>}
       </div>
     </div>
@@ -494,7 +494,7 @@ function DevPanel({ onRefresh, roomCode, roomName }) {
           Seeds 8 dummy players with predictions and results for all 104 matches into the DEFAULT room.
           Use this to preview charts, leaderboard, fun zone and stats with realistic data.
         </p>
-        {isDemoActive&&<div className="alert alert-warn" style={{marginBottom:'1rem'}}>Demo data is active — clear before the real tournament starts.</div>}
+        {isDemoActive&&<div className="alert alert-warn" style={{marginBottom:'1rem'}}>Demo data is active - clear before the real tournament starts.</div>}
         <div style={{display:'flex',gap:10,marginBottom:'1rem',flexWrap:'wrap'}}>
           <button className="btn btn-accent" onClick={handleSeed} disabled={demoStatus==='seeding'||demoStatus==='clearing'}>
             {demoStatus==='seeding'?'Seeding...':(isDemoActive?'Re-seed Demo':'Seed Demo Data')}
@@ -562,7 +562,7 @@ function MatchResultRow({ match: initialMatch, onSave }) {
     <div className="match-row">
       <div className="team-home" style={{fontSize:13}}>{m.home_team}</div>
       <input type="number" min="0" className="score-input" value={m.home_goals??''} placeholder="?" onChange={e=>set('home_goals',e.target.value)}/>
-      <span className="score-sep">–</span>
+      <span className="score-sep">-</span>
       <input type="number" min="0" className="score-input" value={m.away_goals??''} placeholder="?" onChange={e=>set('away_goals',e.target.value)}/>
       <div className="team-away" style={{fontSize:13}}>{m.away_team}</div>
       <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>

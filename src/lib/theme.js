@@ -27,7 +27,7 @@ export const THEMES = {
     }
   },
   light: {
-    label: 'Light', icon: '☀️',
+    label: 'Light', icon: '☀',
     vars: {
       '--c-bg':       '#E8ECF4',
       '--c-surface':  '#F2F5FA',

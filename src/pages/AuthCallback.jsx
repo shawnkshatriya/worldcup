@@ -15,7 +15,7 @@ export default function AuthCallback() {
   }, [])
 
   async function handleCallback() {
-    // Supabase magic link puts tokens in the URL hash — getSession picks them up
+    // Supabase magic link puts tokens in the URL hash - getSession picks them up
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
@@ -32,13 +32,13 @@ export default function AuthCallback() {
       .from('players').select('*').eq('auth_id', user.id).single()
 
     if (existing) {
-      // Returning player — already set up, go home
+      // Returning player - already set up, go home
       setStatus('Welcome back! Redirecting...')
       setTimeout(() => navigate('/'), 800)
       return
     }
 
-    // New player — create the row
+    // New player - create the row
     if (name && room) {
       setStatus(`Setting up your account as "${name}"...`)
       try {
@@ -89,7 +89,7 @@ export default function AuthCallback() {
 
       {error && (
         <div style={{ textAlign: 'center', maxWidth: 360 }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>!</div>
           <div className="alert alert-warn" style={{ textAlign: 'left' }}>{error}</div>
           <button className="btn btn-accent" style={{ marginTop: 12 }} onClick={() => navigate('/join')}>
             Back to join page

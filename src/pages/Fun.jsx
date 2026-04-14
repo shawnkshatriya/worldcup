@@ -38,7 +38,7 @@ function BingoCard({ playerId, predictions, matches }) {
           const bg     = cell.isExact   ? 'rgba(240,165,0,0.28)'   : cell.isCorrect ? 'rgba(34,197,94,0.18)'  : cell.isWrong ? 'rgba(239,68,68,0.14)' : 'var(--c-surface2)'
           const border = cell.isExact   ? '1.5px solid rgba(240,165,0,0.6)' : cell.isCorrect ? '1.5px solid rgba(34,197,94,0.4)' : cell.isWrong ? '1.5px solid rgba(239,68,68,0.3)' : '1px solid var(--c-border)'
           const textCol= cell.isExact   ? '#F0A500' : cell.isCorrect ? '#22C55E' : cell.isWrong ? '#EF4444' : 'var(--c-muted)'
-          const tick   = cell.isExact   ? '💎' : cell.isCorrect ? '✓' : cell.isWrong ? '✗' : ''
+          const tick   = cell.isExact   ? '💎' : cell.isCorrect ? 'v' : cell.isWrong ? 'x' : ''
           return (
             <div key={i} style={{aspectRatio:'1', background:bg, border, borderRadius:4, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:2, position:'relative'}}>
               {tick && <div style={{position:'absolute',top:2,right:3,fontSize:cell.isExact?9:8,color:textCol,fontWeight:700}}>{tick}</div>}
@@ -51,9 +51,9 @@ function BingoCard({ playerId, predictions, matches }) {
       </div>
       <div style={{display:'flex',gap:12,fontSize:11,color:'var(--c-muted)',flexWrap:'wrap'}}>
         {[
-          {bg:'rgba(240,165,0,0.28)',  border:'1.5px solid rgba(240,165,0,0.6)',  label:'💎 Exact score'},
-          {bg:'rgba(34,197,94,0.18)',  border:'1.5px solid rgba(34,197,94,0.4)',  label:'✓ Correct result'},
-          {bg:'rgba(239,68,68,0.14)',  border:'1.5px solid rgba(239,68,68,0.3)',  label:'✗ Wrong'},
+          {bg:'rgba(240,165,0,0.28)',  border:'1.5px solid rgba(240,165,0,0.6)',  label:'\u{1F48E} Exact score'},
+          {bg:'rgba(34,197,94,0.18)',  border:'1.5px solid rgba(34,197,94,0.4)',  label:'v Correct result'},
+          {bg:'rgba(239,68,68,0.14)',  border:'1.5px solid rgba(239,68,68,0.3)',  label:'x Wrong'},
           {bg:'var(--c-surface2)',     border:'1px solid var(--c-border)',         label:'Upcoming'},
         ].map(l=>(
           <span key={l.label} style={{display:'flex',alignItems:'center',gap:5}}>
@@ -62,7 +62,7 @@ function BingoCard({ playerId, predictions, matches }) {
           </span>
         ))}
       </div>
-      <p style={{fontSize:11,color:'var(--c-hint)',marginTop:6}}>Top row = your predicted score · Bottom row = actual result</p>
+      <p style={{fontSize:11,color:'var(--c-hint)',marginTop:6}}>Top row = your predicted score . Bottom row = actual result</p>
     </div>
   )
 }
@@ -177,7 +177,7 @@ export default function Fun() {
       <div className="page-body">
         {noData && (
           <div className="alert alert-info" style={{marginBottom:'1.5rem'}}>
-            Seed demo data from <strong>Admin → Dev tab</strong> to see everything come alive here.
+            Seed demo data from <strong>Admin -> Dev tab</strong> to see everything come alive here.
           </div>
         )}
 
@@ -239,7 +239,7 @@ export default function Fun() {
         {tab==='h2h' && (
           <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
             <div className="alert alert-info">
-              <strong>How this works:</strong> For every match with a result, we compare who scored more points on that prediction. Green = winning that rivalry, red = losing. The number shows W–L record across all played matches.
+              <strong>How this works:</strong> For every match with a result, we compare who scored more points on that prediction. Green = winning that rivalry, red = losing. The number shows W-L record across all played matches.
             </div>
 
             <div className="card" style={{marginBottom:0,padding:0,overflow:'hidden'}}>
@@ -274,17 +274,17 @@ export default function Fun() {
                             </div>
                           </td>
                           {sorted.map(cp=>{
-                            if(cp.id===rp.id) return <td key={cp.id} style={{textAlign:'center',background:'var(--c-surface2)',color:'var(--c-hint)',fontSize:12}}>—</td>
+                            if(cp.id===rp.id) return <td key={cp.id} style={{textAlign:'center',background:'var(--c-surface2)',color:'var(--c-hint)',fontSize:12}}>-</td>
                             const rec=h2h[rp.id]?.[cp.id]
-                            if(!rec) return <td key={cp.id} style={{textAlign:'center',color:'var(--c-hint)',fontSize:12}}>—</td>
+                            if(!rec) return <td key={cp.id} style={{textAlign:'center',color:'var(--c-hint)',fontSize:12}}>-</td>
                             const total=rec.wins+rec.losses+rec.draws
-                            if(total===0) return <td key={cp.id} style={{textAlign:'center',color:'var(--c-hint)',fontSize:12}}>—</td>
+                            if(total===0) return <td key={cp.id} style={{textAlign:'center',color:'var(--c-hint)',fontSize:12}}>-</td>
                             const winning=rec.wins>rec.losses
                             const tied=rec.wins===rec.losses
                             return (
                               <td key={cp.id} style={{textAlign:'center',background:winning?'rgba(34,197,94,0.07)':tied?'transparent':'rgba(239,68,68,0.07)'}}>
                                 <div style={{fontWeight:700,fontSize:12,color:winning?'var(--c-success)':tied?'var(--c-muted)':'var(--c-danger)'}}>{rec.wins}W</div>
-                                <div style={{fontSize:10,color:'var(--c-hint)'}}>{rec.losses}L · {rec.draws}D</div>
+                                <div style={{fontSize:10,color:'var(--c-hint)'}}>{rec.losses}L . {rec.draws}D</div>
                               </td>
                             )
                           })}
@@ -300,7 +300,7 @@ export default function Fun() {
             {/* Closest rivalries */}
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Closest rivalries</div>
-              <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:'1rem'}}>Pairs with the most even records — the real grudge matches</p>
+              <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:'1rem'}}>Pairs with the most even records - the real grudge matches</p>
               {(() => {
                 const pairs=[]
                 for(let i=0;i<sorted.length;i++) for(let j=i+1;j<sorted.length;j++){
@@ -320,8 +320,8 @@ export default function Fun() {
                       <span style={{fontSize:13,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{a.name}</span>
                     </div>
                     <div style={{textAlign:'center',flexShrink:0,minWidth:100}}>
-                      <div style={{fontFamily:'var(--font-display)',fontSize:20}}>{rec.wins} – {rec.losses}</div>
-                      <div style={{fontSize:10,color:'var(--c-muted)'}}>{total} matches · {rec.draws} draws</div>
+                      <div style={{fontFamily:'var(--font-display)',fontSize:20}}>{rec.wins} - {rec.losses}</div>
+                      <div style={{fontSize:10,color:'var(--c-muted)'}}>{total} matches . {rec.draws} draws</div>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:6,flex:1,justifyContent:'flex-end',minWidth:0}}>
                       <span style={{fontSize:13,fontWeight:500,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',textAlign:'right'}}>{b.name}</span>
@@ -338,7 +338,7 @@ export default function Fun() {
         {tab==='bingo' && (
           <div>
             <div className="alert alert-info" style={{marginBottom:'1rem'}}>
-              Each cell shows your predicted score (top) and the actual result (bottom). 💎 gold = exact score, ✓ green = correct result, ✗ red = wrong.
+              Each cell shows your predicted score (top) and the actual result (bottom). 💎 gold = exact score, v green = correct result, x red = wrong.
             </div>
             <div style={{display:'flex',gap:8,marginBottom:'1.25rem',flexWrap:'wrap'}}>
               {players.map((p,i)=>(
@@ -360,7 +360,7 @@ export default function Fun() {
                     <div className="avatar" style={{width:40,height:40,fontSize:14,fontWeight:700,background:`${AVATAR_COLORS[pi%AVATAR_COLORS.length]}22`,color:AVATAR_COLORS[pi%AVATAR_COLORS.length]}}>{p?.name?.slice(0,2).toUpperCase()}</div>
                     <div>
                       <div style={{fontWeight:600,fontSize:15}}>{p?.name}'s prediction card</div>
-                      <div style={{fontSize:12,color:'var(--c-muted)'}}>{stat?.exact} exact · {stat?.correct} correct · {stat?.total} pts total</div>
+                      <div style={{fontSize:12,color:'var(--c-muted)'}}>{stat?.exact} exact . {stat?.correct} correct . {stat?.total} pts total</div>
                     </div>
                   </div>
                   <BingoCard playerId={selectedPlayer} predictions={predictions} matches={matches} />
@@ -384,7 +384,7 @@ export default function Fun() {
                     background:commentMatch===m.id?'var(--c-accent)':'var(--c-surface2)',
                     borderColor:commentMatch===m.id?'var(--c-accent)':'var(--c-border)',
                     color:commentMatch===m.id?'#fff':'var(--c-muted)',
-                  }}>{m.home_team} {m.home_goals}–{m.away_goals} {m.away_team}</button>
+                  }}>{m.home_team} {m.home_goals}-{m.away_goals} {m.away_team}</button>
                 ))}
               </div>
             </div>
@@ -395,7 +395,7 @@ export default function Fun() {
                 <div className="card" style={{marginBottom:0}}>
                   <div style={{marginBottom:'1rem',paddingBottom:'1rem',borderBottom:'1px solid var(--c-border)'}}>
                     <div style={{fontFamily:'var(--font-display)',fontSize:20,letterSpacing:'0.04em',color:'var(--c-muted)'}}>{m?.home_team} vs {m?.away_team}</div>
-                    <div style={{fontFamily:'var(--font-display)',fontSize:42,color:'var(--c-accent)',lineHeight:1}}>{m?.home_goals} – {m?.away_goals}</div>
+                    <div style={{fontFamily:'var(--font-display)',fontSize:42,color:'var(--c-accent)',lineHeight:1}}>{m?.home_goals} - {m?.away_goals}</div>
                   </div>
                   {commentLines.length===0?<p style={{color:'var(--c-muted)',fontSize:13}}>No predictions found for this match.</p>:(
                     <div style={{display:'flex',flexDirection:'column',gap:10}}>
@@ -404,7 +404,7 @@ export default function Fun() {
                         const color=pi>=0?AVATAR_COLORS[pi%AVATAR_COLORS.length]:'var(--c-muted)'
                         const bg=line.type==='exact'?'rgba(240,165,0,0.08)':line.type==='correct'?'rgba(34,197,94,0.06)':line.type==='nobody'?'rgba(255,255,255,0.02)':'rgba(239,68,68,0.06)'
                         const border=line.type==='exact'?'1px solid rgba(240,165,0,0.2)':line.type==='correct'?'1px solid rgba(34,197,94,0.15)':'1px solid var(--c-border)'
-                        const emoji=line.type==='exact'?'💎':line.type==='correct'?'✅':line.type==='close'?'🤏':line.type==='nobody'?'😶':'💀'
+                        const emoji=line.type==='exact'?'💎':line.type==='correct'?'ok':line.type==='close'?'🤏':line.type==='nobody'?'😶':'💀'
                         return (
                           <div key={i} style={{display:'flex',alignItems:'flex-start',gap:12,padding:'12px 14px',borderRadius:'var(--radius)',background:bg,border}}>
                             <span style={{fontSize:20,flexShrink:0,marginTop:1}}>{emoji}</span>

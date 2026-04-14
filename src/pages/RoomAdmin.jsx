@@ -5,13 +5,13 @@ import { Navigate } from 'react-router-dom'
 import { saveRoomWeights } from '../lib/rooms'
 
 const WEIGHT_LABELS = {
-  group_result:  'Group stage — correct W/D/L',
-  group_diff:    'Group stage — correct goal difference',
-  group_exact:   'Group stage — exact score',
-  group_approx:  'Group stage — approximation bonus',
-  ko_result:     'KO round — correct result',
-  ko_diff:       'KO round — correct goal difference',
-  ko_exact:      'KO round — exact score',
+  group_result:  'Group stage - correct W/D/L',
+  group_diff:    'Group stage - correct goal difference',
+  group_exact:   'Group stage - exact score',
+  group_approx:  'Group stage - approximation bonus',
+  ko_result:     'KO round - correct result',
+  ko_diff:       'KO round - correct goal difference',
+  ko_exact:      'KO round - exact score',
   winner_bonus:  'Tournament winner bonus pick',
 }
 
@@ -114,7 +114,7 @@ export default function RoomAdmin() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>Room admin</h1>
-          <p>Managing: <strong>{roomCode}</strong> · {players.length} players</p>
+          <p>Managing: <strong>{roomCode}</strong> . {players.length} players</p>
         </div>
       </div>
       <div className="page-body">
@@ -156,7 +156,7 @@ export default function RoomAdmin() {
                         <span style={{fontWeight:500,fontSize:13}}>{p.name}</span>
                       </div>
                     </td>
-                    <td style={{fontSize:12,color:'var(--c-muted)'}}>{p.email||'—'}</td>
+                    <td style={{fontSize:12,color:'var(--c-muted)'}}>{p.email||'-'}</td>
                     <td>
                       {p.is_room_admin
                         ? <span className="badge badge-amber">Room admin</span>
@@ -257,7 +257,7 @@ function MatchRow({ match: initialMatch, onSave }) {
     <div className="match-row">
       <div className="team-home" style={{fontSize:13}}>{m.home_team}</div>
       <input type="number" min="0" className="score-input" value={m.home_goals??''} placeholder="?" onChange={e=>set('home_goals',e.target.value)}/>
-      <span className="score-sep">–</span>
+      <span className="score-sep">-</span>
       <input type="number" min="0" className="score-input" value={m.away_goals??''} placeholder="?" onChange={e=>set('away_goals',e.target.value)}/>
       <div className="team-away" style={{fontSize:13}}>{m.away_team}</div>
       <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>

@@ -18,7 +18,7 @@ export default function Feedback() {
     setStatus('sending'); setError('')
 
     try {
-      // Always save to DB first — guaranteed to work
+      // Always save to DB first - guaranteed to work
       const { error: dbErr } = await supabase.from('feedback').insert({
         player_id:   player?.id   || null,
         player_name: player?.name || authUser?.email || 'Anonymous',
@@ -135,7 +135,7 @@ export default function Feedback() {
                 <textarea
                   value={message}
                   onChange={e=>setMessage(e.target.value)}
-                  placeholder="What's on your mind? Bug, idea, complaint, praise — all welcome."
+                  placeholder="What's on your mind? Bug, idea, complaint, praise - all welcome."
                   rows={5}
                   style={{width:'100%',resize:'vertical',fontFamily:'var(--font-body)',fontSize:14,padding:'10px 12px',background:'var(--c-surface2)',border:'1px solid var(--c-border2)',borderRadius:'var(--radius)',color:'var(--c-text)',lineHeight:1.6}}
                 />
@@ -165,5 +165,5 @@ export default function Feedback() {
 }
 
 function AdminFeedback() {
-  return null // Placeholder — admin can view feedback in Supabase Table Editor
+  return null // Placeholder - admin can view feedback in Supabase Table Editor
 }

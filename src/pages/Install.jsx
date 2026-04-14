@@ -4,14 +4,14 @@ export default function Install() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>Install the app</h1>
-          <p>Add WC26 to your home screen — no App Store needed</p>
+          <p>Add WC26 to your home screen - no App Store needed</p>
         </div>
       </div>
       <div className="page-body">
 
         {/* iPhone */}
         <div className="card" style={{marginBottom:'1.25rem'}}>
-          <div className="card-title">iPhone — Safari only</div>
+          <div className="card-title">iPhone - Safari only</div>
           <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1.5rem'}}>
             Must use Safari. Chrome on iOS does not support home screen install.
           </p>
@@ -35,7 +35,7 @@ export default function Install() {
 
         {/* Android */}
         <div className="card" style={{marginBottom:'1.25rem'}}>
-          <div className="card-title">Android — Chrome</div>
+          <div className="card-title">Android - Chrome</div>
           <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1.5rem'}}>
             Chrome usually shows an install banner automatically. Or use the menu.
           </p>
@@ -60,7 +60,7 @@ export default function Install() {
           <div className="card-title">Questions</div>
           {[
             { q:'Does it work offline?', a:'The shell loads from cache. Live scores and leaderboard need a connection.' },
-            { q:'Will it update automatically?', a:'Yes — updates silently next time you open it.' },
+            { q:'Will it update automatically?', a:'Yes - updates silently next time you open it.' },
             { q:'Does it use storage?', a:'Barely a few kilobytes. All data lives in the cloud.' },
             { q:'Can I get push notifications?', a:'Android yes. iOS Safari is adding support gradually.' },
           ].map((f,i,arr) => (
@@ -76,7 +76,7 @@ export default function Install() {
   )
 }
 
-// ── Phone mockup shell ───────────────────────────────────────────────────────
+// -- Phone mockup shell -------------------------------------------------------
 function Phone({ children, bg='#f5f5f5' }) {
   return (
     <div style={{width:120,height:220,background:'#1a1a1a',borderRadius:16,border:'5px solid #333',overflow:'hidden',position:'relative',flexShrink:0}}>
@@ -116,7 +116,7 @@ function IOSStep1() {
       <IOSUrlBar/>
       <AppContent/>
       <div style={{height:26,background:'#f5f5f5',borderTop:'0.5px solid #ddd',display:'flex',alignItems:'center',justifyContent:'space-around',flexShrink:0}}>
-        {['←','→','□','⬆','⋯'].map((s,i)=><span key={i} style={{fontSize:10,color:'#007AFF'}}>{s}</span>)}
+        {['\u2190','->','\u25A1','\u2B06','\u22EF'].map((s,i)=><span key={i} style={{fontSize:10,color:'#007AFF'}}>{s}</span>)}
       </div>
     </Phone>
   )
@@ -129,7 +129,7 @@ function IOSStep2() {
       <IOSUrlBar/>
       <AppContent/>
       <div style={{height:26,background:'#f5f5f5',borderTop:'0.5px solid #ddd',display:'flex',alignItems:'center',justifyContent:'space-around',flexShrink:0,position:'relative'}}>
-        {['←','→','□','⬆','⋯'].map((s,i)=><span key={i} style={{fontSize:10,color:s==='⬆'?'#C8102E':'#007AFF',fontWeight:s==='⬆'?700:400}}>{s}</span>)}
+        {['\u2190','->','\u25A1','\u2B06','\u22EF'].map((s,i)=><span key={i} style={{fontSize:10,color:s==='\u2B06'?'#C8102E':'#007AFF',fontWeight:s==='\u2B06'?700:400}}>{s}</span>)}
         <div style={{position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',background:'#C8102E',color:'#fff',fontSize:7,padding:'2px 6px',borderRadius:8,whiteSpace:'nowrap'}}>Tap this</div>
       </div>
     </Phone>

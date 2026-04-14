@@ -106,11 +106,11 @@ export default function Join() {
             ))}
           </div>
 
-          {/* ── New player ── */}
+          {/* -- New player -- */}
           {mode === 'new' && status !== 'sent' && (
             <>
               <p style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
-                Enter your details and we'll email you a magic link to join. No password needed — ever.
+                Enter your details and we'll email you a magic link to join. No password needed - ever.
               </p>
               <div className="form-row">
                 <label>Your name</label>
@@ -133,7 +133,7 @@ export default function Join() {
             </>
           )}
 
-          {/* ── Returning player ── */}
+          {/* -- Returning player -- */}
           {mode === 'returning' && status !== 'sent' && (
             <>
               <p style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
@@ -151,14 +151,14 @@ export default function Join() {
             </>
           )}
 
-          {/* ── Sent confirmation ── */}
+          {/* -- Sent confirmation -- */}
           {status === 'sent' && (
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📬</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, letterSpacing: '0.06em', marginBottom: 8 }}>Check your inbox</div>
               <p style={{ fontSize: 13, color: 'var(--c-muted)', lineHeight: 1.7, marginBottom: 20 }}>
                 We sent a magic link to <strong style={{ color: 'var(--c-text)' }}>{email}</strong>.
-                Click it to {mode === 'new' ? 'join the pool' : 'log back in'} — no password needed.
+                Click it to {mode === 'new' ? 'join the pool' : 'log back in'} - no password needed.
               </p>
               <p style={{ fontSize: 12, color: 'var(--c-hint)' }}>
                 Didn't get it? Check spam, or{' '}
@@ -169,7 +169,7 @@ export default function Join() {
             </div>
           )}
 
-          {/* ── Admin ── */}
+          {/* -- Admin -- */}
           {mode === 'admin' && (
             <>
               <div className="form-row">
@@ -187,7 +187,7 @@ export default function Join() {
         </div>
 
         <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--c-hint)', marginTop: 16 }}>
-          FIFA World Cup 2026 · Canada · Mexico · USA
+          FIFA World Cup 2026 . Canada . Mexico . USA
         </p>
       </div>
     </div>

@@ -35,7 +35,7 @@ export default function Scores() {
     } else if (filter === 'upcoming') {
       query = query.eq('status','SCHEDULED').limit(30)
     }
-    // 'all' — no extra filter
+    // 'all' - no extra filter
 
     const { data } = await query.limit(200)
     const results = data || []
@@ -84,8 +84,8 @@ export default function Scores() {
         <div className="page-header-inner">
           <h1>Live Scores</h1>
           <p>
-            {demoMode ? `Demo mode — ${finishedCount} simulated matches shown as finished` : 'Powered by football-data.org'}
-            {lastSync && <span style={{color:'var(--c-muted)',marginLeft:8}}>· Synced {lastSync}</span>}
+            {demoMode ? `Demo mode - ${finishedCount} simulated matches shown as finished` : 'Powered by football-data.org'}
+            {lastSync && <span style={{color:'var(--c-muted)',marginLeft:8}}>. Synced {lastSync}</span>}
           </p>
         </div>
       </div>
@@ -93,14 +93,14 @@ export default function Scores() {
 
         {demoMode && (
           <div className="alert alert-warn" style={{marginBottom:'1.25rem'}}>
-            Demo mode active — showing simulated match results. Clear demo data from Admin → Dev tab to return to real data.
+            Demo mode active - showing simulated match results. Clear demo data from Admin -> Dev tab to return to real data.
           </div>
         )}
 
         {!demoMode && !apiKey && (
           <div className="alert alert-info" style={{marginBottom:'1.25rem'}}>
             Add <code>VITE_FOOTBALL_API_KEY</code> to Vercel environment variables to enable live score sync (free at football-data.org).
-            Scores can also be entered manually in Admin → Results.
+            Scores can also be entered manually in Admin -> Results.
           </div>
         )}
 
@@ -124,7 +124,7 @@ export default function Scores() {
         {!loading && matches.length === 0 && (
           <div className="alert alert-info">
             {filter==='live' ? 'No matches currently in play.' :
-             filter==='finished' ? 'No finished matches yet — seed demo data or wait for the tournament.' :
+             filter==='finished' ? 'No finished matches yet - seed demo data or wait for the tournament.' :
              filter==='upcoming' ? 'No upcoming matches found.' : 'No matches found.'}
           </div>
         )}
@@ -146,14 +146,14 @@ export default function Scores() {
                 <div style={{textAlign:'center'}}>
                   {m.home_goals!=null ? (
                     <div style={{fontFamily:'var(--font-display)',fontSize:28,fontWeight:400,lineHeight:1,letterSpacing:'0.04em'}}>
-                      {m.home_goals} – {m.away_goals}
+                      {m.home_goals} - {m.away_goals}
                     </div>
                   ) : (
                     <div style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-muted)'}}>vs</div>
                   )}
                   {m.home_goals_pen!=null && (
                     <div style={{fontSize:10,color:'var(--c-muted)'}}>
-                      (pen {m.home_goals_pen}–{m.away_goals_pen})
+                      (pen {m.home_goals_pen}-{m.away_goals_pen})
                     </div>
                   )}
                   {m.home_goals_et!=null && m.home_goals_pen==null && (
