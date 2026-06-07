@@ -13,6 +13,17 @@ const PHASE_LABELS = {
 
 const FILTERS = ['finished','live','upcoming','all']
 
+// Demo mode is active when the known demo seed player exists in the DB.
+// This is precise — it won't false-positive once real tournament scores start coming in.
+async function checkDemoActive() {
+  const { data } = await supabase
+    .from('players')
+    .select('id')
+    .eq('email', 'demo+shawn@wc26.test')
+    .limit(1)
+  return !!(data?.length)
+}
+
 export default function Scores() {
   const { isAdmin } = usePlayer()
   const [matches, setMatches] = useState([])
@@ -37,13 +48,12 @@ export default function Scores() {
     }
     // 'all' - no extra filter
 
-    const { data } = await query.limit(200)
-    const results = data || []
-    setMatches(results)
-
-    // Detect demo mode: any match has TBD but is FINISHED
-    const hasDemo = results.some(m => m.status==='FINISHED' && m.home_goals!=null)
-    setDemoMode(hasDemo && results.filter(m=>m.status==='FINISHED').length > 10)
+    const [{ data }, isDemo] = await Promise.all([
+      query.limit(200),
+      checkDemoActive(),
+    ])
+    setMatches(data || [])
+    setDemoMode(isDemo)
     setLoading(false)
   }
 
@@ -84,8 +94,8 @@ export default function Scores() {
         <div className="page-header-inner">
           <h1>Live Scores</h1>
           <p>
-            {demoMode ? `Demo mode - ${finishedCount} simulated matches shown as finished` : 'Powered by football-data.org'}
-            {lastSync && <span style={{color:'var(--c-muted)',marginLeft:8}}>. Synced {lastSync}</span>}
+            {demoMode ? `Demo mode — ${finishedCount} simulated matches` : 'Powered by football-data.org'}
+            {lastSync && <span style={{color:'var(--c-muted)',marginLeft:8}}>· Synced {lastSync}</span>}
           </p>
         </div>
       </div>
@@ -93,14 +103,14 @@ export default function Scores() {
 
         {demoMode && (
           <div className="alert alert-warn" style={{marginBottom:'1.25rem'}}>
-            Demo mode active - showing simulated match results. Clear demo data from Admin &rarr; Dev tab to return to real data.
+            Demo mode active — showing simulated match results. Clear demo data from Admin → Dev tab before the tournament starts.
           </div>
         )}
 
         {!demoMode && !apiKey && (
           <div className="alert alert-info" style={{marginBottom:'1.25rem'}}>
             Add <code>VITE_FOOTBALL_API_KEY</code> to Vercel environment variables to enable live score sync (free at football-data.org).
-            Scores can also be entered manually in Admin &rarr; Results.
+            Scores can also be entered manually in Admin → Results.
           </div>
         )}
 
@@ -124,7 +134,7 @@ export default function Scores() {
         {!loading && matches.length === 0 && (
           <div className="alert alert-info">
             {filter==='live' ? 'No matches currently in play.' :
-             filter==='finished' ? 'No finished matches yet - seed demo data or wait for the tournament.' :
+             filter==='finished' ? 'No finished matches yet — tournament kicks off 11 June 2026.' :
              filter==='upcoming' ? 'No upcoming matches found.' : 'No matches found.'}
           </div>
         )}
