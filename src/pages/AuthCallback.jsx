@@ -15,7 +15,6 @@ export default function AuthCallback() {
   }, [])
 
   async function handleCallback() {
-    // Supabase magic link puts tokens in the URL hash - getSession picks them up
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
@@ -27,34 +26,60 @@ export default function AuthCallback() {
     const name = params.get('name')
     const room = params.get('room')
 
-    // Check if this user already has a player row
-    const { data: existing } = await supabase
-      .from('players').select('*').eq('auth_id', user.id).single()
-
-    if (existing) {
-      // Returning player - already set up, go home
-      setStatus('Welcome back! Redirecting...')
-      setTimeout(() => navigate('/'), 800)
-      return
-    }
-
-    // New player - create the row
     if (name && room) {
+      // ── New player signup flow ──
+      // Check if this auth_id already has a row in THIS specific room
+      const { data: existingInRoom } = await supabase
+        .from('players').select('*')
+        .eq('auth_id', user.id)
+        .eq('room_code', room)
+        .single()
+
+      if (existingInRoom) {
+        // Already in this room — pin to it and go home
+        localStorage.setItem('wc26_player_room', room)
+        setStatus('Welcome back! Redirecting...')
+        await loadPlayer(user.id)
+        setTimeout(() => navigate('/'), 800)
+        return
+      }
+
+      // Create new player row for this room
       setStatus(`Setting up your account as "${name}"...`)
       try {
         await createPlayer(name, room)
-        setStatus('You\'re in! Redirecting...')
+        setStatus("You're in! Redirecting...")
         setTimeout(() => navigate('/predictions'), 800)
       } catch (e) {
         if (e.message === 'NAME_TAKEN') {
-          setError(`"${name}" is already taken. Go back and choose a different name.`)
+          setError(`"${name}" is already taken in this pool. Go back and choose a different name.`)
         } else {
           setError('Failed to create your player profile. Please try again.')
         }
       }
+
     } else {
-      // Returning login with no name/room params
+      // ── Returning login flow (no name/room params) ──
+      // Check which room the stored localStorage preference says, and verify
+      // the user actually has a player row there. If they're in multiple rooms,
+      // pick the stored preference; otherwise pick whichever row exists.
+      const { data: allRows } = await supabase
+        .from('players').select('*').eq('auth_id', user.id)
+
+      if (!allRows?.length) {
+        setError('No account found for this email. Please join using an invite link.')
+        return
+      }
+
+      const stored = localStorage.getItem('wc26_player_room')
+      const match = stored ? allRows.find(r => r.room_code === stored) : null
+      const target = match || allRows[0]
+
+      // Pin localStorage to the resolved room so usePlayer picks the right one
+      localStorage.setItem('wc26_player_room', target.room_code)
+
       setStatus('Welcome back! Redirecting...')
+      await loadPlayer(user.id)
       setTimeout(() => navigate('/'), 800)
     }
   }
