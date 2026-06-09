@@ -1,8 +1,8 @@
 // Achievement definitions + engine
 
 export const ACHIEVEMENTS = [
-  { id:'first_blood',   icon:'\u26BD', name:'First Blood',       desc:'Got your first correct result',                      tier:'bronze', check: s => s.correct >= 1 },
-  { id:'eager',         icon:'\u26A1', name:'Eager Beaver',      desc:'Submitted 50+ predictions',                         tier:'bronze', check: s => s.preds >= 50 },
+  { id:'first_blood',   icon:'⚽', name:'First Blood',       desc:'Got your first correct result',                      tier:'bronze', check: s => s.correct >= 1 },
+  { id:'eager',         icon:'⚡', name:'Eager Beaver',      desc:'Submitted 50+ predictions',                         tier:'bronze', check: s => s.preds >= 50 },
   { id:'hat_trick',     icon:'🎩', name:'Hat Trick',         desc:'3 exact scores',                                    tier:'silver', check: s => s.exact >= 3 },
   { id:'diff_king',     icon:'📐', name:'Diff King',         desc:'10 correct goal differences',                       tier:'silver', check: s => s.diff >= 10 },
   { id:'high_roller',   icon:'🎲', name:'High Roller',       desc:'5 approx bonuses on big-scoring games',             tier:'silver', check: s => s.approx >= 5 },

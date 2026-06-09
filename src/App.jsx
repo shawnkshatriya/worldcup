@@ -1,0 +1,59 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { PlayerProvider } from './hooks/usePlayer'
+import Sidebar from './components/Sidebar'
+import Dashboard from './pages/Dashboard'
+import Predictions from './pages/Predictions'
+import Leaderboard from './pages/Leaderboard'
+import Scores from './pages/Scores'
+import Stats from './pages/Stats'
+import AllPredictions from './pages/AllPredictions'
+import Fun from './pages/Fun'
+import Support from './pages/Support'
+import Install from './pages/Install'
+import WinnerPick from './pages/WinnerPick'
+import RoomAdmin from './pages/RoomAdmin'
+import Guide from './pages/Guide'
+import Admin from './pages/Admin'
+import Join from './pages/Join'
+import AuthCallback from './pages/AuthCallback'
+import './index.css'
+
+function AppShell() {
+  return (
+    <div className="layout">
+      <Sidebar />
+      <main className="main">
+        <Routes>
+          <Route path="/"            element={<Dashboard />} />
+          <Route path="/predictions" element={<Predictions />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/scores"      element={<Scores />} />
+          <Route path="/stats"       element={<Stats />} />
+          <Route path="/predictions/all" element={<AllPredictions />} />
+          <Route path="/fun" element={<Fun />} />
+          <Route path="/feedback" element={<Navigate to="/support" replace />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/install" element={<Install />} />
+          <Route path="/winner" element={<WinnerPick />} />
+          <Route path="/room-admin" element={<RoomAdmin />} />
+          <Route path="/guide" element={<Guide />} />
+          <Route path="/admin"       element={<Admin />} />
+        </Routes>
+      </main>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <PlayerProvider>
+        <Routes>
+          <Route path="/join"          element={<Join />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/*"             element={<AppShell />} />
+        </Routes>
+      </PlayerProvider>
+    </BrowserRouter>
+  )
+}

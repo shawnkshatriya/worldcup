@@ -24,10 +24,19 @@ export const THEMES = {
       '--fifa-blue':  '#003DA5',
       '--fifa-gold':  '#F0A500',
       '--c-accent-text': '#ffffff',
+      '--c-success-bg': 'rgba(34,197,94,0.15)',
+      '--c-warn-bg':    'rgba(245,158,11,0.15)',
+      '--c-danger-bg':  'rgba(239,68,68,0.15)',
+      '--c-info-bg':    'rgba(59,130,246,0.15)',
+      '--c-muted-bg':   'rgba(255,255,255,0.05)',
+      '--c-alert-info':    '#93C5FD',
+      '--c-alert-success': '#86EFAC',
+      '--c-alert-warn':    '#FCD34D',
+      '--c-alert-danger':  '#FCA5A5',
     }
   },
   light: {
-    label: 'Light', icon: '\u2600',
+    label: 'Light', icon: '☀',
     vars: {
       '--c-bg':       '#E8ECF4',
       '--c-surface':  '#F2F5FA',
@@ -51,10 +60,19 @@ export const THEMES = {
       '--fifa-blue':  '#003DA5',
       '--fifa-gold':  '#C07800',
       '--c-accent-text': '#ffffff',
+      '--c-success-bg': 'rgba(22,122,58,0.14)',
+      '--c-warn-bg':    'rgba(180,83,9,0.14)',
+      '--c-danger-bg':  'rgba(196,30,30,0.14)',
+      '--c-info-bg':    'rgba(26,63,190,0.14)',
+      '--c-muted-bg':   'rgba(0,0,0,0.06)',
+      '--c-alert-info':    '#1A3FBE',
+      '--c-alert-success': '#167A3A',
+      '--c-alert-warn':    '#92400E',
+      '--c-alert-danger':  '#991B1B',
     }
   },
   worldcup: {
-    label: 'World Cup', icon: '\u26BD',
+    label: 'World Cup', icon: '⚽',
     vars: {
       '--c-bg':       '#2D6A2D',
       '--c-surface':  '#357035',
@@ -78,6 +96,15 @@ export const THEMES = {
       '--fifa-blue':  '#87CEEB',
       '--fifa-gold':  '#FFD700',
       '--c-accent-text': '#1a1a1a',
+      '--c-success-bg': 'rgba(144,238,144,0.2)',
+      '--c-warn-bg':    'rgba(255,215,0,0.2)',
+      '--c-danger-bg':  'rgba(255,107,107,0.2)',
+      '--c-info-bg':    'rgba(29,78,216,0.2)',
+      '--c-muted-bg':   'rgba(0,0,0,0.1)',
+      '--c-alert-info':    '#87CEEB',
+      '--c-alert-success': '#90EE90',
+      '--c-alert-warn':    '#FFD700',
+      '--c-alert-danger':  '#FF6B6B',
     }
   }
 }

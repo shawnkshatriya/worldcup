@@ -1,6 +1,6 @@
 // Edge Function: sync-scores
-// Fetches from football-data.org (server-side, shared cache), writes results
-// to the matches table. All 250 users share one cached fetch — no rate limit issues.
+// Fetches from football-data.org, UPSERTS all matches.
+// First run: populates the full schedule. Subsequent runs: updates live/finished scores.
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -9,7 +9,6 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Cache results for 60 seconds so hammering refresh doesn't spike the API
 let lastFetch = 0
 let lastResult: any = null
 
@@ -29,7 +28,7 @@ serve(async (req) => {
   const WC_ID = 2000
 
   if (!FD_KEY) {
-    return new Response(JSON.stringify({ ok: false, error: 'No API key configured' }), {
+    return new Response(JSON.stringify({ ok: false, error: 'No API key configured. Set FOOTBALL_DATA_API_KEY in Supabase Edge Function secrets.' }), {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' }
     })
   }
@@ -41,13 +40,12 @@ serve(async (req) => {
 
     if (!res.ok) {
       const txt = await res.text()
-      return new Response(JSON.stringify({ ok: false, error: `API error ${res.status}: ${txt.slice(0, 200)}` }), {
+      return new Response(JSON.stringify({ ok: false, error: `API ${res.status}: ${txt.slice(0, 200)}` }), {
         status: 502, headers: { ...cors, 'Content-Type': 'application/json' }
       })
     }
 
     const { matches } = await res.json()
-    const finished = matches.filter((m: any) => m.status === 'FINISHED' || m.status === 'IN_PLAY')
 
     const admin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -55,29 +53,63 @@ serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
+    // Map API phase names to our schema
+    const phaseMap: Record<string, string> = {
+      'GROUP_STAGE': '', // will use group info
+      'ROUND_OF_32': 'ROUND_OF_32',
+      'LAST_32': 'ROUND_OF_32',
+      'ROUND_OF_16': 'ROUND_OF_16',
+      'LAST_16': 'ROUND_OF_16',
+      'QUARTER_FINALS': 'QUARTER_FINALS',
+      'SEMI_FINALS': 'SEMI_FINALS',
+      'THIRD_PLACE': 'THIRD_PLACE',
+      'FINAL': 'FINAL',
+    }
+
+    let upserted = 0
     let updated = 0
-    for (const m of finished) {
+
+    for (const m of matches) {
       const score = m.score?.fullTime
-      if (!score || score.home == null) continue
+      let phase = phaseMap[m.stage] || m.stage
 
-      const { error } = await admin.from('matches').update({
-        home_goals: score.home,
-        away_goals: score.away,
-        home_goals_et: m.score?.extraTime?.home ?? null,
-        away_goals_et: m.score?.extraTime?.away ?? null,
-        home_goals_pen: m.score?.penalties?.home ?? null,
-        away_goals_pen: m.score?.penalties?.away ?? null,
-        status: m.status,
-        updated_at: new Date().toISOString()
-      }).eq('id', m.id)
+      // For group stage, use the group name (GROUP_A, GROUP_B, etc.)
+      if (m.stage === 'GROUP_STAGE' && m.group) {
+        phase = m.group.replace('Group ', 'GROUP_').replace(' ', '_').toUpperCase()
+        // football-data.org returns "GROUP_A" format already
+        if (!phase.startsWith('GROUP_')) phase = 'GROUP_' + m.group.replace('Group ', '').toUpperCase()
+      }
 
-      if (!error) updated++
+      const row: any = {
+        id: m.id,
+        phase: phase,
+        match_number: m.matchday || null,
+        home_team: m.homeTeam?.name || m.homeTeam?.shortName || null,
+        away_team: m.awayTeam?.name || m.awayTeam?.shortName || null,
+        kickoff: m.utcDate || null,
+        status: m.status || 'SCHEDULED',
+        updated_at: new Date().toISOString(),
+      }
+
+      // Add scores if available
+      if (score && score.home != null) {
+        row.home_goals = score.home
+        row.away_goals = score.away
+        row.home_goals_et = m.score?.extraTime?.home ?? null
+        row.away_goals_et = m.score?.extraTime?.away ?? null
+        row.home_goals_pen = m.score?.penalties?.home ?? null
+        row.away_goals_pen = m.score?.penalties?.away ?? null
+        updated++
+      }
+
+      const { error } = await admin.from('matches').upsert(row, { onConflict: 'id' })
+      if (!error) upserted++
     }
 
     lastFetch = now
-    lastResult = { updated, total: finished.length }
+    lastResult = { upserted, updated, total: matches.length }
 
-    return new Response(JSON.stringify({ ok: true, cached: false, updated, total: finished.length }), {
+    return new Response(JSON.stringify({ ok: true, cached: false, upserted, updated, total: matches.length }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
     })
   } catch (err) {
