@@ -112,12 +112,70 @@ export function PlayerProvider({ children }) {
     setIsAdmin(false); setPlayer(null); setAuthUser(null)
   }
 
+  async function directSignup(email, name, inviteToken) {
+    var trimEmail = email.trim().toLowerCase()
+    var trimName = name.trim()
+    var { data: room } = await supabase.from('rooms').select('code').eq('invite_token', inviteToken).single()
+    if (!room) throw new Error('INVALID_CODE')
+    // Check name uniqueness
+    var { data: nameTaken } = await supabase.from('players').select('id').eq('room_code', room.code).ilike('name', trimName)
+    if (nameTaken?.length > 0) throw new Error('NAME_TAKEN')
+    // Check if already signed up with this email in this room
+    var { data: existing } = await supabase.from('players').select('*').ilike('email', trimEmail).eq('room_code', room.code).single()
+    if (existing) {
+      // Already exists - just sign them in
+      var { error: signInErr } = await supabase.auth.signInWithPassword({ email: trimEmail, password: 'wc2026_' + trimEmail })
+      if (signInErr) {
+        // Try signup in case auth user doesn't exist
+        await supabase.auth.signUp({ email: trimEmail, password: 'wc2026_' + trimEmail })
+        await supabase.auth.signInWithPassword({ email: trimEmail, password: 'wc2026_' + trimEmail })
+      }
+      localStorage.setItem('wc26_player_room', room.code)
+      setPlayer(existing)
+      return existing
+    }
+    // Create auth user
+    var { data: signUpData, error: signUpErr } = await supabase.auth.signUp({ email: trimEmail, password: 'wc2026_' + trimEmail })
+    if (signUpErr) {
+      // User might already exist in auth but not in players - try sign in
+      var { error: fallbackErr } = await supabase.auth.signInWithPassword({ email: trimEmail, password: 'wc2026_' + trimEmail })
+      if (fallbackErr) throw new Error('Could not create account. Try again or use a different email.')
+    } else {
+      // Sign in immediately
+      await supabase.auth.signInWithPassword({ email: trimEmail, password: 'wc2026_' + trimEmail })
+    }
+    var { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Auth failed. Try again.')
+    var { data: playerRow, error: insertErr } = await supabase.from('players')
+      .insert({ name: trimName, room_code: room.code, auth_id: user.id, email: trimEmail })
+      .select().single()
+    if (insertErr) throw new Error(insertErr.message)
+    localStorage.setItem('wc26_player_room', room.code)
+    setPlayer(playerRow)
+    return playerRow
+  }
+
+  async function directLogin(email) {
+    var trimEmail = email.trim().toLowerCase()
+    var { data: existing } = await supabase.from('players').select('*').ilike('email', trimEmail)
+    if (!existing?.length) throw new Error('EMAIL_NOT_FOUND')
+    var { error } = await supabase.auth.signInWithPassword({ email: trimEmail, password: 'wc2026_' + trimEmail })
+    if (error) throw new Error('Could not log in. If you signed up with a magic link before, ask your admin for help.')
+    var stored = localStorage.getItem('wc26_player_room')
+    var match = stored ? existing.find(function(r){ return r.room_code === stored }) : null
+    var target = match || existing[0]
+    localStorage.setItem('wc26_player_room', target.room_code)
+    setPlayer(target)
+    return target
+  }
+
   return (
     <PlayerCtx.Provider value={{
       player, authUser, isAdmin, loading,
       adminRoom, switchAdminRoom,
       isRoomAdmin: player?.is_room_admin === true,
       createPlayer, sendSignupLink, sendLoginLink,
+      directSignup, directLogin,
       loginAdmin, logout, loadPlayer, switchPlayerRoom
     }}>
       {children}
