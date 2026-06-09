@@ -1,6 +1,6 @@
 export const THEMES = {
   dark: {
-    label: 'Dark', icon: '\u{1F319}',
+    label: 'Dark', icon: '🌙',
     vars: {
       '--c-bg':       '#080B12',
       '--c-surface':  '#0E1220',
