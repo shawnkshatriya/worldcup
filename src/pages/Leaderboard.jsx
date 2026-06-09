@@ -167,7 +167,7 @@ export default function Leaderboard() {
                             </div>
                           </td>
                           <td style={{textAlign:'right'}}>
-                            <span style={{fontFamily:'var(--font-display)',fontSize:24,color:i<3?MEDAL_COLORS[i]:'var(--c-text)'}}>{p.pts}</span>
+                            <span style={{fontFamily:'var(--font-display)',fontSize:24,color:(i<3)?MEDAL_COLORS[i]:'var(--c-text)'}}>{p.pts}</span>
                           </td>
                           <td style={{textAlign:'right'}}><PctBadge val={p.pctWL}/></td>
                           <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.correct}</td>

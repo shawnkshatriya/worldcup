@@ -376,7 +376,7 @@ export default function Stats() {
               <div className="card-title">Points race</div>
               {sorted.map((p,i)=>(
                 <div key={p.id} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
-                  <div style={{width:28,textAlign:'center',fontSize:i<3?22:14,color:i===0?'var(--c-gold)':i===1?'var(--c-silver)':i===2?'var(--c-bronze)':'var(--c-muted)'}}>
+                  <div style={{width:28,textAlign:'center',fontSize:(i<3)?22:14,color:i===0?'var(--c-gold)':i===1?'var(--c-silver)':i===2?'var(--c-bronze)':'var(--c-muted)'}}>
                     {i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}
                   </div>
                   <div className="avatar" style={{width:28,height:28,fontSize:10,fontWeight:700,background:`${p.color}22`,color:p.color,flexShrink:0}}>{p.name.slice(0,2).toUpperCase()}</div>
@@ -434,7 +434,7 @@ export default function Stats() {
                         <tr key={p.id}>
                           <td>
                             <div style={{display:'flex',alignItems:'center',gap:8}}>
-                              <span style={{fontSize:i<3?16:12}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
+                              <span style={{fontSize:(i<3)?16:12}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
                               <div className="avatar" style={{width:24,height:24,fontSize:9,background:`${p.color}22`,color:p.color}}>{p.name.slice(0,2).toUpperCase()}</div>
                               <span style={{fontSize:13,fontWeight:500}}>{p.name}</span>
                             </div>
