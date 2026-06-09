@@ -138,9 +138,9 @@ export default function Dashboard() {
                 June 11 - July 19 &nbsp;.&nbsp; 48 teams &nbsp;.&nbsp; 104 matches
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <FlagPill emoji="\u{1F1E8}\u{1F1E6}" label="Canada" />
-                <FlagPill emoji="\u{1F1F2}\u{1F1FD}" label="Mexico" />
-                <FlagPill emoji="\u{1F1FA}\u{1F1F8}" label="USA" />
+                <FlagPill emoji="🇨🇦" label="Canada" />
+                <FlagPill emoji="🇲🇽" label="Mexico" />
+                <FlagPill emoji="🇺🇸" label="USA" />
               </div>
             </div>
 

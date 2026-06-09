@@ -6,22 +6,22 @@ import { Link } from 'react-router-dom'
 const TOURNAMENT_START = new Date('2026-06-11T22:00:00Z')  // Group stage deadline
 const KO_DEADLINE      = new Date('2026-07-04T18:00:00Z')  // KO stage deadline (first R32 kickoff)
 const TEAMS = [
-  {name:'Argentina',flag:'\u{1F1E6}\u{1F1F7}'},{name:'Australia',flag:'\u{1F1E6}\u{1F1FA}'},{name:'Belgium',flag:'\u{1F1E7}\u{1F1EA}'},
-  {name:'Brazil',flag:'\u{1F1E7}\u{1F1F7}'},{name:'Canada',flag:'\u{1F1E8}\u{1F1E6}'},{name:'Chile',flag:'\u{1F1E8}\u{1F1F1}'},
-  {name:'Colombia',flag:'\u{1F1E8}\u{1F1F4}'},{name:'Croatia',flag:'\u{1F1ED}\u{1F1F7}'},{name:'Denmark',flag:'\u{1F1E9}\u{1F1F0}'},
-  {name:'Ecuador',flag:'\u{1F1EA}\u{1F1E8}'},{name:'Egypt',flag:'\u{1F1EA}\u{1F1EC}'},{name:'England',flag:'\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}'},
-  {name:'France',flag:'\u{1F1EB}\u{1F1F7}'},{name:'Germany',flag:'\u{1F1E9}\u{1F1EA}'},{name:'Ghana',flag:'\u{1F1EC}\u{1F1ED}'},
-  {name:'Indonesia',flag:'\u{1F1EE}\u{1F1E9}'},{name:'Iran',flag:'\u{1F1EE}\u{1F1F7}'},{name:'Italy',flag:'\u{1F1EE}\u{1F1F9}'},
-  {name:'Ivory Coast',flag:'\u{1F1E8}\u{1F1EE}'},{name:'Japan',flag:'\u{1F1EF}\u{1F1F5}'},{name:'Mexico',flag:'\u{1F1F2}\u{1F1FD}'},
-  {name:'Morocco',flag:'\u{1F1F2}\u{1F1E6}'},{name:'Netherlands',flag:'\u{1F1F3}\u{1F1F1}'},{name:'Nigeria',flag:'\u{1F1F3}\u{1F1EC}'},
-  {name:'Panama',flag:'\u{1F1F5}\u{1F1E6}'},{name:'Peru',flag:'\u{1F1F5}\u{1F1EA}'},{name:'Poland',flag:'\u{1F1F5}\u{1F1F1}'},
-  {name:'Portugal',flag:'\u{1F1F5}\u{1F1F9}'},{name:'Saudi Arabia',flag:'\u{1F1F8}\u{1F1E6}'},{name:'Senegal',flag:'\u{1F1F8}\u{1F1F3}'},
-  {name:'Serbia',flag:'\u{1F1F7}\u{1F1F8}'},{name:'South Korea',flag:'\u{1F1F0}\u{1F1F7}'},{name:'Spain',flag:'\u{1F1EA}\u{1F1F8}'},
-  {name:'Switzerland',flag:'\u{1F1E8}\u{1F1ED}'},{name:'Turkey',flag:'\u{1F1F9}\u{1F1F7}'},{name:'Uruguay',flag:'\u{1F1FA}\u{1F1FE}'},
-  {name:'USA',flag:'\u{1F1FA}\u{1F1F8}'},{name:'Costa Rica',flag:'\u{1F1E8}\u{1F1F7}'},{name:'Slovenia',flag:'\u{1F1F8}\u{1F1EE}'},
-  {name:'South Africa',flag:'\u{1F1FF}\u{1F1E6}'},{name:'Venezuela',flag:'\u{1F1FB}\u{1F1EA}'},{name:'Ukraine',flag:'\u{1F1FA}\u{1F1E6}'},
-  {name:'New Zealand',flag:'\u{1F1F3}\u{1F1FF}'},{name:'Paraguay',flag:'\u{1F1F5}\u{1F1FE}'},{name:'Guatemala',flag:'\u{1F1EC}\u{1F1F9}'},
-  {name:'Cuba',flag:'\u{1F1E8}\u{1F1FA}'},{name:'Cameroon',flag:'\u{1F1E8}\u{1F1F2}'},{name:'Hungary',flag:'\u{1F1ED}\u{1F1FA}'},
+  {name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},{name:'Belgium',flag:'🇧🇪'},
+  {name:'Brazil',flag:'🇧🇷'},{name:'Canada',flag:'🇨🇦'},{name:'Chile',flag:'🇨🇱'},
+  {name:'Colombia',flag:'🇨🇴'},{name:'Croatia',flag:'🇭🇷'},{name:'Denmark',flag:'🇩🇰'},
+  {name:'Ecuador',flag:'🇪🇨'},{name:'Egypt',flag:'🇪🇬'},{name:'England',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},
+  {name:'France',flag:'🇫🇷'},{name:'Germany',flag:'🇩🇪'},{name:'Ghana',flag:'🇬🇭'},
+  {name:'Indonesia',flag:'🇮🇩'},{name:'Iran',flag:'🇮🇷'},{name:'Italy',flag:'🇮🇹'},
+  {name:'Ivory Coast',flag:'🇨🇮'},{name:'Japan',flag:'🇯🇵'},{name:'Mexico',flag:'🇲🇽'},
+  {name:'Morocco',flag:'🇲🇦'},{name:'Netherlands',flag:'🇳🇱'},{name:'Nigeria',flag:'🇳🇬'},
+  {name:'Panama',flag:'🇵🇦'},{name:'Peru',flag:'🇵🇪'},{name:'Poland',flag:'🇵🇱'},
+  {name:'Portugal',flag:'🇵🇹'},{name:'Saudi Arabia',flag:'🇸🇦'},{name:'Senegal',flag:'🇸🇳'},
+  {name:'Serbia',flag:'🇷🇸'},{name:'South Korea',flag:'🇰🇷'},{name:'Spain',flag:'🇪🇸'},
+  {name:'Switzerland',flag:'🇨🇭'},{name:'Turkey',flag:'🇹🇷'},{name:'Uruguay',flag:'🇺🇾'},
+  {name:'USA',flag:'🇺🇸'},{name:'Costa Rica',flag:'🇨🇷'},{name:'Slovenia',flag:'🇸🇮'},
+  {name:'South Africa',flag:'🇿🇦'},{name:'Venezuela',flag:'🇻🇪'},{name:'Ukraine',flag:'🇺🇦'},
+  {name:'New Zealand',flag:'🇳🇿'},{name:'Paraguay',flag:'🇵🇾'},{name:'Guatemala',flag:'🇬🇹'},
+  {name:'Cuba',flag:'🇨🇺'},{name:'Cameroon',flag:'🇨🇲'},{name:'Hungary',flag:'🇭🇺'},
 ]
 
 function WinnerPickInline({ player }) {

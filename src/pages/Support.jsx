@@ -89,7 +89,7 @@ export default function Support() {
             <div className="card-title">Send feedback</div>
             {status === 'done' ? (
               <div style={{textAlign:'center',padding:'1.5rem 0'}}>
-                <div style={{fontSize:36,marginBottom:12}}>\u{1F64F}</div>
+                <div style={{fontSize:36,marginBottom:12}}>🙏</div>
                 <div style={{fontWeight:600,fontSize:16,marginBottom:8}}>Thanks!</div>
                 <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>Your feedback has been received.</p>
                 <button className="btn btn-accent" onClick={() => setStatus('idle')}>Send more</button>

@@ -147,13 +147,13 @@ function FunFacts({ sorted, playerStats, leader, totalGoals, finished, avgGoals,
   const avgPts = playerStats.length ? Math.round(totalPts / playerStats.length) : 0
 
   const facts = [
-    leader && leader.total > 0 && { icon: '\u{1F451}', text: gap > 5 ? leader.name + ' is running away - ' + gap + ' pts clear of ' + (second ? second.name : 'second') : gap === 0 && second ? leader.name + ' and ' + second.name + ' are level at the top!' : leader.name + ' leads with ' + leader.total + ' pts, ' + gap + ' ahead' },
-    last && last.id !== leader?.id && leader && leader.total > 0 && { icon: '\u{1F4C9}', text: last.name + ' is last - ' + (leader.total - last.total) + ' pts off the pace.' },
-    mostExact && mostExact.exact >= 3 && { icon: '\u{1F48E}', text: mostExact.name + ' is a psychic - ' + mostExact.exact + ' exact scores.' },
-    mostCorr && mostCorr.correct > 0 && { icon: '\u{1F3AF}', text: mostCorr.name + ' picks winners best - ' + mostCorr.correct + ' correct results' },
-    avgPts > 0 && { icon: '\u{1F4CA}', text: 'Pool average is ' + avgPts + ' pts.' },
-    totalGoals > 0 && { icon: '\u{26BD}', text: totalGoals + ' goals in ' + finished.length + ' matches - ' + avgGoals + ' per game' },
-    topScorer && { icon: '\u{1F525}', text: topScorer.name + ' leads with ' + topScorer.goals + ' goals' },
+    leader && leader.total > 0 && { icon: '👑', text: gap > 5 ? leader.name + ' is running away - ' + gap + ' pts clear of ' + (second ? second.name : 'second') : gap === 0 && second ? leader.name + ' and ' + second.name + ' are level at the top!' : leader.name + ' leads with ' + leader.total + ' pts, ' + gap + ' ahead' },
+    last && last.id !== leader?.id && leader && leader.total > 0 && { icon: '📉', text: last.name + ' is last - ' + (leader.total - last.total) + ' pts off the pace.' },
+    mostExact && mostExact.exact >= 3 && { icon: '💎', text: mostExact.name + ' is a psychic - ' + mostExact.exact + ' exact scores.' },
+    mostCorr && mostCorr.correct > 0 && { icon: '🎯', text: mostCorr.name + ' picks winners best - ' + mostCorr.correct + ' correct results' },
+    avgPts > 0 && { icon: '📊', text: 'Pool average is ' + avgPts + ' pts.' },
+    totalGoals > 0 && { icon: '⚽', text: totalGoals + ' goals in ' + finished.length + ' matches - ' + avgGoals + ' per game' },
+    topScorer && { icon: '🔥', text: topScorer.name + ' leads with ' + topScorer.goals + ' goals' },
   ].filter(Boolean)
 
   return (
@@ -377,7 +377,7 @@ export default function Stats() {
               {sorted.map((p,i)=>(
                 <div key={p.id} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
                   <div style={{width:28,textAlign:'center',fontSize:i<3?22:14,color:i===0?'var(--c-gold)':i===1?'var(--c-silver)':i===2?'var(--c-bronze)':'var(--c-muted)'}}>
-                    {i===0?'\u{1F947}':i===1?'\u{1F948}':i===2?'\u{1F949}':i+1}
+                    {i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}
                   </div>
                   <div className="avatar" style={{width:28,height:28,fontSize:10,fontWeight:700,background:`${p.color}22`,color:p.color,flexShrink:0}}>{p.name.slice(0,2).toUpperCase()}</div>
                   <div style={{flex:1,minWidth:0}}>
@@ -434,7 +434,7 @@ export default function Stats() {
                         <tr key={p.id}>
                           <td>
                             <div style={{display:'flex',alignItems:'center',gap:8}}>
-                              <span style={{fontSize:i<3?16:12}}>{i===0?'\u{1F947}':i===1?'\u{1F948}':i===2?'\u{1F949}':i+1}</span>
+                              <span style={{fontSize:i<3?16:12}}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
                               <div className="avatar" style={{width:24,height:24,fontSize:9,background:`${p.color}22`,color:p.color}}>{p.name.slice(0,2).toUpperCase()}</div>
                               <span style={{fontSize:13,fontWeight:500}}>{p.name}</span>
                             </div>

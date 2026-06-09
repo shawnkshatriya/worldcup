@@ -72,7 +72,7 @@ export default function Feedback() {
 
           {status === 'done' ? (
             <div className="card" style={{textAlign:'center',padding:'3rem 2rem'}}>
-              <div style={{fontSize:48,marginBottom:16}}>\u{1F64F}</div>
+              <div style={{fontSize:48,marginBottom:16}}>🙏</div>
               <div style={{fontFamily:'var(--font-display)',fontSize:28,letterSpacing:'0.04em',marginBottom:8}}>Thanks!</div>
               <p style={{color:'var(--c-muted)',fontSize:14,lineHeight:1.7,marginBottom:'1.5rem'}}>
                 Your feedback has been sent to Shawn and saved to the database. It genuinely helps.
