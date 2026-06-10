@@ -9,7 +9,7 @@ const TEAMS = [
   { name:'Algeria', flag:'🇩🇿'},{ name:'Argentina', flag:'🇦🇷'},{ name:'Australia', flag:'🇦🇺'},
   { name:'Austria', flag:'🇦🇹'},{ name:'Belgium', flag:'🇧🇪'},{ name:'Bosnia and Herzegovina', flag:'🇧🇦'},
   { name:'Brazil', flag:'🇧🇷'},{ name:'Canada', flag:'🇨🇦'},{ name:'Cape Verde', flag:'🇨🇻'},
-  { name:'Colombia', flag:'🇨🇴'},{ name:'Croatia', flag:'🇭🇷'},{ name:'Curaçao', flag:'🇨🇼'},
+  { name:'Colombia', flag:'🇨🇴'},{ name:'Croatia', flag:'🇭🇷'},{ name:'Curacao', flag:'🇨🇼'},
   { name:'Czechia', flag:'🇨🇿'},{ name:'DR Congo', flag:'🇨🇩'},{ name:'Ecuador', flag:'🇪🇨'},
   { name:'Egypt', flag:'🇪🇬'},{ name:'England', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{ name:'France', flag:'🇫🇷'},
   { name:'Germany', flag:'🇩🇪'},{ name:'Ghana', flag:'🇬🇭'},{ name:'Haiti', flag:'🇭🇹'},
@@ -20,7 +20,7 @@ const TEAMS = [
   { name:'Portugal', flag:'🇵🇹'},{ name:'Qatar', flag:'🇶🇦'},{ name:'Saudi Arabia', flag:'🇸🇦'},
   { name:'Scotland', flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'},{ name:'Senegal', flag:'🇸🇳'},{ name:'South Africa', flag:'🇿🇦'},
   { name:'South Korea', flag:'🇰🇷'},{ name:'Spain', flag:'🇪🇸'},{ name:'Sweden', flag:'🇸🇪'},
-  { name:'Switzerland', flag:'🇨🇭'},{ name:'Tunisia', flag:'🇹🇳'},{ name:'Türkiye', flag:'🇹🇷'},
+  { name:'Switzerland', flag:'🇨🇭'},{ name:'Tunisia', flag:'🇹🇳'},{ name:'Turkey', flag:'🇹🇷'},
   { name:'United States', flag:'🇺🇸'},{ name:'Uruguay', flag:'🇺🇾'},{ name:'Uzbekistan', flag:'🇺🇿'},
 ]
 
