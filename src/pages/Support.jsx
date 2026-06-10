@@ -28,12 +28,10 @@ export default function Support() {
 
       // Non-blocking email notification
       try {
-        const url = import.meta.env.VITE_SUPABASE_URL
-        const key = import.meta.env.VITE_SUPABASE_ANON_KEY
-        await fetch(`${url}/functions/v1/send-feedback`, {
+        await fetch('/api/notify-feedback', {
           method:'POST',
-          headers:{'Content-Type':'application/json','apikey':key},
-          body:JSON.stringify({ player_id:player?.id, player_name:player?.name||'Anonymous', email:authUser?.email, category, message:message.trim(), rating:rating||null })
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ name:player?.name||'Anonymous', rating:rating||null, message:message.trim(), type:category })
         })
       } catch(_) {}
 

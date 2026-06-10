@@ -128,7 +128,7 @@ export default function Guide() {
             { pts: w ? w.group_diff+' pts' : '...', label:'Correct goal difference', desc:'You got the right margin but not the exact score. E.g. you said 2-0, result was 3-1 (both +2). Stacks with correct result.' },
             { pts: w ? w.group_result+' pts' : '...', label:'Correct result (W/D/L)', desc:'You picked the right winner or draw, but the margin was different. E.g. you said 2-0, result was 1-0.' },
             { pts: w ? w.group_approx+' pt' : '...', label:'Approximation bonus', desc:'Group stage only, high-scoring matches (4+ goals). Your prediction was within 1 goal each way. Stacks with correct result.' },
-            { pts: w ? w.winner_bonus+' pts' : '...', label:'Tournament winner pick', desc:'Picked before June 11 - if your chosen team wins the whole tournament you get a big bonus.' },
+            { pts: w ? w.winner_bonus+' pts' : '...', label:'Tournament winner pick', desc:'Pick who wins it all. If your chosen team wins the final you get a big bonus. Locks when knockout stage begins.' },
             { pts: w ? (w.finalist_bonus||10)+' pts' : '...', label:'Finalist bonus', desc:'If your chosen winner reaches the Final (even if they lose), you get a smaller bonus.' },
           ].map((s,i) => (
             <div key={i} style={{display:'flex',gap:14,padding:'12px 0',borderBottom: i<3?'1px solid var(--c-border)':'none',alignItems:'flex-start'}}>
@@ -155,7 +155,7 @@ export default function Guide() {
         <Section title="What each page does">
           <Tab name="Dashboard" desc="Your at-a-glance summary - matches played, your rank, your points, and the current top 5. Also shows the scoring rules for your room." />
           <Tab name="My Predictions" desc="Enter and edit your score predictions for all 104 matches. Grouped by phase. Lock icon appears once a match has kicked off." />
-          <Tab name="Winner Pick" desc="Pick which team wins the entire tournament before June 11. Hidden from other players until kickoff - then everyone can see each other's picks." />
+          <Tab name="Winner Pick" desc="Pick which team wins the entire tournament. Found in the Final tab of My Predictions. Locks when knockout stage begins." />
           <Tab name="Leaderboard" desc="Full standings for your room - points, % correct results, % correct goal difference, % exact scores. Podium at the top for the top 3." />
           <Tab name="Live Scores" desc="Match results as they come in, grouped by phase. Shows FT (full time), LIVE, or upcoming. Finished tab is most useful during the tournament." />
           <Tab name="Stats" desc="Four tabs of charts and numbers - tournament stats, player accuracy breakdowns, points race charts, and fun facts about the pool." />
@@ -171,7 +171,7 @@ export default function Guide() {
             'Predict all 104 matches - a guess at a KO match is still worth points if you get lucky.',
             'Don\'t always go for big scorelines - 1-0 and 1-1 are the most common results in tournament football.',
             'In knockout rounds, more points are at stake - spend more time on those predictions.',
-            'Pick your tournament winner early - you can change it right up until June 11 kickoff.',
+            'Pick your tournament winner during the group stage — it locks when knockout predictions open.',
             'Check the leaderboard after each matchday to see who\'s closing in on you.',
           ].map((tip, i, arr) => (
             <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom: i<arr.length-1?'1px solid var(--c-border)':'none',fontSize:13,alignItems:'flex-start'}}>
@@ -223,7 +223,7 @@ export default function Guide() {
 
             <Section title="Match day workflow">
               {[
-                { title:'During the match', desc:'Nothing to do - players are locked from editing their prediction for this match from kickoff.' },
+                { title:'During the match', desc:'Nothing to do - players are locked from editing their prediction 15 minutes before kickoff.' },
                 { title:'After the final whistle', desc:'Go to Admin &rarr; Results, select the right phase, enter the score and hit Save.' },
                 { title:'Recalculate scores', desc:'Go to Admin &rarr; Weights and click Recalculate. This re-runs the scoring engine for all players and updates the leaderboard.' },
                 { title:'Repeat for each match', desc:'If multiple matches finish on the same day, enter all results first then recalculate once at the end.' },
