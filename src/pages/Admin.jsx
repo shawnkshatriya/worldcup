@@ -263,17 +263,11 @@ export default function Admin() {
             <div className="card" style={{marginBottom:0}}>
               <div className="card-title">Group stage predictions</div>
               <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'0.75rem'}}>
-                Hard deadline: <strong>June 11, 2026 at 6:00 PM ET</strong>. After this, nobody can change group stage predictions.
+                Each prediction locks <strong>15 minutes before that match kicks off</strong>. Players can update any prediction until then.
               </p>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
-                {new Date() >= new Date('2026-06-11T22:00:00Z') ? (
-                  <span className="badge badge-red">Locked</span>
-                ) : (
-                  <span className="badge badge-green">Open</span>
-                )}
-                <span style={{fontSize:12,color:'var(--c-muted)'}}>
-                  {new Date() >= new Date('2026-06-11T22:00:00Z') ? 'Predictions are locked. This cannot be changed.' : 'Auto-locks at kickoff. No action needed.'}
-                </span>
+                <span className="badge badge-green">Per-match lock</span>
+                <span style={{fontSize:12,color:'var(--c-muted)'}}>No action needed — locks are automatic.</span>
               </div>
             </div>
 
@@ -306,7 +300,7 @@ export default function Admin() {
               </div>
               {roomData.ko_predictions_open && (
                 <p style={{fontSize:12,color:'var(--c-muted)',marginTop:'0.75rem'}}>
-                  Hard deadline: July 4, 2026 at 2:00 PM ET. After that, KO predictions lock automatically regardless of this toggle.
+                  Each KO prediction locks 15 minutes before that match kicks off, same as group stage.
                 </p>
               )}
             </div>

@@ -85,16 +85,14 @@ export default function Guide() {
         {/* -- GETTING STARTED -- */}
         <Section title="Getting started">
           <Step n={1} title="Join via invite link"
-            desc="Open the invite link your pool organiser shared. Enter your name and email - a magic link gets sent to your inbox." />
-          <Step n={2} title="Click the magic link"
-            desc="Open the email from WC26 Predictor and click the link. It logs you in automatically - no password to remember." />
-          <Step n={3} title="Submit your predictions"
-            desc="Go to My Predictions and fill in your score for every match. You can update predictions right up until each match kicks off." />
-          <Step n={4} title="Pick the tournament winner"
-            desc="Go to Winner Pick and choose which team you think wins the whole tournament. Worth a big bonus if you're right - locked at kickoff." />
-          <Step n={5} title="Install the app"
+            desc="Open the invite link your pool organiser shared. Enter your name, email, and invite code — you're in instantly." />
+          <Step n={2} title="Submit your predictions"
+            desc="Go to My Predictions and fill in your score for every match. You can update predictions right up until 15 minutes before each match kicks off." />
+          <Step n={3} title="Pick the tournament winner"
+            desc="Go to Winner Pick and choose which team you think wins the whole tournament. Worth a big bonus if you're right." />
+          <Step n={4} title="Install the app"
             desc="Go to Install App in the sidebar to add WC26 to your phone home screen. No App Store - it installs directly from the browser." />
-          <Tip>Coming back? Go to the join page and use Log Back In with your email. A new magic link gets sent.</Tip>
+          <Tip>Coming back? Go to the join page and use Log Back In with your email.</Tip>
         </Section>
 
         {/* -- MY PREDICTIONS -- */}
@@ -106,7 +104,7 @@ export default function Guide() {
             { title:'Enter home and away goals', desc:'Type the score you think will happen. 0 is a valid score - don\'t leave it blank.' },
             { title:'Save each match', desc:'Click Save on each match row. A green tick confirms it saved. You can edit it any time before the match kicks off.' },
             { title:'Knockout rounds', desc:'KO matches show TBD teams until the group stage finishes. Your admin will unlock KO predictions once the bracket is set.' },
-            { title:'Deadline', desc:'Group predictions lock at 6pm ET on June 11. KO predictions lock when your admin locks them or at the hard deadline before the first KO match.' },
+            { title:'Deadline', desc:'Each prediction locks 15 minutes before that match kicks off. You can update any prediction right up until then — no single deadline for the whole tournament.' },
           ].map((s,i,arr) => (
             <div key={i} style={{display:'flex',gap:14,padding:'12px 0',borderBottom: i<arr.length-1?'1px solid var(--c-border)':'none'}}>
               <div style={{width:8,height:8,borderRadius:'50%',background:'var(--c-accent)',flexShrink:0,marginTop:6}}/>
@@ -259,7 +257,7 @@ export default function Guide() {
                   'You can promote any player to room admin from Admin &rarr; Players &rarr; Make admin. They\'ll see a Room Admin panel scoped to their room only.',
                   'Scoring weights are per room - set them differently for each pool if you want.',
                   'Demo data only seeds into the DEFAULT room so it won\'t pollute real rooms.',
-                  'If someone needs to join a second room, send them that room\'s invite link - they use the same email and magic link flow.',
+                  'If someone needs to join a second room, send them that room\'s invite link - they use the same email to sign up.',
                 ].map((tip, i, arr) => (
                   <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom: i<arr.length-1?'1px solid var(--c-border)':'none',fontSize:13,alignItems:'flex-start'}}>
                     <div style={{width:6,height:6,borderRadius:'50%',background:'var(--c-gold)',flexShrink:0,marginTop:5}}/>

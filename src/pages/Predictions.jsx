@@ -2,9 +2,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
-
-const TOURNAMENT_START = new Date('2026-06-11T22:00:00Z')  // Group stage deadline
-const KO_DEADLINE      = new Date('2026-07-04T18:00:00Z')  // KO stage deadline (first R32 kickoff)
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
   {name:'Austria',flag:'🇦🇹'},{name:'Belgium',flag:'🇧🇪'},{name:'Bosnia and Herzegovina',flag:'🇧🇦'},
@@ -117,16 +114,20 @@ const PHASE_LABELS = {
 }
 
 const KO_PHASES = ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']
-function isLocked(phase, koOpen) {
+const LOCK_BUFFER_MS = 15 * 60 * 1000  // 15 minutes before kickoff
+
+function isLocked(match, koOpen) {
   var now = new Date()
-  if (!phase || !KO_PHASES.includes(phase)) {
-    // Group stage: hard lock at tournament start (June 11 6pm ET)
-    return now >= TOURNAMENT_START
-  } else {
-    // KO stage: locked until admin flips the switch, hard locks at KO_DEADLINE
-    if (now >= KO_DEADLINE) return true
-    return !koOpen
+  // KO matches: locked until admin opens them
+  if (match.phase && KO_PHASES.includes(match.phase) && !koOpen) return true
+  // Match already started or finished
+  if (match.status === 'IN_PLAY' || match.status === 'FINISHED') return true
+  // Lock 15 minutes before kickoff
+  if (match.kickoff) {
+    var kickoff = new Date(match.kickoff)
+    if (now >= new Date(kickoff.getTime() - LOCK_BUFFER_MS)) return true
   }
+  return false
 }
 
 export default function Predictions() {
@@ -234,7 +235,7 @@ export default function Predictions() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>My predictions</h1>
-          <p>Group predictions lock June 11 at 6pm ET. KO predictions unlock when your admin opens them.</p>
+          <p>Predictions lock 15 minutes before each match kicks off. KO predictions unlock when your admin opens them.</p>
         </div>
       </div>
       <div className="page-body">
@@ -281,7 +282,7 @@ export default function Predictions() {
             </p>
           )}
 
-          {matches.length > 0 && KO_PHASES.includes(activePhase) && !koOpen && new Date() < KO_DEADLINE && (
+          {matches.length > 0 && KO_PHASES.includes(activePhase) && !koOpen && (
             <div className="alert alert-warn" style={{marginBottom:'1rem'}}>
               KO predictions are locked. Your pool admin will unlock them once the bracket is set.
             </div>
@@ -289,7 +290,7 @@ export default function Predictions() {
 
           {matches.map(m => {
             const pred = preds[m.id] || {}
-            const locked = isLocked(m.phase, koOpen)
+            const locked = isLocked(m, koOpen)
             const isSaving = saving[m.id]
             const isSaved = saved[m.id]
             const hasBothGoals = pred.home_goals != null && pred.away_goals != null
