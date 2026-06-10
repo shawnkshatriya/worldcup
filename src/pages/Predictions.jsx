@@ -21,14 +21,14 @@ const TEAMS = [
   {name:'United States',flag:'🇺🇸'},{name:'Uruguay',flag:'🇺🇾'},{name:'Uzbekistan',flag:'🇺🇿'},
 ]
 
-function WinnerPickInline({ player }) {
+function WinnerPickInline({ player, koOpen }) {
   const [myPick, setMyPick] = useState(null)
   const [selected, setSelected] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const locked = new Date() >= TOURNAMENT_START
+  const locked = koOpen  // locks when admin opens KO (bracket is set)
 
   useEffect(() => {
     if (!player) return
@@ -54,7 +54,7 @@ function WinnerPickInline({ player }) {
         <div style={{flex:1}}>
           <div style={{fontWeight:600,fontSize:14,marginBottom:2}}>Tournament winner pick</div>
           <div style={{fontSize:12,color:'var(--c-muted)'}}>
-            {locked ? 'Locked at kickoff' : 'Pick who wins it all - worth a big bonus if correct. Changeable until June 11.'}
+            {locked ? 'Locked — knockout stage has started' : 'Pick who wins it all — worth a big bonus. Locks when knockout stage begins.'}
           </div>
         </div>
         {myPick ? (
@@ -286,6 +286,10 @@ export default function Predictions() {
             <div className="alert alert-warn" style={{marginBottom:'1rem'}}>
               KO predictions are locked. Your pool admin will unlock them once the bracket is set.
             </div>
+          )}
+
+          {activePhase === 'FINAL' && player && (
+            <WinnerPickInline player={player} koOpen={koOpen} />
           )}
 
           {matches.map(m => {
