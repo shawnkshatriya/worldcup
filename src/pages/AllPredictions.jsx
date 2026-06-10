@@ -17,10 +17,15 @@ const PHASE_LABELS = {
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
 
-const TOURNAMENT_START = new Date('2026-06-11T22:00:00Z')
+const LOCK_BUFFER_MS = 15 * 60 * 1000  // 15 minutes
 
-function isTournamentLive() {
-  return new Date() >= TOURNAMENT_START
+function isMatchRevealed(match) {
+  if (match.status === 'IN_PLAY' || match.status === 'FINISHED') return true
+  if (match.kickoff) {
+    var kickoff = new Date(match.kickoff)
+    if (new Date() >= new Date(kickoff.getTime() - LOCK_BUFFER_MS)) return true
+  }
+  return false
 }
 
 export default function AllPredictions() {
@@ -29,12 +34,9 @@ export default function AllPredictions() {
   const [phase, setPhase] = useState('GROUP_A')
   const [matches, setMatches] = useState([])
   const [players, setPlayers] = useState([])
-  const [predictions, setPredictions] = useState({}) // {matchId: {playerId: {hg,ag}}}
-  const [scores, setScores] = useState({})           // {matchId: {playerId: pts}}
+  const [predictions, setPredictions] = useState({})
+  const [scores, setScores] = useState({})
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState('grid') // grid | player
-
-  const canView = isAdmin || isTournamentLive()
 
   useEffect(() => { loadAll() }, [phase])
 
@@ -68,27 +70,13 @@ export default function AllPredictions() {
     setLoading(false)
   }
 
-  if (!canView) {
-    return (
-      <div>
-        <div className="page-header"><div className="page-header-inner"><h1>All Predictions</h1></div></div>
-        <div className="page-body">
-          <div className="alert alert-info" style={{maxWidth:480}}>
-            Predictions from all players will be visible here once the tournament kicks off on June 11, 2026.
-            This prevents anyone from copying others before the matches start.
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   function getPredBg(pred, match) {
     if (!pred || pred.hg == null || match.home_goals == null) return 'transparent'
     const predResult = Math.sign(pred.hg - pred.ag)
     const realResult = Math.sign(match.home_goals - match.away_goals)
-    if (pred.hg === match.home_goals && pred.ag === match.away_goals) return 'rgba(240,165,0,0.18)' // exact - gold
-    if (predResult === realResult) return 'rgba(34,197,94,0.1)' // correct result - green
-    return 'rgba(239,68,68,0.08)' // wrong - red tint
+    if (pred.hg === match.home_goals && pred.ag === match.away_goals) return 'rgba(240,165,0,0.18)'
+    if (predResult === realResult) return 'rgba(34,197,94,0.1)'
+    return 'rgba(239,68,68,0.08)'
   }
 
   function getPredBorder(pred, match) {
@@ -105,9 +93,7 @@ export default function AllPredictions() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>All Predictions</h1>
-          <p>
-            {isAdmin ? 'Admin view - visible before and during tournament' : 'Visible now that the tournament is live'}
-          </p>
+          <p>Predictions are revealed as each match locks (15 min before kickoff).</p>
         </div>
       </div>
       <div className="page-body">
@@ -189,17 +175,20 @@ export default function AllPredictions() {
                       {m.home_goals != null ? `${m.home_goals}-${m.away_goals}` : <span style={{color:'var(--c-hint)',fontSize:12}}>TBD</span>}
                     </td>
                     {players.map(p => {
+                      const revealed = isAdmin || isMatchRevealed(m)
                       const pred = predictions[m.id]?.[p.id]
                       const pts = scores[m.id]?.[p.id]
                       return (
                         <td key={p.id} style={{
                           textAlign:'center',
-                          background: getPredBg(pred, m),
-                          border: getPredBorder(pred, m),
+                          background: revealed ? getPredBg(pred, m) : 'transparent',
+                          border: revealed ? getPredBorder(pred, m) : '1px solid var(--c-border)',
                           borderRadius:4,
                           padding:'6px 4px',
                         }}>
-                          {pred && pred.hg != null ? (
+                          {!revealed ? (
+                            <span style={{color:'var(--c-hint)',fontSize:11}}>🔒</span>
+                          ) : pred && pred.hg != null ? (
                             <div>
                               <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,lineHeight:1}}>
                                 {pred.hg}-{pred.ag}

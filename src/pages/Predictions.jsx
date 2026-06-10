@@ -311,6 +311,14 @@ export default function Predictions() {
                         {new Date(m.kickoff).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
                       </div>
                     )}
+                    {m.kickoff && !locked && (
+                      <div style={{fontSize:10,color:'var(--c-warn)'}}>
+                        {'Locks ' + new Date(new Date(m.kickoff).getTime() - LOCK_BUFFER_MS).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}
+                      </div>
+                    )}
+                    {locked && m.status !== 'FINISHED' && (
+                      <div style={{fontSize:10,color:'var(--c-danger)'}}>Locked</div>
+                    )}
                   </div>
 
                   <input
