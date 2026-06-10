@@ -143,13 +143,15 @@ export default function Predictions() {
     if (player) {
       supabase.from('rooms').select('ko_predictions_open').eq('code', player.room_code).single()
         .then(function(res) { if (res.data) setKoOpen(!!res.data.ko_predictions_open) })
-      // Fetch prediction progress - only count predictions for current matches
+      // Fetch prediction progress
       Promise.all([
-        supabase.from('predictions').select('id, matches!inner(id)', { count: 'exact', head: true })
+        supabase.from('matches').select('id'),
+        supabase.from('predictions').select('id, match_id')
           .eq('player_id', player.id).not('home_goals', 'is', null),
-        supabase.from('matches').select('id', { count: 'exact', head: true })
       ]).then(function(results) {
-        setProgress({ predicted: results[0].count || 0, total: results[1].count || 104 })
+        var matchIds = new Set((results[0].data || []).map(function(m){ return m.id }))
+        var validPreds = (results[1].data || []).filter(function(p){ return matchIds.has(p.match_id) })
+        setProgress({ predicted: validPreds.length, total: matchIds.size || 104 })
       })
     }
   }, [player])
