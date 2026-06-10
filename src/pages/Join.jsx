@@ -76,10 +76,13 @@ export default function Join() {
   if (loading) return null
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+    <div style={{ minHeight: '100vh', minHeight: '100dvh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem' }}>
+
+      {/* Spacer to push content to center when room permits */}
+      <div style={{flex:1}} />
 
       {/* Brand */}
-      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60, borderRadius: 14, background: 'var(--c-accent)', marginBottom: 16 }}>
           <TrophyIcon />
         </div>
@@ -172,6 +175,9 @@ export default function Join() {
           FIFA World Cup 2026 . Canada . Mexico . USA
         </p>
       </div>
+
+      {/* Bottom spacer for centering */}
+      <div style={{flex:1}} />
     </div>
   )
 }
