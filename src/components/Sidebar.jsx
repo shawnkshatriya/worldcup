@@ -43,8 +43,18 @@ const TrophyIcon = () => (
 )
 
 function SidebarContent({ onNavClick }) {
-  const { player, authUser, isAdmin, loading, logout } = usePlayer()
+  const { player, authUser, isAdmin, loading, logout, switchPlayerRoom } = usePlayer()
+  const [rooms, setRooms] = useState([])
   const initials = player?.name?.slice(0,2).toUpperCase() || authUser?.email?.slice(0,2).toUpperCase() || '?'
+
+  useEffect(function() {
+    if (authUser) {
+      import('../lib/supabase.js').then(function(mod) {
+        mod.supabase.from('players').select('room_code, rooms(name)').eq('auth_id', authUser.id)
+          .then(function(res) { if (res.data) setRooms(res.data) })
+      })
+    }
+  }, [authUser])
 
   return (
     <>
@@ -81,11 +91,22 @@ function SidebarContent({ onNavClick }) {
 
       <div style={{padding:'0 20px 12px',display:'flex',flexDirection:'column',gap:8}}>
         <ThemeToggle />
-        {player?.room_code && player.room_code !== 'DEFAULT' && (
+        {rooms.length > 1 ? (
+          <select
+            value={player?.room_code || ''}
+            onChange={function(e) { switchPlayerRoom(e.target.value); window.location.reload() }}
+            style={{fontSize:12,padding:'6px 8px',background:'var(--c-surface2)',color:'var(--c-text)',border:'1px solid var(--c-border)',borderRadius:20,textAlign:'center',cursor:'pointer',appearance:'auto'}}
+          >
+            {rooms.map(function(r) {
+              var label = (r.rooms && r.rooms.name) || r.room_code
+              return <option key={r.room_code} value={r.room_code}>{label}</option>
+            })}
+          </select>
+        ) : player?.room_code && player.room_code !== 'DEFAULT' ? (
           <div style={{fontSize:11,color:'var(--c-muted)',padding:'4px 8px',background:'var(--c-surface2)',borderRadius:20,textAlign:'center',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
             {player.room_code}
           </div>
-        )}
+        ) : null}
       </div>
       <div className="sidebar-footer">
         {loading ? (
