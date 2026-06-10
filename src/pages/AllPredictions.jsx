@@ -45,8 +45,8 @@ export default function AllPredictions() {
     const [{ data: matchData }, { data: playerData }, { data: predData }, { data: scoreData }] = await Promise.all([
       supabase.from('matches').select('*').eq('phase', phase).order('match_number'),
       supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500).order('created_at').limit(500),
-      supabase.from('predictions').select('*').limit(5000),
-      supabase.from('scores').select('*').limit(5000),
+      supabase.from('predictions').select('*').limit(30000),
+      supabase.from('scores').select('*').limit(30000),
     ])
 
     setMatches(matchData || [])

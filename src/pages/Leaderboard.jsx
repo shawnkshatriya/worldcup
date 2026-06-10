@@ -19,8 +19,8 @@ export default function Leaderboard() {
     setLoading(true)
     const [{ data:players }, { data:scores }, { data:predictions }, { count:finished }, { data:winnerPicks }] = await Promise.all([
       supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500),
-      supabase.from('scores').select('*').limit(5000),
-      supabase.from('predictions').select('player_id,match_id,home_goals,away_goals').limit(5000),
+      supabase.from('scores').select('*').limit(30000),
+      supabase.from('predictions').select('player_id,match_id,home_goals,away_goals').limit(30000),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
       supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode),
     ])
