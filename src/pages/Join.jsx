@@ -149,7 +149,7 @@ export default function Join() {
               {error && <div className="alert alert-warn">{error}</div>}
               <button className="btn btn-accent" style={{ width: '100%', justifyContent: 'center', padding: 11, fontSize: 14 }}
                 onClick={handleLogin} disabled={status === 'sending'}>
-                {status === 'sending' ? 'Joining...' : 'Join Pool'}
+                {status === 'sending' ? 'Logging in...' : 'Log In'}
               </button>
             </>
           )}
