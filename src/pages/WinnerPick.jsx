@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 
-const TOURNAMENT_START = new Date('2026-06-11T22:00:00Z')
+const KO_DEADLINE = new Date('2026-07-04T18:00:00Z')
 
 // All 48 qualified teams with flag emojis
 const TEAMS = [
@@ -24,8 +24,11 @@ const TEAMS = [
   { name:'United States', flag:'🇺🇸'},{ name:'Uruguay', flag:'🇺🇾'},{ name:'Uzbekistan', flag:'🇺🇿'},
 ]
 
-function isLocked() {
-  return new Date() >= TOURNAMENT_START
+const KO_DEADLINE = new Date('2026-07-04T18:00:00Z')
+
+function isWinnerPickLocked(koOpen) {
+  if (new Date() >= KO_DEADLINE) return true
+  return !koOpen
 }
 
 export default function WinnerPick() {
@@ -33,6 +36,7 @@ export default function WinnerPick() {
   const [myPick,    setMyPick]    = useState(null)
   const [allPicks,  setAllPicks]  = useState([])
   const [weights,   setWeights]   = useState(null)
+  const [koOpen,    setKoOpen]    = useState(false)
   const [selected,  setSelected]  = useState(null)
   const [saving,    setSaving]    = useState(false)
   const [saved,     setSaved]     = useState(false)
@@ -42,18 +46,20 @@ export default function WinnerPick() {
   const [awarding,  setAwarding]  = useState(false)
 
   const roomCode = player?.room_code || 'DEFAULT'
-  const locked   = isLocked() && !isAdmin
+  const locked   = isWinnerPickLocked(koOpen) && !isAdmin
 
   useEffect(() => { loadData() }, [player])
 
   async function loadData() {
     setLoading(true)
-    const [{ data: picks }, { data: w }] = await Promise.all([
+    const [{ data: picks }, { data: w }, { data: roomData }] = await Promise.all([
       supabase.from('winner_picks').select('*, players(name)').eq('room_code', roomCode),
       supabase.from('scoring_weights').select('winner_bonus').eq('room_code', roomCode).single(),
+      supabase.from('rooms').select('ko_predictions_open').eq('code', roomCode).single(),
     ])
     setAllPicks(picks || [])
     setWeights(w)
+    if (roomData) setKoOpen(!!roomData.ko_predictions_open)
     if (player) {
       const mine = picks?.find(p => p.player_id === player.id)
       if (mine) { setMyPick(mine); setSelected(mine.team) }

@@ -17,11 +17,12 @@ export default function Leaderboard() {
 
   async function load() {
     setLoading(true)
-    const [{ data:players }, { data:scores }, { data:predictions }, { count:finished }] = await Promise.all([
+    const [{ data:players }, { data:scores }, { data:predictions }, { count:finished }, { data:winnerPicks }] = await Promise.all([
       supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500),
       supabase.from('scores').select('*').limit(5000),
       supabase.from('predictions').select('player_id,match_id,home_goals,away_goals').limit(5000),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
+      supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode),
     ])
     setFinished(finished||0)
     if (!players) { setLoading(false); return }
@@ -29,16 +30,18 @@ export default function Leaderboard() {
     const built = players.map((p,idx) => {
       const ps = scores?.filter(s=>s.player_id===p.id)||[]
       const pp = predictions?.filter(pr=>pr.player_id===p.id&&pr.home_goals!=null)||[]
+      const wp = winnerPicks?.find(w=>w.player_id===p.id)
       const scored = ps.length
       const correct= ps.filter(s=>s.pts_result>0||s.pts_exact>0).length
       const diff   = ps.filter(s=>s.pts_diff>0).length
       const exact  = ps.filter(s=>s.pts_exact>0).length
       const approx = ps.reduce((a,s)=>a+(s.pts_approx||0),0)
       const ko     = ps.reduce((a,s)=>a+(s.pts_ko_team||0),0)
+      const winnerBonus = wp?.pts_awarded || 0
       return {
         ...p, color:AVATAR_COLORS[idx%AVATAR_COLORS.length],
-        pts:    ps.reduce((a,s)=>a+(s.pts_total||0),0),
-        correct, diff, exact, approx, ko,
+        pts:    ps.reduce((a,s)=>a+(s.pts_total||0),0) + winnerBonus,
+        correct, diff, exact, approx, ko, winnerBonus,
         preds:  pp.length, scored,
         pctWL:  scored>0?Math.round(correct/scored*100):0,
         pctDiff:scored>0?Math.round(diff/scored*100):0,
