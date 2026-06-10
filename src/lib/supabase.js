@@ -151,16 +151,80 @@ export async function recalcAllRooms() {
   return rooms.length
 }
 
-// --- Cached API sync (calls edge function) -----------------------------------
+// --- Team name mapping (football-data.org → our DB names) -------------------
+var TEAM_NAME_MAP = {
+  'Korea Republic': 'South Korea',
+  'Republic of Korea': 'South Korea',
+  'Türkiye': 'Turkey',
+  'Curaçao': 'Curacao',
+  "Côte d'Ivoire": 'Ivory Coast',
+  'Ivory Coast': 'Ivory Coast',
+  'Bosnia-Herzegovina': 'Bosnia and Herzegovina',
+  'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
+  'Czech Republic': 'Czechia',
+  'Cabo Verde': 'Cape Verde',
+  'Congo DR': 'DR Congo',
+  'Democratic Republic of the Congo': 'DR Congo',
+  'Korea DPR': 'North Korea',
+}
+
+function mapTeamName(name) {
+  return TEAM_NAME_MAP[name] || name
+}
+
+// --- Sync matches directly from football-data.org ---------------------------
 
 export async function syncMatchResults() {
-  var supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-  var anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-  var res = await fetch(supabaseUrl + '/functions/v1/sync-scores', {
-    method: 'POST',
-    headers: { 'apikey': anonKey, 'Content-Type': 'application/json' }
-  })
-  return res.json()
+  var apiKey = import.meta.env.VITE_FOOTBALL_API_KEY
+  if (!apiKey) {
+    return { ok: false, error: 'Add VITE_FOOTBALL_API_KEY to Vercel environment variables.' }
+  }
+
+  try {
+    var res = await fetch('https://api.football-data.org/v4/competitions/2000/matches', {
+      headers: { 'X-Auth-Token': apiKey }
+    })
+
+    if (!res.ok) {
+      var txt = await res.text()
+      return { ok: false, error: 'API ' + res.status + ': ' + txt.slice(0, 200) }
+    }
+
+    var data = await res.json()
+    var matches = data.matches || []
+    var updated = 0
+
+    for (var i = 0; i < matches.length; i++) {
+      var m = matches[i]
+      var score = m.score && m.score.fullTime
+      if (!score || score.home == null) continue
+
+      var homeTeam = mapTeamName(m.homeTeam.name || m.homeTeam.shortName)
+      var awayTeam = mapTeamName(m.awayTeam.name || m.awayTeam.shortName)
+
+      var updateData = {
+        home_goals: score.home,
+        away_goals: score.away,
+        home_goals_et: m.score.extraTime ? m.score.extraTime.home : null,
+        away_goals_et: m.score.extraTime ? m.score.extraTime.away : null,
+        home_goals_pen: m.score.penalties ? m.score.penalties.home : null,
+        away_goals_pen: m.score.penalties ? m.score.penalties.away : null,
+        status: m.status || 'FINISHED',
+        updated_at: new Date().toISOString(),
+      }
+
+      var result = await supabase.from('matches')
+        .update(updateData)
+        .eq('home_team', homeTeam)
+        .eq('away_team', awayTeam)
+
+      if (!result.error) updated++
+    }
+
+    return { ok: true, updated: updated, total: matches.length }
+  } catch (err) {
+    return { ok: false, error: String(err) }
+  }
 }
 
 // --- Sync + auto-recalc (one-click for admins) -------------------------------

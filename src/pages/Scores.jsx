@@ -63,8 +63,7 @@ export default function Scores() {
       var result = await syncAndRecalc()
       if (result.sync.ok) {
         var msg = new Date().toLocaleTimeString()
-        if (result.sync.cached) msg += ' (cached)'
-        if (result.sync.upserted) msg += ' · ' + result.sync.upserted + ' matches synced'
+        if (result.sync.updated > 0) msg += ' · ' + result.sync.updated + ' matches updated'
         if (result.recalcedRooms > 0) msg += ' · scores recalculated'
         setLastSync(msg)
         loadMatches()
