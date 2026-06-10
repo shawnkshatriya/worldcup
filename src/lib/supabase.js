@@ -50,21 +50,8 @@ export function calcMatchPoints(prediction, result, weights, phase) {
     }
   }
 
-  // KO team bonus: did you predict the correct advancing team?
-  if (isKO && weights.ko_team > 0) {
-    // Determine actual winner (pens > ET > regular time)
-    var actualWinner = null
-    if (result.home_goals_pen != null && result.away_goals_pen != null) {
-      actualWinner = result.home_goals_pen > result.away_goals_pen ? 'home' : 'away'
-    } else if (rh !== ra) {
-      actualWinner = rh > ra ? 'home' : 'away'
-    }
-    // Player's predicted winner
-    var predWinner = ph > pa ? 'home' : ph < pa ? 'away' : null
-    if (actualWinner && predWinner === actualWinner) {
-      pts_ko_team = weights.ko_team
-    }
-  }
+  // KO team bonus is tracked separately, not in per-match scoring
+  var pts_ko_team = 0
 
   return {
     pts_result: pts_result,
