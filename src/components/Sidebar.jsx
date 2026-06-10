@@ -50,8 +50,19 @@ function SidebarContent({ onNavClick }) {
   useEffect(function() {
     if (authUser) {
       import('../lib/supabase.js').then(function(mod) {
-        mod.supabase.from('players').select('room_code, rooms(name)').eq('auth_id', authUser.id)
-          .then(function(res) { if (res.data) setRooms(res.data) })
+        mod.supabase.from('players').select('room_code').eq('auth_id', authUser.id)
+          .then(function(res) {
+            if (res.data && res.data.length > 1) {
+              // Fetch room names separately
+              var codes = res.data.map(function(r){ return r.room_code })
+              mod.supabase.from('rooms').select('code, name').in('code', codes)
+                .then(function(roomRes) {
+                  var roomMap = {}
+                  ;(roomRes.data || []).forEach(function(r){ roomMap[r.code] = r.name || r.code })
+                  setRooms(res.data.map(function(r){ return { room_code: r.room_code, name: roomMap[r.room_code] || r.room_code } }))
+                })
+            }
+          })
       })
     }
   }, [authUser])
@@ -98,8 +109,7 @@ function SidebarContent({ onNavClick }) {
             style={{fontSize:12,padding:'6px 8px',background:'var(--c-surface2)',color:'var(--c-text)',border:'1px solid var(--c-border)',borderRadius:20,textAlign:'center',cursor:'pointer',appearance:'auto'}}
           >
             {rooms.map(function(r) {
-              var label = (r.rooms && r.rooms.name) || r.room_code
-              return <option key={r.room_code} value={r.room_code}>{label}</option>
+              return <option key={r.room_code} value={r.room_code}>{r.name}</option>
             })}
           </select>
         ) : player?.room_code && player.room_code !== 'DEFAULT' ? (
