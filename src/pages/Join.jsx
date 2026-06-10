@@ -11,7 +11,7 @@ const TrophyIcon = () => (
 )
 
 export default function Join() {
-  const { player, loading, directSignup, directLogin, loginAdmin } = usePlayer()
+  const { player, loading, sendSignupLink, sendLoginLink, loginAdmin } = usePlayer()
   const navigate = useNavigate()
   const [params] = useSearchParams()
 
@@ -35,8 +35,8 @@ export default function Join() {
     if (!inviteCode.trim())  { setError('Please enter your invite code.'); return }
     setStatus('sending'); setError('')
     try {
-      await directSignup(email.trim(), name.trim(), inviteCode.trim())
-      navigate('/predictions')
+      await sendSignupLink(email.trim(), name.trim(), '', inviteCode.trim())
+      setStatus('sent')
     } catch (e) {
       setStatus('error')
       if (e.message === 'INVALID_CODE') setError('Invalid invite code. Check with your admin.')
@@ -49,14 +49,14 @@ export default function Join() {
     if (!email.trim()) { setError('Please enter your email.'); return }
     setStatus('sending'); setError('')
     try {
-      await directLogin(email.trim())
-      navigate('/')
+      await sendLoginLink(email.trim())
+      setStatus('sent')
     } catch (e) {
       setStatus('error')
       if (e.message === 'EMAIL_NOT_FOUND') {
         setError(`No account found for "${email.trim()}". Check your email or join as a new player.`)
       } else {
-        setError(e.message || 'Could not log in. Please try again.')
+        setError(e.message || 'Could not send magic link. Please try again.')
       }
     }
   }
@@ -110,10 +110,10 @@ export default function Join() {
           </div>
 
           {/* -- New player -- */}
-          {mode === 'new' && (
+          {mode === 'new' && status !== 'sent' && (
             <>
               <p style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
-                Enter your details and invite code to join the pool. No password needed.
+                Enter your details and we'll email you a magic link to join. No password needed.
               </p>
               <div className="form-row">
                 <label>Your name</label>
@@ -131,16 +131,16 @@ export default function Join() {
               {error && <div className="alert alert-warn">{error}</div>}
               <button className="btn btn-accent" style={{ width: '100%', justifyContent: 'center', padding: 11, fontSize: 14 }}
                 onClick={handleSignup} disabled={status === 'sending'}>
-                {status === 'sending' ? 'Joining...' : 'Join Pool'}
+                {status === 'sending' ? 'Sending...' : 'Send Magic Link'}
               </button>
             </>
           )}
 
           {/* -- Returning player -- */}
-          {mode === 'returning' && (
+          {mode === 'returning' && status !== 'sent' && (
             <>
               <p style={{ fontSize: 13, color: 'var(--c-muted)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
-                Enter the email you signed up with to log back in.
+                Enter the email you signed up with and we'll send you a magic link to log back in.
               </p>
               <div className="form-row">
                 <label>Email</label>
@@ -149,9 +149,27 @@ export default function Join() {
               {error && <div className="alert alert-warn">{error}</div>}
               <button className="btn btn-accent" style={{ width: '100%', justifyContent: 'center', padding: 11, fontSize: 14 }}
                 onClick={handleLogin} disabled={status === 'sending'}>
-                {status === 'sending' ? 'Logging in...' : 'Log In'}
+                {status === 'sending' ? 'Sending...' : 'Send Magic Link'}
               </button>
             </>
+          )}
+
+          {/* -- Sent confirmation -- */}
+          {status === 'sent' && (
+            <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📬</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, letterSpacing: '0.06em', marginBottom: 8 }}>Check your inbox</div>
+              <p style={{ fontSize: 13, color: 'var(--c-muted)', lineHeight: 1.7, marginBottom: 20 }}>
+                We sent a magic link to <strong style={{ color: 'var(--c-text)' }}>{email}</strong>.
+                Click it to {mode === 'new' ? 'join the pool' : 'log back in'}.
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--c-hint)' }}>
+                Didn't get it? Check spam, or{' '}
+                <button onClick={() => setStatus('idle')} style={{ color: 'var(--c-accent)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                  try again
+                </button>.
+              </p>
+            </div>
           )}
 
           {/* -- Admin -- */}
