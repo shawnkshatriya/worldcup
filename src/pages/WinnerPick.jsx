@@ -24,8 +24,6 @@ const TEAMS = [
   { name:'United States', flag:'🇺🇸'},{ name:'Uruguay', flag:'🇺🇾'},{ name:'Uzbekistan', flag:'🇺🇿'},
 ]
 
-const KO_DEADLINE = new Date('2026-07-04T18:00:00Z')
-
 function isWinnerPickLocked(koOpen) {
   if (new Date() >= KO_DEADLINE) return true
   return !koOpen
