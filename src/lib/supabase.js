@@ -172,25 +172,17 @@ function mapTeamName(name) {
   return TEAM_NAME_MAP[name] || name
 }
 
-// --- Sync matches directly from football-data.org ---------------------------
+// --- Sync matches via Vercel serverless proxy --------------------------------
 
 export async function syncMatchResults() {
-  var apiKey = import.meta.env.VITE_FOOTBALL_API_KEY
-  if (!apiKey) {
-    return { ok: false, error: 'Add VITE_FOOTBALL_API_KEY to Vercel environment variables.' }
-  }
-
   try {
-    var res = await fetch('https://api.football-data.org/v4/competitions/2000/matches', {
-      headers: { 'X-Auth-Token': apiKey }
-    })
+    var res = await fetch('/api/sync')
+    var data = await res.json()
 
-    if (!res.ok) {
-      var txt = await res.text()
-      return { ok: false, error: 'API ' + res.status + ': ' + txt.slice(0, 200) }
+    if (!data.ok) {
+      return { ok: false, error: data.error || 'Sync failed' }
     }
 
-    var data = await res.json()
     var matches = data.matches || []
     var updated = 0
 
