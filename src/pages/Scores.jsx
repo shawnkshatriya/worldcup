@@ -70,7 +70,7 @@ export default function Scores() {
       } else {
         alert('Sync failed: ' + result.sync.error)
       }
-    } catch(e) { alert('Network error syncing scores') }
+    } catch(e) { alert('Sync error: ' + (e.message || e)) }
     setSyncing(false)
   }
 
