@@ -152,6 +152,8 @@ export default function Predictions() {
         var matchIds = new Set((results[0].data || []).map(function(m){ return m.id }))
         var validPreds = (results[1].data || []).filter(function(p){ return matchIds.has(p.match_id) })
         setProgress({ predicted: validPreds.length, total: matchIds.size || 104 })
+      }).catch(function() {
+        setProgress({ predicted: 0, total: 104 })
       })
     }
   }, [player])

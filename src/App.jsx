@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { PlayerProvider } from './hooks/usePlayer'
+import ErrorBoundary from './components/ErrorBoundary'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import Predictions from './pages/Predictions'
@@ -46,6 +47,7 @@ function AppShell() {
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <PlayerProvider>
         <Routes>
@@ -55,5 +57,6 @@ export default function App() {
         </Routes>
       </PlayerProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }
