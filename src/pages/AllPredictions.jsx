@@ -53,14 +53,15 @@ export default function AllPredictions() {
     setPlayers(playerData || [])
     const predMap = {}
     for (const p of predData || []) {
-      if (!predMap[p.match_id]) predMap[p.match_id] = {}
-      predMap[p.match_id][p.player_id] = { hg: p.home_goals, ag: p.away_goals }
+      const mid = String(p.match_id)
+      if (!predMap[mid]) predMap[mid] = {}
+      predMap[mid][String(p.player_id)] = { hg: p.home_goals, ag: p.away_goals }
     }
     setPredictions(predMap)
     const scoreMap = {}
     for (const s of scoreData || []) {
-      if (!scoreMap[s.match_id]) scoreMap[s.match_id] = {}
-      scoreMap[s.match_id][s.player_id] = s.pts_total || 0
+      if (!scoreMap[String(s.match_id)]) scoreMap[String(s.match_id)] = {}
+      scoreMap[String(s.match_id)][String(s.player_id)] = s.pts_total || 0
     }
     setScores(scoreMap)
   }
@@ -217,9 +218,9 @@ export default function AllPredictions() {
                           {new Date(m.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
                         </div>
                       )}
-                      {isMatchRevealed(m) && predictions[m.id] && (function() {
+                      {isMatchRevealed(m) && predictions[String(m.id)] && (function() {
                         var counts = {}
-                        Object.values(predictions[m.id]).forEach(function(p) {
+                        Object.values(predictions[String(m.id)]).forEach(function(p) {
                           if (p && p.hg != null) { var k = p.hg + '-' + p.ag; counts[k] = (counts[k]||0) + 1 }
                         })
                         var top = Object.entries(counts).sort(function(a,b){return b[1]-a[1]})[0]
@@ -232,8 +233,8 @@ export default function AllPredictions() {
                     </td>
                     {players.map(p => {
                       const revealed = isAdmin || isMatchRevealed(m)
-                      const pred = predictions[m.id]?.[p.id]
-                      const pts = scores[m.id]?.[p.id]
+                      const pred = predictions[String(m.id)]?.[String(p.id)]
+                      const pts = scores[String(m.id)]?.[String(p.id)]
                       return (
                         <td key={p.id} style={{
                           textAlign:'center',

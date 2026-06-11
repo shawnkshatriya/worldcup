@@ -334,7 +334,6 @@ export default function Predictions() {
         <div className="card">
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
             <div className="card-title" style={{marginBottom:0}}>{groupBy === 'group' ? PHASE_LABELS[activePhase] : activeDay ? activeDay.replace(', 2026','') : 'Select a day'}</div>
-            <div style={{fontSize:10,color:'red',marginBottom:8}}>{'DEBUG: player='+String(player?.id||'none')+' | preds='+Object.keys(preds).length+' | matches='+matches.length+' | first match id='+String(matches[0]?.id||'none')+' | first pred key='+String(Object.keys(preds)[0]||'none')}</div>
             <button
               style={{fontSize:11,color:'var(--c-muted)',background:'var(--c-surface2)',border:'1px solid var(--c-border)',borderRadius:16,padding:'4px 12px',cursor:'pointer',whiteSpace:'nowrap'}}
               onClick={async function() {
