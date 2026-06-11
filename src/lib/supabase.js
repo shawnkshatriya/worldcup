@@ -92,7 +92,7 @@ export async function recalcPlayerScores(roomCode) {
   var upserts = []
   for (var i = 0; i < predictions.length; i++) {
     var pred = predictions[i]
-    var match = matches.find(function(m) { return m.id === pred.match_id })
+    var match = matches.find(function(m) { return String(m.id) === String(pred.match_id) })
     if (!match) continue
     var pts = calcMatchPoints(pred, match, weights, match.phase)
     if (!pts) continue
@@ -234,7 +234,7 @@ export async function syncMatchResults() {
 
 export async function syncAndRecalc() {
   var syncResult = await syncMatchResults()
-  if (syncResult.ok && syncResult.updated > 0) {
+  if (syncResult.ok) {
     var roomCount = await recalcAllRooms()
     return { sync: syncResult, recalcedRooms: roomCount }
   }
