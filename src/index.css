@@ -844,3 +844,17 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
 .text-success { color: var(--c-success); }
 .text-warn    { color: var(--c-warn); }
 .font-display { font-family: var(--font-display); }
+
+/* ═══════════════════════════════════════
+   STATS GRID - responsive
+═══════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+.stats-grid .span-2 { grid-column: span 2; }
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .stats-grid .span-2 { grid-column: span 1; }
+}

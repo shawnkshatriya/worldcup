@@ -20,8 +20,8 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
   const maxGroup = groupEntries.length > 0 ? Math.max(...Object.values(groupGoals)) : 1
 
   return (
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))',gap:'1.25rem'}}>
-      <div className="card" style={{marginBottom:0,gridColumn:'span 2'}}>
+    <div className="stats-grid">
+      <div className="card span-2" style={{marginBottom:0}}>
         <div className="card-title">Match facts</div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:10}}>
           {matchFacts.map(function(s){

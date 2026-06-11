@@ -76,19 +76,19 @@ export default function Join() {
   if (loading) return null
 
   return (
-    <div style={{ minHeight: '100vh', minHeight: '100dvh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '2rem 1rem 4rem', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--c-bg)', padding: '2rem 1rem 5rem', boxSizing: 'border-box' }}>
+      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
 
       {/* Brand */}
-      <div style={{ textAlign: 'center', marginBottom: '1rem', flexShrink: 0 }}>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 12, background: 'var(--c-accent)', marginBottom: 10 }}>
           <TrophyIcon />
         </div>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, letterSpacing: '0.06em', lineHeight: 1, color: 'var(--c-text)' }}>WC 2026</div>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, letterSpacing: '0.1em', color: 'var(--c-muted)', marginTop: 2 }}>PREDICTOR POOL</div>
-
       </div>
 
-      <div style={{ width: '100%', maxWidth: 400 }}>
+      <div>
         <div className="card" style={{ padding: '1.75rem' }}>
 
           {/* Tab switcher */}
@@ -172,8 +172,7 @@ export default function Join() {
           FIFA World Cup 2026 . Canada . Mexico . USA
         </p>
       </div>
-
-
+      </div>
     </div>
   )
 }
