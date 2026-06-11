@@ -69,7 +69,16 @@ export default function Dashboard() {
   const [myUpcoming, setMyUpcoming] = useState([])
   const countdown = useCountdown('2026-06-11T19:00:00Z')
 
-  useEffect(() => { loadData() }, [player])
+  useEffect(() => {
+    loadData()
+    var id = setInterval(loadData, 60000)
+    var onFocus = function() { loadData() }
+    window.addEventListener('focus', onFocus)
+    return function() {
+      clearInterval(id)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [player])
 
   async function loadData() {
     const [
