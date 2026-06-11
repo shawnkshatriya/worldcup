@@ -15,12 +15,26 @@ export default function Leaderboard() {
 
   useEffect(() => { load() }, [])
 
+  async function fetchAll(table, cols) {
+    var all = []
+    var from = 0
+    var pageSize = 1000
+    while (true) {
+      var page = await supabase.from(table).select(cols).range(from, from + pageSize - 1)
+      if (!page.data || page.data.length === 0) break
+      all = all.concat(page.data)
+      if (page.data.length < pageSize) break
+      from += pageSize
+    }
+    return all
+  }
+
   async function load() {
     setLoading(true)
-    const [{ data:players }, { data:scores }, { data:predictions }, { count:finished }, { data:winnerPicks }] = await Promise.all([
+    const [{ data:players }, scores, predictions, { count:finished }, { data:winnerPicks }] = await Promise.all([
       supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500),
-      supabase.from('scores').select('*').limit(30000),
-      supabase.from('predictions').select('player_id,match_id,home_goals,away_goals').limit(30000),
+      fetchAll('scores', '*'),
+      fetchAll('predictions', 'player_id,match_id,home_goals,away_goals'),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
       supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode),
     ])

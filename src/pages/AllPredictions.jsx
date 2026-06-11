@@ -45,21 +45,42 @@ export default function AllPredictions() {
   useEffect(() => { loadMatchData() }, [phase, groupBy, activeDay])
 
   async function loadPoolData() {
-    const [{ data: playerData }, { data: predData }, { data: scoreData }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500),
-      supabase.from('predictions').select('*').limit(30000),
-      supabase.from('scores').select('*').limit(30000),
-    ])
+    const { data: playerData } = await supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500)
     setPlayers(playerData || [])
+
+    // Paginate predictions to bypass Supabase's 1000-row default cap
+    var allPreds = []
+    var from = 0
+    var pageSize = 1000
+    while (true) {
+      var { data: page } = await supabase.from('predictions').select('match_id,player_id,home_goals,away_goals').range(from, from + pageSize - 1)
+      if (!page || page.length === 0) break
+      allPreds = allPreds.concat(page)
+      if (page.length < pageSize) break
+      from += pageSize
+    }
+
     const predMap = {}
-    for (const p of predData || []) {
+    for (const p of allPreds) {
       const mid = String(p.match_id)
       if (!predMap[mid]) predMap[mid] = {}
       predMap[mid][String(p.player_id)] = { hg: p.home_goals, ag: p.away_goals }
     }
     setPredictions(predMap)
+
+    // Paginate scores too
+    var allScores = []
+    from = 0
+    while (true) {
+      var { data: sPage } = await supabase.from('scores').select('match_id,player_id,pts_total').range(from, from + pageSize - 1)
+      if (!sPage || sPage.length === 0) break
+      allScores = allScores.concat(sPage)
+      if (sPage.length < pageSize) break
+      from += pageSize
+    }
+
     const scoreMap = {}
-    for (const s of scoreData || []) {
+    for (const s of allScores) {
       if (!scoreMap[String(s.match_id)]) scoreMap[String(s.match_id)] = {}
       scoreMap[String(s.match_id)][String(s.player_id)] = s.pts_total || 0
     }

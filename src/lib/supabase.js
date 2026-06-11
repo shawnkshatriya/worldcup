@@ -70,11 +70,22 @@ export function calcMatchPoints(prediction, result, weights, phase) {
 export async function recalcPlayerScores(roomCode) {
   var wRes = await supabase.from('scoring_weights').select('*').eq('room_code', roomCode).single()
   var mRes = await supabase.from('matches').select('*').eq('status', 'FINISHED')
-  var pRes = await supabase.from('predictions').select('*, players!inner(room_code)').eq('players.room_code', roomCode)
+
+  // Paginate predictions to bypass Supabase 1000-row cap
+  var predictions = []
+  var from = 0
+  var pageSize = 1000
+  while (true) {
+    var pPage = await supabase.from('predictions').select('*, players!inner(room_code)')
+      .eq('players.room_code', roomCode).range(from, from + pageSize - 1)
+    if (!pPage.data || pPage.data.length === 0) break
+    predictions = predictions.concat(pPage.data)
+    if (pPage.data.length < pageSize) break
+    from += pageSize
+  }
 
   var weights = wRes.data
   var matches = mRes.data
-  var predictions = pRes.data
   if (!weights || !matches || !predictions) return
 
   // Score each prediction
