@@ -48,12 +48,18 @@ export default function AllPredictions() {
     const { data: playerData } = await supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500)
     setPlayers(playerData || [])
 
-    // Paginate predictions to bypass Supabase's 1000-row default cap
+    var playerIds = (playerData || []).map(function(p){ return p.id })
+    if (playerIds.length === 0) return
+
+    // Fetch predictions only for this room's players (much smaller, faster)
     var allPreds = []
     var from = 0
     var pageSize = 1000
     while (true) {
-      var { data: page } = await supabase.from('predictions').select('match_id,player_id,home_goals,away_goals').range(from, from + pageSize - 1)
+      var { data: page } = await supabase.from('predictions')
+        .select('match_id,player_id,home_goals,away_goals')
+        .in('player_id', playerIds)
+        .range(from, from + pageSize - 1)
       if (!page || page.length === 0) break
       allPreds = allPreds.concat(page)
       if (page.length < pageSize) break
@@ -68,11 +74,14 @@ export default function AllPredictions() {
     }
     setPredictions(predMap)
 
-    // Paginate scores too
+    // Scores for this room's players only
     var allScores = []
     from = 0
     while (true) {
-      var { data: sPage } = await supabase.from('scores').select('match_id,player_id,pts_total').range(from, from + pageSize - 1)
+      var { data: sPage } = await supabase.from('scores')
+        .select('match_id,player_id,pts_total')
+        .in('player_id', playerIds)
+        .range(from, from + pageSize - 1)
       if (!sPage || sPage.length === 0) break
       allScores = allScores.concat(sPage)
       if (sPage.length < pageSize) break
