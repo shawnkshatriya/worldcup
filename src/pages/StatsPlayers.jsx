@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { HBar, StatPct } from './StatsCharts'
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
@@ -27,7 +26,6 @@ export default function StatsPlayers({ sorted, maxPts, leader, playerStats, pool
   // Find current player's stats
   var myStats = currentPlayer ? sorted.find(function(p){ return p.id === currentPlayer.id }) : null
   var myRank = currentPlayer ? sorted.findIndex(function(p){ return p.id === currentPlayer.id }) + 1 : null
-  const [filter, setFilter] = useState('')
   var metrics = [
     {label:'% W/L correct',  key:'pctWL',   color:'var(--c-accent)',  suffix:'%'},
     {label:'% goal diff',    key:'pctDiff',  color:'var(--c-info)',    suffix:'%'},
@@ -80,19 +78,8 @@ export default function StatsPlayers({ sorted, maxPts, leader, playerStats, pool
       </div>
 
       <div className="card" style={{marginBottom:0}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,gap:8,flexWrap:'wrap'}}>
-          <div className="card-title" style={{marginBottom:0}}>Points race</div>
-          {players.length > 8 && (
-            <input
-              type="text"
-              placeholder="Filter players..."
-              value={filter}
-              onChange={function(e){ setFilter(e.target.value) }}
-              style={{fontSize:12,padding:'5px 10px',borderRadius:16,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)',maxWidth:160}}
-            />
-          )}
-        </div>
-        {sorted.filter(function(p){ return !filter || p.name.toLowerCase().includes(filter.toLowerCase()) }).map(function(p, i) {
+        <div className="card-title">Points race</div>
+        {sorted.map(function(p, i) {
           return (
             <div key={p.id} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
               <div style={{width:28,textAlign:'center',fontSize:i < 3 ? 22 : 14,color:medalColor(i)}}>

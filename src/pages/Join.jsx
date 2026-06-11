@@ -76,7 +76,7 @@ export default function Join() {
   if (loading) return null
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--c-bg)', padding: '2rem 1rem 5rem', boxSizing: 'border-box' }}>
+    <div style={{ background: 'var(--c-bg)', padding: '2rem 1rem calc(4rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', minHeight: '100%' }}>
       <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
 
       {/* Brand */}

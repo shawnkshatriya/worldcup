@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import PlayerFilter from '../components/PlayerFilter'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { ACHIEVEMENTS, TIER_COLORS, computeAchievements, generateMatchCommentary } from '../lib/achievements'
@@ -77,6 +78,7 @@ export default function Fun() {
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [selectedPlayer, setSP] = useState(null)
+  const [filterPlayers, setFilterPlayers] = useState([])
   const [commentMatch, setCM]   = useState(null)
 
   useEffect(() => { loadAll() }, [])
@@ -121,6 +123,7 @@ export default function Fun() {
   }), [players, scores, predictions, matches])
 
   const sorted = [...playerStats].sort((a,b)=>b.total-a.total)
+  const sortedFiltered = filterPlayers.length === 0 ? sorted : sorted.filter(p => filterPlayers.includes(p.id))
 
   // Head-to-head per match
   const h2h = useMemo(() => {
@@ -181,17 +184,22 @@ export default function Fun() {
           </div>
         )}
 
-        <div className="tabs">
-          <button className={`tab${tab==='achievements'?' active':''}`} onClick={()=>setTab('achievements')}>Achievements</button>
-          <button className={`tab${tab==='h2h'?' active':''}`} onClick={()=>setTab('h2h')}>Rivalries</button>
-          <button className={`tab${tab==='bingo'?' active':''}`} onClick={()=>setTab('bingo')}>Bingo cards</button>
-          <button className={`tab${tab==='roast'?' active':''}`} onClick={()=>setTab('roast')}>Match roasts</button>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:'1rem'}}>
+          <div className="tabs" style={{marginBottom:0}}>
+            <button className={`tab${tab==='achievements'?' active':''}`} onClick={()=>setTab('achievements')}>Achievements</button>
+            <button className={`tab${tab==='h2h'?' active':''}`} onClick={()=>setTab('h2h')}>Rivalries</button>
+            <button className={`tab${tab==='bingo'?' active':''}`} onClick={()=>setTab('bingo')}>Bingo cards</button>
+            <button className={`tab${tab==='roast'?' active':''}`} onClick={()=>setTab('roast')}>Match roasts</button>
+          </div>
+          {(tab==='achievements' || tab==='bingo') && (
+            <PlayerFilter players={players} selected={filterPlayers} onChange={setFilterPlayers} />
+          )}
         </div>
 
         {/* ACHIEVEMENTS */}
         {tab==='achievements' && (
           <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
-            {sorted.map((p,rank) => {
+            {sortedFiltered.map((p,rank) => {
               const unlocked = computeAchievements(p, rank+1, null)
               const locked   = ACHIEVEMENTS.filter(a=>!unlocked.find(u=>u.id===a.id))
               return (
@@ -341,7 +349,7 @@ export default function Fun() {
               Each cell shows your predicted score (top) and the actual result (bottom). 💎 gold = exact score, v green = correct result, x red = wrong.
             </div>
             <div style={{display:'flex',gap:8,marginBottom:'1.25rem',flexWrap:'wrap'}}>
-              {players.map((p,i)=>(
+              {(filterPlayers.length === 0 ? players : players.filter(p => filterPlayers.includes(p.id))).map((p,i)=>(
                 <button key={p.id} onClick={()=>setSP(p.id)} style={{
                   padding:'6px 14px', borderRadius:20, border:'1px solid', fontSize:13, fontWeight:600, cursor:'pointer', transition:'all 0.12s',
                   background:selectedPlayer===p.id?AVATAR_COLORS[i%AVATAR_COLORS.length]:'transparent',

@@ -61,15 +61,15 @@
   --sidebar-w: 230px;
 }
 
-html { background: var(--c-bg); }
+html { background: var(--c-bg); height: 100%; }
 
 body {
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--c-text);
   background: var(--c-bg);
-  min-height: 100vh;
-  min-height: 100dvh;  line-height: 1.55;
+  min-height: 100%;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 

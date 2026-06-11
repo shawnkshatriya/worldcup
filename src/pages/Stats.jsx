@@ -5,6 +5,7 @@ import { FunFacts } from './StatsCharts'
 import StatsTournament from './StatsTournament'
 import StatsPlayers from './StatsPlayers'
 import StatsChartsTab from './StatsChartsTab'
+import PlayerFilter from '../components/PlayerFilter'
 
 var AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
 var GROUP_NAMES = { GROUP_A:'A',GROUP_B:'B',GROUP_C:'C',GROUP_D:'D',GROUP_E:'E',GROUP_F:'F', GROUP_G:'G',GROUP_H:'H',GROUP_I:'I',GROUP_J:'J',GROUP_K:'K',GROUP_L:'L' }
@@ -66,6 +67,10 @@ export default function Stats() {
   })},[players,scores,predictions])
 
   var sorted = playerStats.slice().sort(function(a,b){return b.total-a.total})
+
+  var selectedState = useState([])
+  var selectedPlayers = selectedState[0], setSelectedPlayers = selectedState[1]
+  var filteredSorted = selectedPlayers.length === 0 ? sorted : sorted.filter(function(p){ return selectedPlayers.includes(p.id) })
   var maxPts = sorted[0] ? (sorted[0].total||1) : 1
   var leader = sorted[0]
   var topScorer = useMemo(function(){
@@ -110,14 +115,15 @@ export default function Stats() {
   },[finished,scores])
 
   var ptsOverTime=useMemo(function(){
-    return sorted.slice(0,3).map(function(pl){ return {
+    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
+    return base.map(function(pl){ return {
       label:pl.name, color:pl.color,
       points: finished.slice(0,20).map(function(m,i){
         var cumPts=scores.filter(function(s){return s.player_id===pl.id&&finished.slice(0,i+1).some(function(x){return x.id===s.match_id})}).reduce(function(a,s){return a+(s.pts_total||0)},0)
         return {label:'M'+(i+1),y:cumPts}
       })
     }})
-  },[sorted,finished,scores])
+  },[sorted,finished,scores,selectedPlayers])
 
   var topScorerMetric = null
   if (topScorer) {
@@ -149,20 +155,25 @@ export default function Stats() {
       </div>
       <div className="page-body">
 
-        <div className="tabs">
-        {tabs.map(function(t) {
-          return (
-            <button key={t} className={'tab' + (tab===t ? ' active' : '')} onClick={function(){setTab(t)}}>
-              {TAB_LABELS[t] || t}
-            </button>
-          )
-        })}
-      </div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,marginBottom:'1rem',flexWrap:'wrap'}}>
+          <div className="tabs" style={{marginBottom:0}}>
+          {tabs.map(function(t) {
+            return (
+              <button key={t} className={'tab' + (tab===t ? ' active' : '')} onClick={function(){setTab(t)}}>
+                {TAB_LABELS[t] || t}
+              </button>
+            )
+          })}
+          </div>
+          {(tab === 'players' || tab === 'funfacts' || tab === 'charts') && (
+            <PlayerFilter players={players} selected={selectedPlayers} onChange={setSelectedPlayers} />
+          )}
+        </div>
 
       {tab==='tournament' ? <StatsTournament finished={finished} totalGoals={totalGoals} avgGoals={avgGoals} topScorer={topScorer} goalsHist={goalsHist} groupGoals={groupGoals} groupCounts={groupCounts} topTeams={topTeams} scoreless={scoreless} highScoring={highScoring} predictions={predictions}/> : null}
-      {tab==='players' ? <StatsPlayers sorted={sorted} maxPts={maxPts} leader={leader} playerStats={playerStats} poolAccuracy={poolAccuracy} poolExactRate={poolExactRate} players={players} currentPlayer={player} finished={finished}/> : null}
-      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime}/> : null}
-      {tab==='funfacts' ? <FunFacts sorted={sorted} playerStats={playerStats} leader={leader} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
+      {tab==='players' ? <StatsPlayers sorted={filteredSorted} maxPts={maxPts} leader={leader} playerStats={playerStats} poolAccuracy={poolAccuracy} poolExactRate={poolExactRate} players={players} currentPlayer={player} finished={finished}/> : null}
+      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} selectedPlayers={selectedPlayers}/> : null}
+      {tab==='funfacts' ? <FunFacts sorted={filteredSorted} playerStats={playerStats} leader={leader} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
       </div>
     </div>
   )

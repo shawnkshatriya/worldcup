@@ -1,6 +1,6 @@
 import { Donut, LineChart } from './StatsCharts'
 
-export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime }) {
+export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, selectedPlayers }) {
   var hasScores = scores.length > 0
   var ptsResult = scores.reduce(function(a,s){ return a + (s.pts_result||0) }, 0)
   var ptsDiff   = scores.reduce(function(a,s){ return a + (s.pts_diff||0) }, 0)
