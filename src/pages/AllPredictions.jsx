@@ -141,6 +141,9 @@ export default function AllPredictions() {
         </div>
       </div>
       <div className="page-body">
+        <div style={{fontSize:11,color:'red',padding:'8px',background:'#fee',marginBottom:8,fontFamily:'monospace',wordBreak:'break-all'}}>
+          DEBUG: players={players.length} | predMatchKeys={Object.keys(predictions).length} | matches={matches.length} | firstMatchId={String(matches[0]?.id)} | predsForFirstMatch={matches[0] ? Object.keys(predictions[String(matches[0].id)]||{}).length : 0} | samplePredMatchKey={Object.keys(predictions)[0]} | samplePlayerId={String(players[0]?.id).slice(0,8)} | samplePredPlayerKey={predictions[Object.keys(predictions)[0]] ? Object.keys(predictions[Object.keys(predictions)[0]])[0]?.slice(0,8) : 'none'}
+        </div>
 
         {/* View toggle */}
         <div className="tabs" style={{marginBottom:'0.75rem'}}>
