@@ -196,7 +196,11 @@ export async function syncMatchResults() {
     for (var i = 0; i < matches.length; i++) {
       var m = matches[i]
       var score = m.score && m.score.fullTime
-      if (!score || score.home == null) continue
+      var isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED'
+      if (!score || score.home == null) {
+        if (!isLive) continue
+        score = { home: 0, away: 0 }
+      }
 
       var homeTeam = mapTeamName(m.homeTeam.name || m.homeTeam.shortName)
       var awayTeam = mapTeamName(m.awayTeam.name || m.awayTeam.shortName)
@@ -208,7 +212,7 @@ export async function syncMatchResults() {
         away_goals_et: m.score.extraTime ? m.score.extraTime.away : null,
         home_goals_pen: m.score.penalties ? m.score.penalties.home : null,
         away_goals_pen: m.score.penalties ? m.score.penalties.away : null,
-        status: m.status || 'FINISHED',
+        status: m.status || 'SCHEDULED',
         updated_at: new Date().toISOString(),
       }
 
