@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, syncAndRecalc } from '../lib/supabase'
+import { getVenue } from '../lib/venues'
 import { usePlayer } from '../hooks/usePlayer'
 
 const PHASE_LABELS = {
@@ -32,6 +33,8 @@ export default function Scores() {
   const [lastSync, setLastSync] = useState(null)
   const [syncing, setSyncing]   = useState(false)
   const [demoMode, setDemoMode] = useState(false)
+  const [groupBy, setGroupBy]   = useState('group')
+  const [predDist, setPredDist] = useState({}) // 'group' or 'day'
 
   useEffect(() => { loadMatches() }, [filter])
 
@@ -55,6 +58,23 @@ export default function Scores() {
     setMatches(data || [])
     setDemoMode(isDemo)
     setLoading(false)
+
+    // Fetch prediction distribution for finished matches
+    var finishedIds = (data || []).filter(function(m){return m.status==='FINISHED'}).map(function(m){return m.id})
+    if (finishedIds.length > 0) {
+      var { data: preds } = await supabase.from('predictions').select('match_id,home_goals,away_goals')
+        .in('match_id', finishedIds).not('home_goals','is',null)
+      var dist = {}
+      ;(preds || []).forEach(function(p) {
+        if (!dist[p.match_id]) dist[p.match_id] = { home: 0, draw: 0, away: 0, total: 0 }
+        var d = dist[p.match_id]
+        d.total++
+        if (p.home_goals > p.away_goals) d.home++
+        else if (p.home_goals < p.away_goals) d.away++
+        else d.draw++
+      })
+      setPredDist(dist)
+    }
   }
 
   async function handleSync() {
@@ -82,9 +102,14 @@ export default function Scores() {
     return function() { clearInterval(id) }
   }, [demoMode, syncing, filter])
 
-  // Group by phase
+  // Group matches by phase or by day
   const grouped = matches.reduce((acc, m) => {
-    const k = m.phase
+    var k
+    if (groupBy === 'day' && m.kickoff) {
+      k = new Date(m.kickoff).toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' })
+    } else {
+      k = m.phase
+    }
     if (!acc[k]) acc[k] = []
     acc[k].push(m)
     return acc
@@ -127,11 +152,17 @@ export default function Scores() {
               </button>
             ))}
           </div>
-          {(apiKey || isAdmin) && !demoMode && (
-            <button className="btn btn-sm" onClick={handleSync} disabled={syncing}>
-              {syncing ? 'Syncing...' : 'Sync from API'}
-            </button>
-          )}
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            <div className="tabs" style={{marginBottom:0}}>
+              <button className={`tab${groupBy==='group'?' active':''}`} onClick={()=>setGroupBy('group')} style={{fontSize:11,padding:'4px 10px'}}>By Group</button>
+              <button className={`tab${groupBy==='day'?' active':''}`} onClick={()=>setGroupBy('day')} style={{fontSize:11,padding:'4px 10px'}}>By Day</button>
+            </div>
+            {(apiKey || isAdmin) && !demoMode && (
+              <button className="btn btn-sm" onClick={handleSync} disabled={syncing}>
+                {syncing ? 'Syncing...' : 'Sync from API'}
+              </button>
+            )}
+          </div>
         </div>
 
         {loading && <p style={{color:'var(--c-muted)'}}>Loading...</p>}
@@ -146,19 +177,15 @@ export default function Scores() {
 
         {Object.entries(grouped).map(([phase, ms]) => (
           <div className="card" key={phase} style={{marginBottom:'1rem'}}>
-            <div className="card-title">{PHASE_LABELS[phase] || phase}</div>
+            <div className="card-title">{groupBy === 'group' ? (PHASE_LABELS[phase] || phase) : phase}</div>
             {ms.map(m => (
-              <div key={m.id} className="match-row">
+              <div key={m.id}>
+              <div className="match-row">
                 <div className="team-home">
                   <div style={{fontWeight:600,fontSize:13}}>{m.home_team||'TBD'}</div>
-                  {m.kickoff && (
-                    <div style={{fontSize:11,color:'var(--c-muted)'}}>
-                      {new Date(m.kickoff).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
-                    </div>
-                  )}
                 </div>
 
-                <div style={{textAlign:'center'}}>
+                <div className="match-center" style={{minWidth:80}}>
                   {m.home_goals!=null ? (
                     <div style={{fontFamily:'var(--font-display)',fontSize:28,fontWeight:400,lineHeight:1,letterSpacing:'0.04em'}}>
                       {m.home_goals} - {m.away_goals}
@@ -174,18 +201,82 @@ export default function Scores() {
                   {m.home_goals_et!=null && m.home_goals_pen==null && (
                     <div style={{fontSize:10,color:'var(--c-muted)'}}>AET</div>
                   )}
+                  {m.kickoff && (
+                    <div style={{fontSize:10,color:'var(--c-muted)',marginTop:2}}>
+                      {new Date(m.kickoff).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+                      {' '}
+                      {new Date(m.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
+                    </div>
+                  )}
+                  <div style={{marginTop:3}}>
+                    <span className={`match-status status-${m.status==='IN_PLAY'?'live':m.status==='FINISHED'?'finished':'upcoming'}`}>
+                      {m.status==='IN_PLAY'?'LIVE':m.status==='FINISHED'?'FT':m.kickoff?'Upcoming':'TBD'}
+                    </span>
+                  </div>
+                  {m.match_number && getVenue(m.match_number) && (
+                    <div style={{fontSize:9,color:'var(--c-hint)',marginTop:2}}>{getVenue(m.match_number)}</div>
+                  )}
                 </div>
 
                 <div className="team-away">
                   <div style={{fontWeight:600,fontSize:13}}>{m.away_team||'TBD'}</div>
-                  <div style={{marginTop:4}}>
-                    <span className={`match-status status-${m.status==='IN_PLAY'?'live':m.status==='FINISHED'?'finished':'upcoming'}`}>
-                      {m.status==='IN_PLAY'?'LIVE':m.status==='FINISHED'?'FT':'Soon'}
-                    </span>
-                  </div>
                 </div>
               </div>
+              {predDist[m.id] && (
+                <div style={{display:'flex',justifyContent:'center',gap:12,fontSize:10,color:'var(--c-muted)',paddingBottom:6}}>
+                  <span>{predDist[m.id].home} picked {m.home_team}</span>
+                  <span>{predDist[m.id].draw} drew</span>
+                  <span>{predDist[m.id].away} picked {m.away_team}</span>
+                </div>
+              )}
+              </div>
             ))}
+            {groupBy === 'group' && phase.startsWith('GROUP') && ms.some(function(m){return m.home_goals != null}) && (function() {
+              var teams = {}
+              ms.forEach(function(m) {
+                if (m.home_goals == null) return
+                if (!teams[m.home_team]) teams[m.home_team] = {name:m.home_team,p:0,w:0,d:0,l:0,gf:0,ga:0}
+                if (!teams[m.away_team]) teams[m.away_team] = {name:m.away_team,p:0,w:0,d:0,l:0,gf:0,ga:0}
+                var h = teams[m.home_team], a = teams[m.away_team]
+                h.p++; a.p++; h.gf += m.home_goals; h.ga += m.away_goals; a.gf += m.away_goals; a.ga += m.home_goals
+                if (m.home_goals > m.away_goals) { h.w++; a.l++ }
+                else if (m.home_goals < m.away_goals) { a.w++; h.l++ }
+                else { h.d++; a.d++ }
+              })
+              var sorted = Object.values(teams).map(function(t){ t.gd = t.gf - t.ga; t.pts = t.w*3 + t.d; return t })
+                .sort(function(a,b){ return b.pts - a.pts || b.gd - a.gd || b.gf - a.gf })
+              return (
+                <div style={{marginTop:12,borderTop:'1px solid var(--c-border)',paddingTop:10}}>
+                  <div style={{fontSize:11,fontWeight:700,color:'var(--c-muted)',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Standings</div>
+                  <table style={{width:'100%',fontSize:12}}>
+                    <thead><tr style={{color:'var(--c-muted)'}}>
+                      <th style={{textAlign:'left',fontWeight:600}}>Team</th>
+                      <th style={{textAlign:'center',width:28}}>P</th>
+                      <th style={{textAlign:'center',width:28}}>W</th>
+                      <th style={{textAlign:'center',width:28}}>D</th>
+                      <th style={{textAlign:'center',width:28}}>L</th>
+                      <th style={{textAlign:'center',width:32}}>GD</th>
+                      <th style={{textAlign:'center',width:32,fontWeight:700}}>Pts</th>
+                    </tr></thead>
+                    <tbody>
+                      {sorted.map(function(t,i) {
+                        return (
+                          <tr key={t.name} style={{fontWeight: i < 2 ? 600 : 400, color: i < 2 ? 'var(--c-text)' : 'var(--c-muted)'}}>
+                            <td>{t.name}</td>
+                            <td style={{textAlign:'center'}}>{t.p}</td>
+                            <td style={{textAlign:'center'}}>{t.w}</td>
+                            <td style={{textAlign:'center'}}>{t.d}</td>
+                            <td style={{textAlign:'center'}}>{t.l}</td>
+                            <td style={{textAlign:'center'}}>{t.gd > 0 ? '+'+t.gd : t.gd}</td>
+                            <td style={{textAlign:'center',fontWeight:700}}>{t.pts}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
           </div>
         ))}
       </div>

@@ -132,7 +132,7 @@ export function LineChart({ series, height=80, showLast=true }) {
 }
 
 
-export function FunFacts({ sorted, playerStats, leader, totalGoals, finished, avgGoals, topScorer }) {
+export function FunFacts({ sorted, playerStats, leader, totalGoals, finished, avgGoals, topScorer, predictions }) {
   const second = sorted[1]
   const last = sorted[sorted.length - 1]
   const mostExact = [...playerStats].sort((a, b) => b.exact - a.exact)[0]
@@ -151,18 +151,46 @@ export function FunFacts({ sorted, playerStats, leader, totalGoals, finished, av
     topScorer && { icon: '🔥', text: topScorer.name + ' leads with ' + topScorer.goals + ' goals' },
   ].filter(Boolean)
 
+  // Most predicted scorelines
+  var predCounts = {}
+  if (predictions) {
+    predictions.forEach(function(p) {
+      if (p.home_goals != null) { var k = p.home_goals + '-' + p.away_goals; predCounts[k] = (predCounts[k]||0) + 1 }
+    })
+  }
+  var topPreds = Object.entries(predCounts).sort(function(a,b){return b[1]-a[1]}).slice(0,5)
+  if (topPreds.length > 0) {
+    facts.push({ icon: '📋', text: 'Most predicted score: ' + topPreds[0][0] + ' (' + topPreds[0][1] + ' times)' })
+  }
+
   return (
-    <div className="card" style={{marginBottom:0}}>
-      <div className="card-title">Fun facts</div>
-      {!facts.length
-        ? <p style={{color:'var(--c-muted)',fontSize:13}}>Seed demo data to unlock facts.</p>
-        : facts.map((fact, i) => (
-          <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
-            <span style={{fontSize:18,flexShrink:0}}>{fact.icon}</span>
-            <span style={{color:'var(--c-muted)',lineHeight:1.6}}>{fact.text}</span>
-          </div>
-        ))
-      }
+    <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">Fun facts</div>
+        {!facts.length
+          ? <p style={{color:'var(--c-muted)',fontSize:13}}>No data yet - check back once matches are played.</p>
+          : facts.map((fact, i) => (
+            <div key={i} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:'1px solid var(--c-border)',fontSize:13,alignItems:'flex-start'}}>
+              <span style={{fontSize:18,flexShrink:0}}>{fact.icon}</span>
+              <span style={{color:'var(--c-muted)',lineHeight:1.6}}>{fact.text}</span>
+            </div>
+          ))
+        }
+      </div>
+
+      {topPreds.length > 0 && (
+        <div className="card" style={{marginBottom:0}}>
+          <div className="card-title">Most predicted scorelines</div>
+          {topPreds.map(function(entry) {
+            return (
+              <div key={entry[0]} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--c-border)',fontSize:13}}>
+                <span style={{fontFamily:'var(--font-display)',fontSize:18}}>{entry[0]}</span>
+                <span style={{color:'var(--c-muted)'}}>{entry[1]} times</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

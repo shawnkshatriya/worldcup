@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
+import { getVenue } from '../lib/venues'
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
   {name:'Austria',flag:'🇦🇹'},{name:'Belgium',flag:'🇧🇪'},{name:'Bosnia and Herzegovina',flag:'🇧🇦'},
@@ -138,52 +139,81 @@ export default function Predictions() {
   const [saving, setSaving] = useState({})
   const [saved, setSaved] = useState({})
   const [koOpen, setKoOpen] = useState(false)
-  const [progress, setProgress] = useState({ predicted: 0, total: 104 })
+  const [progress, setProgress] = useState({ groupPred: 0, groupTotal: 72, koPred: 0, koTotal: 32 })
+  const [groupBy, setGroupBy] = useState('group') // 'group' or 'day'
+  const [allMatches, setAllMatches] = useState([])
+  const [activeDay, setActiveDay] = useState(null)
 
   useEffect(function() {
     if (player) {
       supabase.from('rooms').select('ko_predictions_open').eq('code', player.room_code).single()
         .then(function(res) { if (res.data) setKoOpen(!!res.data.ko_predictions_open) })
-      // Fetch prediction progress
+      // Fetch prediction progress split by group/KO
       Promise.all([
-        supabase.from('matches').select('id'),
+        supabase.from('matches').select('id, phase'),
         supabase.from('predictions').select('id, match_id')
           .eq('player_id', player.id).not('home_goals', 'is', null),
       ]).then(function(results) {
-        var matchIds = new Set((results[0].data || []).map(function(m){ return m.id }))
-        var validPreds = (results[1].data || []).filter(function(p){ return matchIds.has(p.match_id) })
-        setProgress({ predicted: validPreds.length, total: matchIds.size || 104 })
+        var allM = results[0].data || []
+        var groupMatches = allM.filter(function(m){ return m.phase && m.phase.startsWith('GROUP') })
+        var koMatches = allM.filter(function(m){ return m.phase && !m.phase.startsWith('GROUP') })
+        var groupIds = new Set(groupMatches.map(function(m){ return m.id }))
+        var koIds = new Set(koMatches.map(function(m){ return m.id }))
+        var preds = results[1].data || []
+        var groupPred = preds.filter(function(p){ return groupIds.has(p.match_id) }).length
+        var koPred = preds.filter(function(p){ return koIds.has(p.match_id) }).length
+        setProgress({ groupPred: groupPred, groupTotal: groupMatches.length, koPred: koPred, koTotal: koMatches.length })
       }).catch(function() {
-        setProgress({ predicted: 0, total: 104 })
+        setProgress({ groupPred: 0, groupTotal: 72, koPred: 0, koTotal: 32 })
       })
     }
   }, [player])
 
   useEffect(() => {
     loadMatches()
-  }, [activePhase])
+  }, [activePhase, groupBy, activeDay])
 
   useEffect(() => {
-    if (player && matches.length) loadPredictions()
-  }, [player, matches])
+    if (player) loadPredictions()
+  }, [player])
+
+  // Load all matches once for day view
+  useEffect(function() {
+    if (groupBy === 'day') {
+      supabase.from('matches').select('*').order('kickoff').then(function(res) {
+        var data = res.data || []
+        setAllMatches(data)
+        if (!activeDay && data.length > 0 && data[0].kickoff) {
+          setActiveDay(new Date(data[0].kickoff).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}))
+        }
+      })
+    }
+  }, [groupBy])
 
   async function loadMatches() {
-    const { data } = await supabase
-      .from('matches')
-      .select('*')
-      .eq('phase', activePhase)
-      .order('match_number')
-    setMatches(data || [])
+    if (groupBy === 'day') {
+      // Filter allMatches by activeDay
+      var dayMatches = allMatches.filter(function(m) {
+        if (!m.kickoff || !activeDay) return false
+        return new Date(m.kickoff).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}) === activeDay
+      })
+      setMatches(dayMatches)
+    } else {
+      const { data } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('phase', activePhase)
+        .order('match_number')
+      setMatches(data || [])
+    }
   }
 
   async function loadPredictions() {
     if (!player) return
-    const ids = matches.map(m => m.id)
     const { data } = await supabase
       .from('predictions')
       .select('*')
       .eq('player_id', player.id)
-      .in('match_id', ids)
     const map = {}
     data?.forEach(p => { map[p.match_id] = p })
     setPreds(map)
@@ -201,16 +231,15 @@ export default function Predictions() {
     }, { onConflict: 'player_id,match_id' })
     setSaving(s => ({ ...s, [matchId]: false }))
     setSaved(s => ({ ...s, [matchId]: true }))
-    if (!preds[matchId]?.home_goals && !preds[matchId]?.away_goals) {
-      setProgress(function(p) { return { predicted: p.predicted + 1, total: p.total } })
-    }
     setTimeout(() => setSaved(s => ({ ...s, [matchId]: false })), 1500)
   }
 
   function updatePred(matchId, field, val) {
+    var n = val === '' ? null : Math.max(0, Math.min(20, Math.floor(Number(val))))
+    if (val !== '' && isNaN(n)) return
     setPreds(p => ({
       ...p,
-      [matchId]: { ...(p[matchId]||{}), [field]: val }
+      [matchId]: { ...(p[matchId]||{}), [field]: val === '' ? null : n }
     }))
   }
 
@@ -241,37 +270,89 @@ export default function Predictions() {
       <div className="page-body">
 
         <div style={{background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:'var(--radius)',padding:'12px 16px',marginBottom:'1.25rem'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
-            <span style={{fontSize:13,fontWeight:600}}>{progress.predicted} of {progress.total} predicted</span>
-            <span style={{fontSize:12,color:'var(--c-muted)'}}>{progress.total > 0 ? Math.round(progress.predicted / progress.total * 100) : 0}%</span>
+          <div style={{marginBottom:10}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+              <span style={{fontSize:12,fontWeight:600}}>Group stage</span>
+              <span style={{fontSize:11,color:'var(--c-muted)'}}>{progress.groupPred}/{progress.groupTotal}</span>
+            </div>
+            <div style={{height:5,background:'var(--c-surface2)',borderRadius:3,overflow:'hidden'}}>
+              <div style={{height:'100%',width:(progress.groupTotal > 0 ? Math.round(progress.groupPred / progress.groupTotal * 100) : 0) + '%',background:progress.groupPred === progress.groupTotal ? 'var(--c-success)' : 'var(--c-accent)',borderRadius:3,transition:'width 0.6s'}}/>
+            </div>
           </div>
-          <div style={{height:6,background:'var(--c-surface2)',borderRadius:3,overflow:'hidden'}}>
-            <div style={{height:'100%',width:(progress.total > 0 ? Math.round(progress.predicted / progress.total * 100) : 0) + '%',background:progress.predicted === progress.total ? 'var(--c-success)' : 'var(--c-accent)',borderRadius:3,transition:'width 0.6s'}}/>
+          <div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+              <span style={{fontSize:12,fontWeight:600}}>Knockout</span>
+              <span style={{fontSize:11,color:'var(--c-muted)'}}>{progress.koPred}/{progress.koTotal}</span>
+            </div>
+            <div style={{height:5,background:'var(--c-surface2)',borderRadius:3,overflow:'hidden'}}>
+              <div style={{height:'100%',width:(progress.koTotal > 0 ? Math.round(progress.koPred / progress.koTotal * 100) : 0) + '%',background:progress.koPred === progress.koTotal ? 'var(--c-success)' : 'var(--c-info)',borderRadius:3,transition:'width 0.6s'}}/>
+            </div>
           </div>
-          {progress.predicted < progress.total && (
-            <div style={{fontSize:11,color:'var(--c-muted)',marginTop:4}}>{progress.total - progress.predicted} matches left to predict</div>
+          {(progress.groupPred + progress.koPred) < (progress.groupTotal + progress.koTotal) && (
+            <div style={{fontSize:11,color:'var(--c-muted)',marginTop:6}}>{(progress.groupTotal + progress.koTotal) - (progress.groupPred + progress.koPred)} matches left to predict</div>
           )}
         </div>
-        <div style={{marginBottom:8,fontSize:12,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Group stage</div>
-        <div className="tabs">
-          {groupPhases.map(p => (
-            <button key={p} className={`tab${activePhase===p?' active':''}`} onClick={() => setActivePhase(p)}>
-              {PHASE_LABELS[p]}
-            </button>
-          ))}
+        <div className="tabs" style={{marginBottom:'1rem'}}>
+          <button className={`tab${groupBy==='group'?' active':''}`} onClick={function(){setGroupBy('group')}} style={{fontSize:11,padding:'4px 10px'}}>By Group</button>
+          <button className={`tab${groupBy==='day'?' active':''}`} onClick={function(){setGroupBy('day')}} style={{fontSize:11,padding:'4px 10px'}}>By Day</button>
         </div>
 
-        <div style={{marginBottom:8,fontSize:12,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Knockout rounds</div>
-        <div className="tabs" style={{marginBottom:'1.5rem'}}>
-          {koPhases.map(p => (
-            <button key={p} className={`tab${activePhase===p?' active':''}`} onClick={() => setActivePhase(p)}>
-              {PHASE_LABELS[p]}
-            </button>
-          ))}
-        </div>
+        {groupBy === 'group' && (
+          <>
+            <div style={{marginBottom:8,fontSize:12,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Group stage</div>
+            <div className="tabs">
+              {groupPhases.map(p => (
+                <button key={p} className={`tab${activePhase===p?' active':''}`} onClick={() => setActivePhase(p)}>
+                  {PHASE_LABELS[p]}
+                </button>
+              ))}
+            </div>
+
+            <div style={{marginBottom:8,fontSize:12,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.05em'}}>Knockout rounds</div>
+            <div className="tabs" style={{marginBottom:'1.5rem'}}>
+              {koPhases.map(p => (
+                <button key={p} className={`tab${activePhase===p?' active':''}`} onClick={() => setActivePhase(p)}>
+                  {PHASE_LABELS[p]}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {groupBy === 'day' && (
+          <div className="tabs" style={{marginBottom:'1.5rem',flexWrap:'wrap'}}>
+            {[...new Set(allMatches.filter(function(m){return m.kickoff}).map(function(m){return new Date(m.kickoff).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}))].map(function(day) {
+              return (
+                <button key={day} className={'tab' + (activeDay===day?' active':'')} onClick={function(){setActiveDay(day)}} style={{fontSize:11,padding:'4px 8px'}}>
+                  {day.replace(', 2026','')}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         <div className="card">
-          <div className="card-title">{PHASE_LABELS[activePhase]}</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+            <div className="card-title" style={{marginBottom:0}}>{groupBy === 'group' ? PHASE_LABELS[activePhase] : activeDay ? activeDay.replace(', 2026','') : 'Select a day'}</div>
+            <button
+              style={{fontSize:11,color:'var(--c-muted)',background:'var(--c-surface2)',border:'1px solid var(--c-border)',borderRadius:16,padding:'4px 12px',cursor:'pointer',whiteSpace:'nowrap'}}
+              onClick={async function() {
+                for (var i = 0; i < matches.length; i++) {
+                  var m = matches[i]
+                  if (isLocked(m, koOpen)) continue
+                  var p = preds[m.id] || {}
+                  if (p.home_goals != null && p.away_goals != null) continue
+                  var h = Math.floor(Math.random() * 5)
+                  var a = Math.floor(Math.random() * 5)
+                  updatePred(m.id, 'home_goals', h)
+                  updatePred(m.id, 'away_goals', a)
+                  await savePred(m.id, h, a)
+                }
+              }}
+            >
+              {String.fromCodePoint(0x1F3B2)} Randomize empty
+            </button>
+          </div>
 
           {matches.length === 0 && activePhase.startsWith('GROUP') && (
             <p style={{color:'var(--c-muted)',fontSize:14}}>No matches loaded yet for this group.</p>
@@ -288,7 +369,7 @@ export default function Predictions() {
             </div>
           )}
 
-          {activePhase === 'FINAL' && player && (
+          {((groupBy === 'group' && activePhase === 'FINAL') || (groupBy === 'day' && matches.some(function(m){ return m.phase === 'FINAL' }))) && player && (
             <WinnerPickInline player={player} koOpen={koOpen} />
           )}
 
@@ -300,25 +381,28 @@ export default function Predictions() {
             const hasBothGoals = pred.home_goals != null && pred.away_goals != null
 
             return (
-              <div key={m.id}>
-                <div className="match-row">
-                  <div className="team-home">
-                    <div style={{fontWeight:500}}>{m.home_team || '?'}</div>
-                    {m.kickoff && (
-                      <div style={{fontSize:12,color:'var(--c-muted)'}}>
-                        {new Date(m.kickoff).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
-                        {' '}
-                        {new Date(m.kickoff).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
-                      </div>
-                    )}
-                    {m.kickoff && !locked && (
-                      <div style={{fontSize:10,color:'var(--c-warn)'}}>
-                        {'Locks ' + new Date(new Date(m.kickoff).getTime() - LOCK_BUFFER_MS).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}
-                      </div>
+              <div key={m.id} style={{borderBottom:'1px solid var(--c-border)',padding:'12px 0'}}>
+                {m.kickoff && (
+                  <div style={{textAlign:'center',fontSize:13,color:'var(--c-muted)',marginBottom:6}}>
+                    {new Date(m.kickoff).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+                    {' · '}
+                    {new Date(m.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
+                    {!locked && (
+                      <span style={{color:'var(--c-warn)',marginLeft:6}}>
+                        {'· Locks ' + new Date(new Date(m.kickoff).getTime() - LOCK_BUFFER_MS).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})}
+                      </span>
                     )}
                     {locked && m.status !== 'FINISHED' && (
-                      <div style={{fontSize:10,color:'var(--c-danger)'}}>Locked</div>
+                      <span style={{color:'var(--c-danger)',marginLeft:6}}>· Locked</span>
                     )}
+                  </div>
+                )}
+                {m.match_number && getVenue(m.match_number) && (
+                  <div style={{textAlign:'center',fontSize:12,color:'var(--c-hint)',marginBottom:4}}>{getVenue(m.match_number)}</div>
+                )}
+                <div className="match-row" style={{borderBottom:'none',padding:0}}>
+                  <div className="team-home">
+                    <div style={{fontWeight:500}}>{m.home_team || '?'}</div>
                   </div>
 
                   <input
@@ -346,13 +430,12 @@ export default function Predictions() {
                   />
 
                   <div className="team-away">
-                    <div style={{fontWeight:500}}>{m.away_team || '?'}</div>
-                    <div style={{fontSize:12,marginTop:2}}>
-                      {locked && <span className="badge badge-red">Locked</span>}
+                    <div style={{fontWeight:500,display:'flex',alignItems:'center',gap:6}}>
+                      {m.away_team || '?'}
                       {!locked && isSaving && <span style={{fontSize:12,color:'var(--c-muted)'}}>Saving...</span>}
-                      {!locked && isSaved && <span className="badge badge-green">Saved</span>}
+                      {!locked && isSaved && <span className="badge badge-green" style={{fontSize:11,padding:'2px 8px'}}>Saved</span>}
                       {!locked && !isSaving && !isSaved && hasBothGoals && (
-                        <span className="badge badge-blue">Predicted</span>
+                        <span className="badge badge-blue" style={{fontSize:11,padding:'2px 8px'}}>Predicted</span>
                       )}
                     </div>
                   </div>

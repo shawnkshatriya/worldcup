@@ -2,7 +2,7 @@ import { HBar, Donut, ColChart } from './StatsCharts'
 
 const noResults = <p style={{color:'var(--c-muted)',fontSize:13}}>No results yet</p>
 
-export default function StatsTournament({ finished, totalGoals, avgGoals, topScorer, goalsHist, groupGoals, groupCounts, topTeams, scoreless, highScoring }) {
+export default function StatsTournament({ finished, totalGoals, avgGoals, topScorer, goalsHist, groupGoals, groupCounts, topTeams, scoreless, highScoring, predictions }) {
   const matchFacts = [
     {label:'Finished',   value:finished.length},
     {label:'Total goals',value:totalGoals},
@@ -75,6 +75,26 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
           })
         }
       </div>
+
+      {/* Biggest results */}
+      {finished.length > 0 && (function() {
+        var byGoals = finished.slice().sort(function(a,b){ return (b.home_goals+b.away_goals) - (a.home_goals+a.away_goals) })
+        var top3 = byGoals.slice(0,3)
+        return (
+          <div className="card" style={{marginBottom:0}}>
+            <div className="card-title">Highest scoring matches</div>
+            {top3.map(function(m) {
+              return (
+                <div key={m.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--c-border)',fontSize:13}}>
+                  <span>{m.home_team} vs {m.away_team}</span>
+                  <span style={{fontFamily:'var(--font-display)',fontSize:20,color:'var(--c-accent)'}}>{m.home_goals}-{m.away_goals}</span>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
+
     </div>
   )
 }

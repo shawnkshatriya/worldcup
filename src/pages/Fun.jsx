@@ -177,7 +177,7 @@ export default function Fun() {
       <div className="page-body">
         {noData && (
           <div className="alert alert-info" style={{marginBottom:'1.5rem'}}>
-            Seed demo data from <strong>Admin &rarr; Dev tab</strong> to see everything come alive here.
+            Matches haven't started yet. Check back once the tournament kicks off!
           </div>
         )}
 
@@ -376,7 +376,7 @@ export default function Fun() {
             <div className="card" style={{marginBottom:'1rem'}}>
               <div className="card-title">Match roast generator</div>
               <p style={{fontSize:13,color:'var(--c-muted)',marginBottom:'1rem'}}>Pick a finished match. We'll roast whoever got it wrong and praise whoever nailed it.</p>
-              {finishedMatches.length===0 && <div className="alert alert-info">No finished matches yet. Enter results or seed demo data first.</div>}
+              {finishedMatches.length===0 && <div className="alert alert-info">No finished matches yet. Check back once results are in.</div>}
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 {finishedMatches.map(m=>(
                   <button key={m.id} onClick={()=>setCM(m.id)} style={{

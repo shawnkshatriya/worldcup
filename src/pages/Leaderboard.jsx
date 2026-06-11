@@ -137,6 +137,7 @@ export default function Leaderboard() {
                       <th style={{textAlign:'right'}}>% Exact</th>
                       <th style={{textAlign:'right'}}>Exact count</th>
                       <th style={{textAlign:'right'}}>Approx Bonus</th>
+                      <th style={{textAlign:'right'}}>Winner Pick</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -179,6 +180,7 @@ export default function Leaderboard() {
                           <td style={{textAlign:'right'}}><PctBadge val={p.pctExact}/></td>
                           <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.exact}</td>
                           <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.approx}</td>
+                          <td style={{textAlign:'right',color:p.winnerBonus > 0 ? 'var(--c-accent2)' : 'var(--c-muted)',fontSize:13,fontWeight:p.winnerBonus > 0 ? 700 : 400}}>{p.winnerBonus || '-'}</td>
                         </tr>
                       )
                     })}

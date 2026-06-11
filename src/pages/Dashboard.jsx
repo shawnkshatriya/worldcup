@@ -63,7 +63,11 @@ export default function Dashboard() {
   const [myRank, setMyRank]   = useState(null)
   const [myPts, setMyPts]     = useState(null)
   const [weights, setWeights] = useState(null)
-  const countdown = useCountdown('2026-06-11T22:00:00Z')
+  const [nextMatch, setNextMatch] = useState([])
+  const [recentResults, setRecentResults] = useState([])
+  const [poolStats, setPoolStats] = useState(null)
+  const [myUpcoming, setMyUpcoming] = useState([])
+  const countdown = useCountdown('2026-06-11T19:00:00Z')
 
   useEffect(() => { loadData() }, [player])
 
@@ -82,6 +86,31 @@ export default function Dashboard() {
     setStats({ players:playerCount||0, played:playedCount||0, total:104 })
     setWeights(w)
 
+    // Fetch next upcoming matches
+    var { data: upcoming } = await supabase.from('matches').select('*')
+      .eq('status', 'SCHEDULED').not('home_team', 'is', null).order('kickoff').limit(5)
+    if (upcoming && upcoming.length > 0) setNextMatch(upcoming)
+
+    // Recent finished results
+    var { data: recent } = await supabase.from('matches').select('*')
+      .eq('status', 'FINISHED').order('kickoff', { ascending: false }).limit(5)
+    if (recent) setRecentResults(recent)
+
+    // Pool stats
+    var { count: totalPreds } = await supabase.from('predictions').select('*', { count: 'exact', head: true })
+      .not('home_goals', 'is', null)
+    setPoolStats({ totalPredictions: totalPreds || 0 })
+
+    // My upcoming predictions
+    if (player && upcoming && upcoming.length > 0) {
+      var matchIds = upcoming.map(function(m){ return m.id })
+      var { data: myPreds } = await supabase.from('predictions').select('match_id, home_goals, away_goals')
+        .eq('player_id', player.id).in('match_id', matchIds)
+      var predMap = {}
+      ;(myPreds || []).forEach(function(p){ predMap[p.match_id] = p })
+      setMyUpcoming(upcoming.map(function(m){ return { ...m, pred: predMap[m.id] || null } }))
+    }
+
     const { data:players } = await supabase.from('players').select('id,name').eq('room_code', roomCode)
     const { data:scores }  = await supabase.from('scores').select('player_id,pts_total')
     if (!players) return
@@ -91,7 +120,7 @@ export default function Dashboard() {
       pts: scores?.filter(s=>s.player_id===p.id).reduce((a,s)=>a+(s.pts_total||0),0)||0
     })).sort((a,b)=>b.pts-a.pts)
 
-    setLeaders(totals.slice(0,5))
+    setLeaders(totals.slice(0,10))
     if (player) {
       const rank = totals.findIndex(p=>p.id===player.id)+1
       setMyRank(rank||null)
@@ -202,7 +231,7 @@ export default function Dashboard() {
 
           {/* Top 5 leaderboard */}
           <div className="card" style={{marginBottom:0}}>
-            <div className="card-title">Top 5 Leaderboard</div>
+            <div className="card-title">Top 10 Leaderboard</div>
             {leaders.length === 0 && (
               <p style={{color:'var(--c-muted)',fontSize:13,lineHeight:1.7}}>
                 No scores yet - leaderboard fills up once matches are played and results are entered.
@@ -226,19 +255,56 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* Scoring rules */}
-          <div className="card" style={{marginBottom:0}}>
-            <div className="card-title">Scoring rules</div>
-            <p style={{fontSize:11,color:'var(--c-muted)',marginBottom:'0.75rem'}}>All points stack per match. Admin can adjust values per room.</p>
-            {weights ? Object.entries(WEIGHT_LABELS).map(([k,v]) => (
-              <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--c-border)',fontSize:13}}>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>
-                  <div style={{width:3,height:14,borderRadius:2,background:WEIGHT_COLORS[k],flexShrink:0}} />
-                  <span style={{color:'var(--c-muted)'}}>{v}</span>
-                </div>
-                <span style={{fontFamily:'var(--font-display)',fontSize:22,color:'var(--c-text)'}}>{weights[k]}</span>
+          {/* Right column: upcoming + your predictions */}
+          <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+            {/* Upcoming matches */}
+            {nextMatch.length > 0 && (
+              <div className="card" style={{marginBottom:0}}>
+                <div className="card-title">Upcoming matches</div>
+                {nextMatch.map(function(nm, idx) {
+                  return (
+                    <div key={nm.id} style={{padding:'10px 0',borderBottom:idx < nextMatch.length-1 ? '1px solid var(--c-border)' : 'none',textAlign:'center'}}>
+                      <div style={{fontFamily:'var(--font-display)',fontSize:18,letterSpacing:'0.04em',marginBottom:2}}>
+                        {nm.home_team || 'TBD'} vs {nm.away_team || 'TBD'}
+                      </div>
+                      {nm.kickoff && (
+                        <div style={{fontSize:12,color:'var(--c-muted)'}}>
+                          {new Date(nm.kickoff).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+                          {' at '}
+                          {new Date(nm.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-            )) : <p style={{color:'var(--c-muted)',fontSize:13}}>Loading...</p>}
+            )}
+
+            {/* Your predictions for upcoming */}
+            {myUpcoming.length > 0 && (
+              <div className="card" style={{marginBottom:0}}>
+                <div className="card-title">Your predictions</div>
+                {myUpcoming.map(function(m) {
+                  return (
+                    <div key={m.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--c-border)',fontSize:13}}>
+                      <div style={{flex:1}}>
+                        <span style={{fontWeight:500}}>{m.home_team}</span>
+                        <span style={{color:'var(--c-muted)',margin:'0 4px'}}>vs</span>
+                        <span style={{fontWeight:500}}>{m.away_team}</span>
+                      </div>
+                      {m.pred && m.pred.home_goals != null ? (
+                        <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{m.pred.home_goals} - {m.pred.away_goals}</span>
+                      ) : (
+                        <Link to="/predictions" style={{fontSize:11,color:'var(--c-warn)',fontWeight:600}}>Not predicted</Link>
+                      )}
+                    </div>
+                  )
+                })}
+                <Link to="/predictions" style={{display:'block',marginTop:10,fontSize:12,color:'var(--c-accent)',fontWeight:700}}>
+                  All predictions &rarr;
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

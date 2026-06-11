@@ -76,26 +76,25 @@ export default function Join() {
   if (loading) return null
 
   return (
-    <div style={{ minHeight: '100vh', minHeight: '100dvh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem 1rem' }}>
+    <div style={{ minHeight: '100vh', minHeight: '100dvh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
 
-      {/* Spacer to push content to center when room permits */}
-      <div style={{flex:1}} />
+
 
       {/* Brand */}
-      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 60, height: 60, borderRadius: 14, background: 'var(--c-accent)', marginBottom: 16 }}>
+      <div style={{ textAlign: 'center', marginBottom: '1rem', flexShrink: 0 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 12, background: 'var(--c-accent)', marginBottom: 10 }}>
           <TrophyIcon />
         </div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 40, letterSpacing: '0.06em', lineHeight: 1, color: 'var(--c-text)' }}>WC 2026</div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '0.1em', color: 'var(--c-muted)', marginTop: 2 }}>PREDICTOR POOL</div>
-        <div style={{ height: 3, width: 60, margin: '12px auto 0', background: 'linear-gradient(90deg, var(--fifa-red), var(--fifa-blue))' }} />
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, letterSpacing: '0.06em', lineHeight: 1, color: 'var(--c-text)' }}>WC 2026</div>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, letterSpacing: '0.1em', color: 'var(--c-muted)', marginTop: 2 }}>PREDICTOR POOL</div>
+
       </div>
 
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div className="card" style={{ padding: '1.75rem' }}>
 
           {/* Tab switcher */}
-          <div style={{ display: 'flex', gap: 2, background: 'var(--c-surface2)', border: '1px solid var(--c-border)', borderRadius: 'var(--radius)', padding: 3, marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', gap: 2, background: 'var(--c-surface2)', border: '1px solid var(--c-border)', borderRadius: 'var(--radius)', padding: 3, marginBottom: '1rem', flexShrink: 0 }}>
             {TABS.map(t => (
               <button key={t.id} onClick={() => { setMode(t.id); clearState() }} style={{
                 flex: 1, padding: '7px 4px', border: 'none', borderRadius: 4,
@@ -176,8 +175,7 @@ export default function Join() {
         </p>
       </div>
 
-      {/* Bottom spacer for centering */}
-      <div style={{flex:1}} />
+
     </div>
   )
 }

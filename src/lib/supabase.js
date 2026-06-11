@@ -31,18 +31,20 @@ export function calcMatchPoints(prediction, result, weights, phase) {
 
   var pts_result = 0, pts_diff = 0, pts_exact = 0, pts_approx = 0, pts_ko_team = 0
 
-  if (isExact) {
-    // Tier 1: Exact score — standalone, no stacking
-    pts_exact = w.exact
-  } else if (isCorrectDiff) {
-    // Tier 2: Correct goal difference — result + diff stack
+  // All points stack: correct result → goal diff → exact score
+  if (isCorrectResult) {
     pts_result = w.result
-    pts_diff = w.diff
-  } else if (isCorrectResult) {
-    // Tier 3: Correct result only
-    pts_result = w.result
-    // Approx bonus: group stage only, 4+ total goals, within 1 goal each way
-    if (!isKO && w.approx > 0) {
+
+    if (isCorrectDiff) {
+      pts_diff = w.diff
+    }
+
+    if (isExact) {
+      pts_exact = w.exact
+    }
+
+    // Approx bonus: group only, not exact, not correct diff, 4+ goals, within 1 each way
+    if (!isKO && w.approx > 0 && !isExact && !isCorrectDiff) {
       var totalReal = rh + ra
       if (totalReal >= 4 && Math.abs(ph - rh) <= 1 && Math.abs(pa - ra) <= 1) {
         pts_approx = w.approx

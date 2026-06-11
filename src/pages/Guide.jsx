@@ -124,10 +124,10 @@ export default function Guide() {
             The exact point values are set by your pool admin and may differ from the defaults shown here. Check the Dashboard scoring rules for your room's actual values.
           </p>
           {[
-            { pts: w ? w.group_exact+' pts' : '...', label:'Exact score', desc:'You predicted the exact scoreline. E.g. you said 2-1 and the result was 2-1.' },
-            { pts: w ? w.group_diff+' pts' : '...', label:'Correct goal difference', desc:'You got the right margin but not the exact score. E.g. you said 2-0, result was 3-1 (both +2). Stacks with correct result.' },
-            { pts: w ? w.group_result+' pts' : '...', label:'Correct result (W/D/L)', desc:'You picked the right winner or draw, but the margin was different. E.g. you said 2-0, result was 1-0.' },
-            { pts: w ? w.group_approx+' pt' : '...', label:'Approximation bonus', desc:'Group stage only, high-scoring matches (4+ goals). Your prediction was within 1 goal each way. Stacks with correct result.' },
+            { pts: w ? w.group_result+' pts' : '...', label:'Correct result (W/D/L)', desc:'You picked the right winner or draw. E.g. you said 2-0, result was 1-0. This is the base — all other bonuses stack on top.' },
+            { pts: w ? '+'+w.group_diff+' pts' : '...', label:'Correct goal difference', desc:'Bonus on top of correct result. You got the right margin. E.g. you said 2-0, result was 3-1 (both +2). Total: '+(w?w.group_result+'+'+w.group_diff+'='+(w.group_result+w.group_diff):'')+' pts.' },
+            { pts: w ? '+'+w.group_exact+' pts' : '...', label:'Exact score', desc:'Bonus on top of result + diff. You nailed the exact scoreline. E.g. 3-1 predicted, 3-1 actual. Total: '+(w?w.group_result+'+'+w.group_diff+'+'+w.group_exact+'='+(w.group_result+w.group_diff+w.group_exact):'')+' pts.' },
+            { pts: w ? '+'+w.group_approx+' pt' : '...', label:'Approximation bonus', desc:'Group stage only, 4+ total goals. Your prediction was within 1 goal of actual each way but you didn\'t get the exact diff. Stacks with correct result.' },
             { pts: w ? w.winner_bonus+' pts' : '...', label:'Tournament winner pick', desc:'Pick who wins it all. If your chosen team wins the final you get a big bonus. Locks when knockout stage begins.' },
             { pts: w ? (w.finalist_bonus||10)+' pts' : '...', label:'Finalist bonus', desc:'If your chosen winner reaches the Final (even if they lose), you get a smaller bonus.' },
           ].map((s,i) => (
@@ -145,10 +145,10 @@ export default function Guide() {
           <div style={{marginTop:12,padding:'12px 0',borderTop:'1px solid var(--c-border)'}}>
             <div style={{fontWeight:600,fontSize:14,marginBottom:6}}>Knockout rounds</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7}}>
-              {w ? 'KO matches use different weights: correct result (' + w.ko_result + ' pts), goal diff (' + w.ko_diff + ' pts), exact score (' + w.ko_exact + ' pts), and a team qualified bonus (' + w.ko_team + ' pts). No approximation bonus in KO rounds.' : 'KO matches use higher weights. Check the Dashboard for your room\'s values.'}
+              {w ? 'KO matches use higher weights: correct result (' + w.ko_result + ' pts) + goal diff (+' + w.ko_diff + ' pts) + exact score (+' + w.ko_exact + ' pts) = ' + (w.ko_result+w.ko_diff+w.ko_exact) + ' pts max. No approximation bonus in KO rounds.' : 'KO matches use higher weights. Check the Dashboard for your room\'s values.'}
             </div>
           </div>
-          <Tip>Points stack within a match - correct result + correct goal diff earns both bonuses. Exact score is its own tier. Approx bonus stacks on top of correct result in high-scoring group games.</Tip>
+          <Tip>All points stack! Exact score earns correct result + goal diff + exact bonus. E.g. predicting 3-1 exactly = {w ? w.group_result+'+'+w.group_diff+'+'+w.group_exact+'='+(w.group_result+w.group_diff+w.group_exact)+' pts' : '9 pts'}.</Tip>
         </Section>
 
         {/* -- PAGES -- */}

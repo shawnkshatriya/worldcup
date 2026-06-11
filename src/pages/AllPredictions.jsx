@@ -37,36 +37,58 @@ export default function AllPredictions() {
   const [predictions, setPredictions] = useState({})
   const [scores, setScores] = useState({})
   const [loading, setLoading] = useState(true)
+  const [groupBy, setGroupBy] = useState('group')
+  const [allMatches, setAllMatches] = useState([])
+  const [activeDay, setActiveDay] = useState(null)
 
-  useEffect(() => { loadAll() }, [phase])
+  useEffect(() => { loadPoolData() }, [])
+  useEffect(() => { loadMatchData() }, [phase, groupBy, activeDay])
 
-  async function loadAll() {
-    setLoading(true)
-    const [{ data: matchData }, { data: playerData }, { data: predData }, { data: scoreData }] = await Promise.all([
-      supabase.from('matches').select('*').eq('phase', phase).order('match_number'),
-      supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500).order('created_at').limit(500),
+  async function loadPoolData() {
+    const [{ data: playerData }, { data: predData }, { data: scoreData }] = await Promise.all([
+      supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500),
       supabase.from('predictions').select('*').limit(30000),
       supabase.from('scores').select('*').limit(30000),
     ])
-
-    setMatches(matchData || [])
     setPlayers(playerData || [])
-
-    // Index predictions: {matchId_playerId: pred}
     const predMap = {}
     for (const p of predData || []) {
       if (!predMap[p.match_id]) predMap[p.match_id] = {}
       predMap[p.match_id][p.player_id] = { hg: p.home_goals, ag: p.away_goals }
     }
     setPredictions(predMap)
-
-    // Index scores
     const scoreMap = {}
     for (const s of scoreData || []) {
       if (!scoreMap[s.match_id]) scoreMap[s.match_id] = {}
       scoreMap[s.match_id][s.player_id] = s.pts_total || 0
     }
     setScores(scoreMap)
+  }
+
+  async function loadMatchData() {
+    setLoading(true)
+    var matchQuery
+    if (groupBy === 'day') {
+      matchQuery = supabase.from('matches').select('*').order('kickoff')
+    } else {
+      matchQuery = supabase.from('matches').select('*').eq('phase', phase).order('match_number')
+    }
+    const { data: matchData } = await matchQuery
+    var allM = matchData || []
+    if (groupBy === 'day') {
+      setAllMatches(allM)
+      if (!activeDay && allM.length > 0 && allM[0].kickoff) {
+        var firstDay = new Date(allM[0].kickoff).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})
+        setActiveDay(firstDay)
+      }
+      var filtered = allM.filter(function(m) {
+        if (!m.kickoff || !activeDay) return false
+        return new Date(m.kickoff).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) === activeDay
+      })
+      setMatches(filtered)
+    } else {
+      setMatches(allM)
+    }
     setLoading(false)
   }
 
@@ -98,16 +120,39 @@ export default function AllPredictions() {
       </div>
       <div className="page-body">
 
-        {/* Phase tabs */}
-        <div style={{overflowX:'auto',paddingBottom:4,marginBottom:'1.25rem'}}>
-          <div className="tabs" style={{width:'max-content'}}>
-            {PHASES.map(p => (
-              <button key={p} className={`tab${phase===p?' active':''}`} onClick={() => setPhase(p)}>
-                {PHASE_LABELS[p]}
-              </button>
-            ))}
-          </div>
+        {/* View toggle */}
+        <div className="tabs" style={{marginBottom:'0.75rem'}}>
+          <button className={'tab' + (groupBy==='group'?' active':'')} onClick={function(){setGroupBy('group')}} style={{fontSize:11,padding:'4px 10px'}}>By Group</button>
+          <button className={'tab' + (groupBy==='day'?' active':'')} onClick={function(){setGroupBy('day')}} style={{fontSize:11,padding:'4px 10px'}}>By Day</button>
         </div>
+
+        {/* Phase tabs (group mode) */}
+        {groupBy === 'group' && (
+          <div style={{overflowX:'auto',paddingBottom:4,marginBottom:'1.25rem'}}>
+            <div className="tabs" style={{width:'max-content'}}>
+              {PHASES.map(p => (
+                <button key={p} className={`tab${phase===p?' active':''}`} onClick={() => setPhase(p)}>
+                  {PHASE_LABELS[p]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Day tabs */}
+        {groupBy === 'day' && (
+          <div style={{overflowX:'auto',paddingBottom:4,marginBottom:'1.25rem'}}>
+            <div className="tabs" style={{width:'max-content'}}>
+              {[...new Set(allMatches.filter(function(m){return m.kickoff}).map(function(m){return new Date(m.kickoff).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}))].map(function(day) {
+                return (
+                  <button key={day} className={'tab' + (activeDay===day?' active':'')} onClick={function(){setActiveDay(day)}} style={{fontSize:11,padding:'4px 8px'}}>
+                    {day.replace(', 2026','')}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {loading && <p style={{color:'var(--c-muted)'}}>Loading...</p>}
 
@@ -139,7 +184,7 @@ export default function AllPredictions() {
                   <th style={{minWidth:180,position:'sticky',left:0,background:'var(--c-surface)',zIndex:2}}>Match</th>
                   <th style={{minWidth:80,textAlign:'center'}}>Result</th>
                   {players.map((p,i) => (
-                    <th key={p.id} style={{minWidth:80,textAlign:'center'}}>
+                    <th key={p.id} style={{minWidth:90,textAlign:'center'}}>
                       <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
                         <div className="avatar" style={{
                           width:24,height:24,fontSize:9,fontWeight:700,
@@ -148,7 +193,7 @@ export default function AllPredictions() {
                         }}>
                           {p.name.slice(0,2).toUpperCase()}
                         </div>
-                        <span style={{fontSize:10,color:'var(--c-muted)',maxWidth:70,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                        <span style={{fontSize:10,color:'var(--c-muted)',maxWidth:90,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                           {p.name}
                         </span>
                       </div>
@@ -167,9 +212,20 @@ export default function AllPredictions() {
                       </div>
                       {m.kickoff && (
                         <div style={{fontSize:10,color:'var(--c-muted)',marginTop:2}}>
-                          {new Date(m.kickoff).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
+                          {new Date(m.kickoff).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
+                          {' '}
+                          {new Date(m.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
                         </div>
                       )}
+                      {isMatchRevealed(m) && predictions[m.id] && (function() {
+                        var counts = {}
+                        Object.values(predictions[m.id]).forEach(function(p) {
+                          if (p && p.hg != null) { var k = p.hg + '-' + p.ag; counts[k] = (counts[k]||0) + 1 }
+                        })
+                        var top = Object.entries(counts).sort(function(a,b){return b[1]-a[1]})[0]
+                        if (!top) return null
+                        return <div style={{fontSize:9,color:'var(--c-accent2)',marginTop:2}}>Most picked: {top[0]} ({top[1]})</div>
+                      })()}
                     </td>
                     <td style={{textAlign:'center',fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'var(--c-text)'}}>
                       {m.home_goals != null ? `${m.home_goals}-${m.away_goals}` : <span style={{color:'var(--c-hint)',fontSize:12}}>TBD</span>}

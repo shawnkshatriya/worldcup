@@ -615,13 +615,7 @@ function MatchResultRow({ match: initialMatch, onSave }) {
       <span className="score-sep">-</span>
       <input type="number" min="0" className="score-input" value={m.away_goals??''} placeholder="?" onChange={e=>set('away_goals',e.target.value)}/>
       <div className="team-away" style={{fontSize:13}}>{m.away_team}</div>
-      <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-        <input type="number" min="0" className="score-input" value={m.home_goals_et??''} placeholder="ET?" onChange={e=>set('home_goals_et',e.target.value)} title="Extra time home"/>
-        <span style={{fontSize:10,color:'var(--c-muted)'}}>ET</span>
-        <input type="number" min="0" className="score-input" value={m.away_goals_et??''} placeholder="ET?" onChange={e=>set('away_goals_et',e.target.value)} title="Extra time away"/>
-        <input type="number" min="0" className="score-input" value={m.home_goals_pen??''} placeholder="PEN?" onChange={e=>set('home_goals_pen',e.target.value)} title="Penalties home"/>
-        <span style={{fontSize:10,color:'var(--c-muted)'}}>PEN</span>
-        <input type="number" min="0" className="score-input" value={m.away_goals_pen??''} placeholder="PEN?" onChange={e=>set('away_goals_pen',e.target.value)} title="Penalties away"/>
+      <div style={{display:'flex',alignItems:'center',gap:6}}>
         <button className="btn btn-accent btn-sm" onClick={handleSave}>Save</button>
         {saved&&<span className="badge badge-green">Saved</span>}
       </div>

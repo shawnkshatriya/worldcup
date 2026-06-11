@@ -22,7 +22,10 @@ function barWidth(total, maxPts) {
   return pct + '%'
 }
 
-export default function StatsPlayers({ sorted, maxPts, leader, playerStats, poolAccuracy, poolExactRate, players }) {
+export default function StatsPlayers({ sorted, maxPts, leader, playerStats, poolAccuracy, poolExactRate, players, currentPlayer, finished }) {
+  // Find current player's stats
+  var myStats = currentPlayer ? sorted.find(function(p){ return p.id === currentPlayer.id }) : null
+  var myRank = currentPlayer ? sorted.findIndex(function(p){ return p.id === currentPlayer.id }) + 1 : null
   var metrics = [
     {label:'% W/L correct',  key:'pctWL',   color:'var(--c-accent)',  suffix:'%'},
     {label:'% goal diff',    key:'pctDiff',  color:'var(--c-info)',    suffix:'%'},
@@ -31,6 +34,36 @@ export default function StatsPlayers({ sorted, maxPts, leader, playerStats, pool
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+
+      {/* Your performance */}
+      {myStats && (
+        <div className="card" style={{marginBottom:0,background:'var(--c-surface)',border:'1px solid var(--c-accent)',borderRadius:'var(--radius)'}}>
+          <div className="card-title">Your performance</div>
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-value" style={{color:'var(--c-accent)',fontSize:32}}>{myRank ? '#'+myRank : '-'}</div>
+              <div className="metric-label">Rank</div>
+            </div>
+            <div className="metric">
+              <div className="metric-value" style={{fontSize:32}}>{myStats.total}</div>
+              <div className="metric-label">Points</div>
+            </div>
+            <div className="metric">
+              <div className="metric-value" style={{color:'var(--c-success)'}}>{myStats.pctWL}%</div>
+              <div className="metric-label">Results correct</div>
+            </div>
+            <div className="metric">
+              <div className="metric-value" style={{color:'var(--c-accent2)'}}>{myStats.exact}</div>
+              <div className="metric-label">Exact scores</div>
+            </div>
+          </div>
+          {leader && myStats.id !== leader.id && (
+            <div style={{fontSize:12,color:'var(--c-muted)',marginTop:8,textAlign:'center'}}>
+              {leader.total - myStats.total} pts behind {leader.name}
+            </div>
+          )}
+        </div>
+      )}
       <div className="metrics">
         <div className="metric"><div className="metric-label">Players</div><div className="metric-value">{players.length}</div></div>
         <div className="metric"><div className="metric-label">Pool accuracy</div><div className="metric-value" style={{color:'var(--c-success)'}}>{poolAccuracy}%</div></div>
