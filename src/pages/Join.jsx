@@ -76,9 +76,7 @@ export default function Join() {
   if (loading) return null
 
   return (
-    <div style={{ minHeight: '100vh', minHeight: '100dvh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}>
-
-
+    <div style={{ minHeight: '100vh', minHeight: '100dvh', background: 'var(--c-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '2rem 1rem 4rem', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
 
       {/* Brand */}
       <div style={{ textAlign: 'center', marginBottom: '1rem', flexShrink: 0 }}>

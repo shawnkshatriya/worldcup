@@ -452,16 +452,24 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
 
 .match-row {
   display: grid;
-  grid-template-columns: 1fr auto auto auto 1fr;
-  align-items: center;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
   gap: 10px;
   padding: 12px 0;
   border-bottom: 1px solid var(--c-border);
 }
 .match-row:last-child { border-bottom: none; }
-.team-home { text-align: right; font-weight: 500; font-size: 13px; }
-.team-away { text-align: left; font-weight: 500; font-size: 13px; }
-.match-center { grid-column: 2 / 5; text-align: center; }
+.team-home { text-align: right; font-weight: 500; font-size: 13px; padding-top: 2px; }
+.team-away { text-align: left; font-weight: 500; font-size: 13px; padding-top: 2px; }
+.match-center { text-align: center; }
+
+/* Predictions page uses 5-column layout with vertically centered rows */
+.match-row.pred-row {
+  grid-template-columns: 1fr auto auto auto 1fr;
+  align-items: center;
+}
+.match-row.pred-row .team-home,
+.match-row.pred-row .team-away { padding-top: 0; }
 .score-input { width: 50px; text-align: center; padding: 6px 4px; font-size: 14px; font-weight: 600; }
 .score-sep { color: var(--c-muted); font-family: var(--font-display); font-size: 20px; letter-spacing: 0; }
 

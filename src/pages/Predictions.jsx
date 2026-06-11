@@ -400,7 +400,7 @@ export default function Predictions() {
                 {m.match_number && getVenue(m.match_number) && (
                   <div style={{textAlign:'center',fontSize:12,color:'var(--c-hint)',marginBottom:4}}>{getVenue(m.match_number)}</div>
                 )}
-                <div className="match-row" style={{borderBottom:'none',padding:0}}>
+                <div className="match-row pred-row" style={{borderBottom:'none',padding:0}}>
                   <div className="team-home">
                     <div style={{fontWeight:500}}>{m.home_team || '?'}</div>
                   </div>
