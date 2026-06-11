@@ -215,7 +215,7 @@ export default function Predictions() {
       .select('*')
       .eq('player_id', player.id)
     const map = {}
-    data?.forEach(p => { map[p.match_id] = p })
+    data?.forEach(p => { map[String(p.match_id)] = p })
     setPreds(map)
   }
 
@@ -239,7 +239,7 @@ export default function Predictions() {
     if (val !== '' && isNaN(n)) return
     setPreds(p => ({
       ...p,
-      [matchId]: { ...(p[matchId]||{}), [field]: val === '' ? null : n }
+      [String(matchId)]: { ...(p[String(matchId)]||{}), [field]: val === '' ? null : n }
     }))
   }
 
@@ -340,7 +340,7 @@ export default function Predictions() {
                 for (var i = 0; i < matches.length; i++) {
                   var m = matches[i]
                   if (isLocked(m, koOpen)) continue
-                  var p = preds[m.id] || {}
+                  var p = preds[String(m.id)] || {}
                   if (p.home_goals != null && p.away_goals != null) continue
                   var h = Math.floor(Math.random() * 5)
                   var a = Math.floor(Math.random() * 5)
@@ -374,7 +374,7 @@ export default function Predictions() {
           )}
 
           {matches.map(m => {
-            const pred = preds[m.id] || {}
+            const pred = preds[String(m.id)] || {}
             const locked = isLocked(m, koOpen)
             const isSaving = saving[m.id]
             const isSaved = saved[m.id]
