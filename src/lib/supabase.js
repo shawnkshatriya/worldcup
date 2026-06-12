@@ -219,15 +219,15 @@ export async function syncMatchResults() {
 
     for (var i = 0; i < matches.length; i++) {
       var m = matches[i]
-      // football-data puts the running score in fullTime during live play
-      var score = m.score && m.score.fullTime
       var isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED'
-      // Skip if no score data at all and not started
-      if (!score || score.home == null) {
-        if (!isLive) continue
-        // Live but no fullTime score - skip rather than write wrong 0-0
-        continue
+      // Try fullTime first, then any available live score field
+      var score = null
+      if (m.score) {
+        if (m.score.fullTime && m.score.fullTime.home != null) score = m.score.fullTime
+        else if (m.score.regularTime && m.score.regularTime.home != null) score = m.score.regularTime
       }
+      // No usable score - skip (match not started or no data yet)
+      if (!score || score.home == null) continue
 
       var homeTeam = mapTeamName(m.homeTeam.name || m.homeTeam.shortName)
       var awayTeam = mapTeamName(m.awayTeam.name || m.awayTeam.shortName)
