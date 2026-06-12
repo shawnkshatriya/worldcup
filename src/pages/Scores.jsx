@@ -84,6 +84,9 @@ export default function Scores() {
       if (result.sync.ok) {
         var msg = new Date().toLocaleTimeString()
         if (result.sync.updated > 0) msg += ' · ' + result.sync.updated + ' matches updated'
+        if (result.sync.unmatched && result.sync.unmatched.length > 0) {
+          msg += ' · UNMATCHED: ' + result.sync.unmatched.slice(0,3).join(', ')
+        }
         if (result.recalcedRooms > 0) msg += ' · scores recalculated'
         setLastSync(msg)
         loadMatches()

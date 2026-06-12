@@ -160,23 +160,39 @@ export async function recalcAllRooms() {
 
 // --- Team name mapping (football-data.org → our DB names) -------------------
 var TEAM_NAME_MAP = {
+  // Teams where football-data.org name differs from our DB name
   'Korea Republic': 'South Korea',
   'Republic of Korea': 'South Korea',
+  'Korea DPR': 'North Korea',
   'Türkiye': 'Turkey',
+  'Turkiye': 'Turkey',
   'Curaçao': 'Curacao',
   "Côte d'Ivoire": 'Ivory Coast',
-  'Ivory Coast': 'Ivory Coast',
-  'Bosnia-Herzegovina': 'Bosnia and Herzegovina',
-  'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
   'Czech Republic': 'Czechia',
   'Cabo Verde': 'Cape Verde',
   'Congo DR': 'DR Congo',
+  'DR Congo (Kinshasa)': 'DR Congo',
   'Democratic Republic of the Congo': 'DR Congo',
-  'Korea DPR': 'North Korea',
+  'IR Iran': 'Iran',
+  'USA': 'United States',
+  'United States of America': 'United States',
+  'Saudi Arabia (KSA)': 'Saudi Arabia',
+  'Bosnia-Herzegovina': 'Bosnia and Herzegovina',
+  'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
 }
 
+// All 48 DB team names - identity mapping so normalized lookup always resolves
+var ALL_TEAMS = ['Algeria','Argentina','Australia','Austria','Belgium','Bosnia and Herzegovina','Brazil','Canada','Cape Verde','Colombia','Croatia','Curacao','Czechia','DR Congo','Ecuador','Egypt','England','France','Germany','Ghana','Haiti','Iran','Iraq','Ivory Coast','Japan','Jordan','Mexico','Morocco','Netherlands','New Zealand','Norway','Panama','Paraguay','Portugal','Qatar','Saudi Arabia','Scotland','Senegal','South Africa','South Korea','Spain','Sweden','Switzerland','Tunisia','Turkey','United States','Uruguay','Uzbekistan']
+ALL_TEAMS.forEach(function(t) { if (!TEAM_NAME_MAP[t]) TEAM_NAME_MAP[t] = t })
+
 function mapTeamName(name) {
-  return TEAM_NAME_MAP[name] || name
+  if (TEAM_NAME_MAP[name]) return TEAM_NAME_MAP[name]
+  // Try normalized lookup
+  var n = (name || '').toLowerCase().replace(/[^a-z]/g, '')
+  for (var key in TEAM_NAME_MAP) {
+    if (key.toLowerCase().replace(/[^a-z]/g, '') === n) return TEAM_NAME_MAP[key]
+  }
+  return name
 }
 
 // --- Sync matches via Vercel serverless proxy --------------------------------
@@ -193,6 +209,14 @@ export async function syncMatchResults() {
     var matches = data.matches || []
     var updated = 0
 
+    // Load all DB matches once for robust matching
+    var dbMatchesRes = await supabase.from('matches').select('id, home_team, away_team, match_number')
+    var dbMatches = dbMatchesRes.data || []
+
+    function norm(s) { return (s || '').toLowerCase().replace(/[^a-z]/g, '') }
+
+    var unmatched = []
+
     for (var i = 0; i < matches.length; i++) {
       var m = matches[i]
       var score = m.score && m.score.fullTime
@@ -204,6 +228,16 @@ export async function syncMatchResults() {
 
       var homeTeam = mapTeamName(m.homeTeam.name || m.homeTeam.shortName)
       var awayTeam = mapTeamName(m.awayTeam.name || m.awayTeam.shortName)
+
+      // Find the DB match by normalized team names
+      var dbMatch = dbMatches.find(function(dm) {
+        return norm(dm.home_team) === norm(homeTeam) && norm(dm.away_team) === norm(awayTeam)
+      })
+
+      if (!dbMatch) {
+        unmatched.push(homeTeam + ' vs ' + awayTeam)
+        continue
+      }
 
       var updateData = {
         home_goals: score.home,
@@ -218,10 +252,14 @@ export async function syncMatchResults() {
 
       var result = await supabase.from('matches')
         .update(updateData)
-        .eq('home_team', homeTeam)
-        .eq('away_team', awayTeam)
+        .eq('id', dbMatch.id)
+        .select()
 
-      if (!result.error) updated++
+      if (!result.error && result.data && result.data.length > 0) updated++
+    }
+
+    if (unmatched.length > 0) {
+      return { ok: true, updated: updated, total: matches.length, unmatched: unmatched }
     }
 
     return { ok: true, updated: updated, total: matches.length }
