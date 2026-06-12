@@ -69,7 +69,7 @@ function BingoCard({ playerId, predictions, matches }) {
 }
 
 export default function Fun() {
-  const { player, isAdmin } = usePlayer()
+  const { player, isAdmin, loading: playerLoading } = usePlayer()
   const roomCode = player?.room_code || 'DEFAULT'
   const [tab, setTab]           = useState('achievements')
   const [players, setPlayers]   = useState([])
@@ -81,19 +81,37 @@ export default function Fun() {
   const [filterPlayers, setFilterPlayers] = useState([])
   const [commentMatch, setCM]   = useState(null)
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => {
+    if (playerLoading) return
+    if (!player) { setLoading(false); return }
+    loadAll()
+  }, [player, playerLoading])
+
+  async function fetchRows(table, playerIds) {
+    var all = []
+    var from = 0
+    while (true) {
+      var page = await supabase.from(table).select('*').in('player_id', playerIds).range(from, from + 999)
+      if (!page.data || page.data.length === 0) break
+      all = all.concat(page.data)
+      if (page.data.length < 1000) break
+      from += 1000
+    }
+    return all
+  }
 
   async function loadAll() {
     setLoading(true)
-    const [{ data:pl },{ data:sc },{ data:pr },{ data:ma }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500).order('created_at').limit(500),
-      supabase.from('scores').select('*').limit(5000),
-      supabase.from('predictions').select('*').limit(5000),
+    const [{ data:pl },{ data:ma }] = await Promise.all([
+      supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500),
       supabase.from('matches').select('*').order('match_number').limit(200),
     ])
+    var ids = (pl||[]).map(function(p){ return p.id })
+    var sc = ids.length ? await fetchRows('scores', ids) : []
+    var pr = ids.length ? await fetchRows('predictions', ids) : []
     setPlayers(pl||[])
-    setScores(sc||[])
-    setPreds(pr||[])
+    setScores(sc)
+    setPreds(pr)
     setMatches(ma||[])
     if (pl?.length) setSP(pl[0].id)
     setLoading(false)
@@ -131,7 +149,7 @@ export default function Fun() {
     players.forEach(a => { matrix[a.id]={}; players.forEach(b => { if(a.id!==b.id) matrix[a.id][b.id]={wins:0,losses:0,draws:0} }) })
     const finishedIds = new Set(matches.filter(m=>m.home_goals!=null).map(m=>m.id))
     for (const matchId of finishedIds) {
-      const ms = scores.filter(s=>s.match_id===matchId)
+      const ms = scores.filter(s=>String(s.match_id)===String(matchId))
       for (let i=0;i<playerStats.length;i++) for (let j=i+1;j<playerStats.length;j++) {
         const a=playerStats[i],b=playerStats[j]
         const as=ms.find(s=>s.player_id===a.id)?.pts_total||0
@@ -148,10 +166,10 @@ export default function Fun() {
 
   const commentLines = useMemo(() => {
     if (!commentMatch) return []
-    const m = matches.find(x=>x.id===commentMatch)
+    const m = matches.find(x=>String(x.id)===String(commentMatch))
     if (!m) return []
     const preds = predictions
-      .filter(p=>p.match_id===commentMatch&&p.home_goals!=null)
+      .filter(p=>String(p.match_id)===String(commentMatch)&&p.home_goals!=null)
       .map(p=>({
         hg: p.home_goals,
         ag: p.away_goals,
@@ -398,7 +416,7 @@ export default function Fun() {
             </div>
 
             {commentMatch && (() => {
-              const m=matches.find(x=>x.id===commentMatch)
+              const m=matches.find(x=>String(x.id)===String(commentMatch))
               return (
                 <div className="card" style={{marginBottom:0}}>
                   <div style={{marginBottom:'1rem',paddingBottom:'1rem',borderBottom:'1px solid var(--c-border)'}}>
