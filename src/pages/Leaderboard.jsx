@@ -7,14 +7,15 @@ const MEDALS = ['🥇','🥈','🥉']
 const MEDAL_COLORS = ['var(--c-gold)','var(--c-silver)','var(--c-bronze)']
 
 export default function Leaderboard() {
-  const { player } = usePlayer()
+  const { player, loading: playerLoading } = usePlayer()
   const roomCode = player?.room_code || 'DEFAULT'
   const [rows, setRows]             = useState([])
   const [loading, setLoading]       = useState(true)
   const [totalFinished, setFinished] = useState(0)
 
   useEffect(() => {
-    if (!player) return
+    if (playerLoading) return
+    if (!player) { setLoading(false); return }
     load()
     var id = setInterval(load, 60000)
     var onFocus = function() { load() }
@@ -23,7 +24,7 @@ export default function Leaderboard() {
       clearInterval(id)
       window.removeEventListener('focus', onFocus)
     }
-  }, [player])
+  }, [player, playerLoading])
 
   async function fetchAll(table, cols) {
     var all = []

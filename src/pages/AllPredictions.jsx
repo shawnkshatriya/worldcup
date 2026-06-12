@@ -29,7 +29,7 @@ function isMatchRevealed(match) {
 }
 
 export default function AllPredictions() {
-  const { player, isAdmin } = usePlayer()
+  const { player, isAdmin, loading: playerLoading } = usePlayer()
   const roomCode = player?.room_code || 'DEFAULT'
   const [phase, setPhase] = useState('GROUP_A')
   const [matches, setMatches] = useState([])
@@ -41,7 +41,11 @@ export default function AllPredictions() {
   const [allMatches, setAllMatches] = useState([])
   const [activeDay, setActiveDay] = useState(null)
 
-  useEffect(() => { if (player) loadPoolData() }, [player])
+  useEffect(() => {
+    if (playerLoading) return
+    if (!player) { setLoading(false); return }
+    loadPoolData()
+  }, [player, playerLoading])
   useEffect(() => { loadMatchData() }, [phase, groupBy, activeDay])
 
   async function loadPoolData() {

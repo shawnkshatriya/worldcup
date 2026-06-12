@@ -15,6 +15,7 @@ var TAB_LABELS = {tournament:'Tournament',players:'Participants',charts:'Pool Tr
 export default function Stats() {
   var ctx = usePlayer()
   var player = ctx.player
+  var playerLoading = ctx.loading
   var roomCode = player ? (player.room_code || 'DEFAULT') : 'DEFAULT'
   var loadingState = useState(true)
   var loading = loadingState[0], setLoading = loadingState[1]
@@ -29,7 +30,11 @@ export default function Stats() {
   var predsState = useState([])
   var predictions = predsState[0], setPreds = predsState[1]
 
-  useEffect(function(){ if (player) loadAll() },[player])
+  useEffect(function(){
+    if (playerLoading) return
+    if (!player) { setLoading(false); return }
+    loadAll()
+  },[player, playerLoading])
 
   async function fetchAllRows(table, cols, playerIds) {
     var all = []

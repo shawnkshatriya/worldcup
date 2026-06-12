@@ -12,29 +12,36 @@ export function PlayerProvider({ children }) {
   const [adminRoom, setAdminRoom] = useState(() => localStorage.getItem('wc26_admin_room') || 'DEFAULT')
 
   useEffect(() => {
+    // Safety: never stay stuck loading more than 8 seconds
+    var safetyTimer = setTimeout(function() { setLoading(false) }, 8000)
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) { setAuthUser(session.user); loadPlayer(session.user.id) }
       else setLoading(false)
-    })
+    }).catch(function() { setLoading(false) })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session?.user) { setAuthUser(session.user); loadPlayer(session.user.id) }
       else { setAuthUser(null); setPlayer(null); setLoading(false) }
     })
-    return () => subscription.unsubscribe()
+    return () => { subscription.unsubscribe(); clearTimeout(safetyTimer) }
   }, [])
 
   async function loadPlayer(authId) {
-    // User may be in multiple rooms - load all their player rows
-    const { data: rows } = await supabase.from('players').select('*').eq('auth_id', authId)
-    if (!rows?.length) { setPlayer(null); setLoading(false); return }
+    try {
+      // User may be in multiple rooms - load all their player rows
+      const { data: rows, error } = await supabase.from('players').select('*').eq('auth_id', authId)
+      if (error) { setPlayer(null); setLoading(false); return }
+      if (!rows?.length) { setPlayer(null); setLoading(false); return }
 
-    // If only one room, use that. If multiple, prefer the one stored in localStorage
-    // (set when they first joined a room via invite link)
-    const stored = localStorage.getItem('wc26_player_room')
-    const match  = stored ? rows.find(r => r.room_code === stored) : null
-    setPlayer(match || rows[0])
-    setLoading(false)
+      const stored = localStorage.getItem('wc26_player_room')
+      const match  = stored ? rows.find(r => r.room_code === stored) : null
+      setPlayer(match || rows[0])
+      setLoading(false)
+    } catch (e) {
+      setPlayer(null)
+      setLoading(false)
+    }
   }
 
   function switchPlayerRoom(roomCode) {
