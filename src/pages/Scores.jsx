@@ -170,6 +170,12 @@ export default function Scores() {
           </div>
         </div>
 
+        {lastSync && (
+          <div className="alert alert-info" style={{marginBottom:'1.25rem',fontSize:13}}>
+            Last sync: {lastSync}
+          </div>
+        )}
+
         {loading && <p style={{color:'var(--c-muted)'}}>Loading...</p>}
 
         {!loading && matches.length === 0 && (
