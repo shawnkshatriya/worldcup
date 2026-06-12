@@ -121,8 +121,19 @@ export default function Dashboard() {
     }
 
     const { data:players } = await supabase.from('players').select('id,name').eq('room_code', roomCode)
-    const { data:scores }  = await supabase.from('scores').select('player_id,pts_total')
     if (!players) return
+    var roomPlayerIds = players.map(function(p){ return p.id })
+    var scores = []
+    if (roomPlayerIds.length) {
+      var sFrom = 0
+      while (true) {
+        var sPage = await supabase.from('scores').select('player_id,pts_total').in('player_id', roomPlayerIds).range(sFrom, sFrom + 999)
+        if (!sPage.data || sPage.data.length === 0) break
+        scores = scores.concat(sPage.data)
+        if (sPage.data.length < 1000) break
+        sFrom += 1000
+      }
+    }
 
     const totals = players.map((p,i) => ({
       ...p, color:AVATAR_COLORS[i%AVATAR_COLORS.length],

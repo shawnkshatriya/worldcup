@@ -26,7 +26,7 @@ async function checkDemoActive() {
 }
 
 export default function Scores() {
-  const { isAdmin } = usePlayer()
+  const { isAdmin, player } = usePlayer()
   const [matches, setMatches] = useState([])
   const [filter, setFilter]   = useState('finished')
   const [loading, setLoading] = useState(true)
@@ -59,13 +59,25 @@ export default function Scores() {
     setDemoMode(isDemo)
     setLoading(false)
 
-    // Fetch prediction distribution for finished matches
+    // Fetch prediction distribution for finished matches (room-scoped)
     var finishedIds = (data || []).filter(function(m){return m.status==='FINISHED'}).map(function(m){return m.id})
-    if (finishedIds.length > 0) {
-      var { data: preds } = await supabase.from('predictions').select('match_id,home_goals,away_goals')
-        .in('match_id', finishedIds).not('home_goals','is',null)
+    if (finishedIds.length > 0 && player) {
+      var roomPlayersRes = await supabase.from('players').select('id').eq('room_code', player.room_code).limit(500)
+      var rpIds = (roomPlayersRes.data || []).map(function(p){ return p.id })
+      var preds = []
+      if (rpIds.length) {
+        var dFrom = 0
+        while (true) {
+          var dPage = await supabase.from('predictions').select('match_id,home_goals,away_goals,player_id')
+            .in('match_id', finishedIds).in('player_id', rpIds).not('home_goals','is',null).range(dFrom, dFrom + 999)
+          if (!dPage.data || dPage.data.length === 0) break
+          preds = preds.concat(dPage.data)
+          if (dPage.data.length < 1000) break
+          dFrom += 1000
+        }
+      }
       var dist = {}
-      ;(preds || []).forEach(function(p) {
+      preds.forEach(function(p) {
         if (!dist[p.match_id]) dist[p.match_id] = { home: 0, draw: 0, away: 0, total: 0 }
         var d = dist[p.match_id]
         d.total++

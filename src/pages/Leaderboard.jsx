@@ -14,17 +14,16 @@ export default function Leaderboard() {
   const [totalFinished, setFinished] = useState(0)
 
   useEffect(() => {
+    if (!player) return
     load()
-    // Refresh every 60s to pick up new scores
     var id = setInterval(load, 60000)
-    // Refresh when tab regains focus
     var onFocus = function() { load() }
     window.addEventListener('focus', onFocus)
     return function() {
       clearInterval(id)
       window.removeEventListener('focus', onFocus)
     }
-  }, [])
+  }, [player])
 
   async function fetchAll(table, cols) {
     var all = []

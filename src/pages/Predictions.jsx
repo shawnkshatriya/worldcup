@@ -221,6 +221,10 @@ export default function Predictions() {
 
   async function savePred(matchId, homeGoals, awayGoals) {
     if (!player) return
+    // Guard: don't save if this match is locked
+    var theMatch = matches.find(function(m){ return String(m.id) === String(matchId) }) ||
+                   allMatches.find(function(m){ return String(m.id) === String(matchId) })
+    if (theMatch && isLocked(theMatch, koOpen)) return
     setSaving(s => ({ ...s, [matchId]: true }))
     await supabase.from('predictions').upsert({
       player_id: player.id,

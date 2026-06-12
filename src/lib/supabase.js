@@ -110,7 +110,11 @@ export async function recalcPlayerScores(roomCode) {
   }
 
   if (upserts.length) {
-    await supabase.from('scores').upsert(upserts, { onConflict: 'player_id,match_id' })
+    var chunkSize = 500
+    for (var u = 0; u < upserts.length; u += chunkSize) {
+      var chunk = upserts.slice(u, u + chunkSize)
+      await supabase.from('scores').upsert(chunk, { onConflict: 'player_id,match_id' })
+    }
   }
 
   // --- Winner pick bonus ---

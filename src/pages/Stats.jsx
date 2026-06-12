@@ -29,22 +29,38 @@ export default function Stats() {
   var predsState = useState([])
   var predictions = predsState[0], setPreds = predsState[1]
 
-  useEffect(function(){ loadAll() },[])
+  useEffect(function(){ if (player) loadAll() },[player])
 
-  function loadAll() {
+  async function fetchAllRows(table, cols, playerIds) {
+    var all = []
+    var from = 0
+    while (true) {
+      var q = supabase.from(table).select(cols)
+      if (playerIds) q = q.in('player_id', playerIds)
+      var page = await q.range(from, from + 999)
+      if (!page.data || page.data.length === 0) break
+      all = all.concat(page.data)
+      if (page.data.length < 1000) break
+      from += 1000
+    }
+    return all
+  }
+
+  async function loadAll() {
     setLoading(true)
-    Promise.all([
-      supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at'),
-      supabase.from('scores').select('*'),
-      supabase.from('matches').select('*').order('match_number'),
-      supabase.from('predictions').select('*'),
-    ]).then(function(results) {
-      setPlayers(results[0].data||[])
-      setScores(results[1].data||[])
-      setMatches(results[2].data||[])
-      setPreds(results[3].data||[])
-      setLoading(false)
-    })
+    var playersRes = await supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at')
+    var roomPlayers = playersRes.data || []
+    var playerIds = roomPlayers.map(function(p){ return p.id })
+
+    var matchesRes = await supabase.from('matches').select('*').order('match_number')
+    var scores = playerIds.length ? await fetchAllRows('scores', '*', playerIds) : []
+    var preds = playerIds.length ? await fetchAllRows('predictions', '*', playerIds) : []
+
+    setPlayers(roomPlayers)
+    setScores(scores)
+    setMatches(matchesRes.data || [])
+    setPreds(preds)
+    setLoading(false)
   }
 
   var finished = useMemo(function(){ return matches.filter(function(m){ return m.home_goals!=null }) },[matches])
