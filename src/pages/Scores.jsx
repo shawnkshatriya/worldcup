@@ -97,10 +97,12 @@ export default function Scores() {
     setSyncing(false)
   }
 
-  // Auto-poll every 90 seconds during live matches
+  // Auto-sync from API every 90 seconds
   useEffect(function() {
     var id = setInterval(function() {
-      if (!demoMode && !syncing) loadMatches()
+      if (!demoMode && !syncing) {
+        syncAndRecalc().then(function() { loadMatches() }).catch(function(){})
+      }
     }, 90000)
     return function() { clearInterval(id) }
   }, [demoMode, syncing, filter])
