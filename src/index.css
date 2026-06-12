@@ -61,19 +61,21 @@
   --sidebar-w: 230px;
 }
 
-html { background: var(--c-bg); height: 100%; }
+html {
+  background: var(--c-bg);
+}
 
 body {
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--c-text);
   background: var(--c-bg);
-  min-height: 100%;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  margin: 0;
 }
 
-#root { min-height: 100vh; min-height: 100dvh; }
+#root { }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
