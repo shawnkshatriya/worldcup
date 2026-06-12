@@ -28,7 +28,7 @@ async function checkDemoActive() {
 export default function Scores() {
   const { isAdmin, player } = usePlayer()
   const [matches, setMatches] = useState([])
-  const [filter, setFilter]   = useState('finished')
+  const [filter, setFilter]   = useState('all')
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
   const [syncing, setSyncing]   = useState(false)
@@ -45,7 +45,7 @@ export default function Scores() {
     if (filter === 'finished') {
       query = query.eq('status','FINISHED').order('match_number', {ascending:true})
     } else if (filter === 'live') {
-      query = query.eq('status','IN_PLAY')
+      query = query.in('status',['IN_PLAY','PAUSED'])
     } else if (filter === 'upcoming') {
       query = query.eq('status','SCHEDULED').limit(30)
     }
@@ -60,7 +60,8 @@ export default function Scores() {
     setLoading(false)
 
     // Fetch prediction distribution for finished matches (room-scoped)
-    var finishedIds = (data || []).filter(function(m){return m.status==='FINISHED'}).map(function(m){return m.id})
+    // Show distribution for any started/finished match (predictions are locked by then)
+    var finishedIds = (data || []).filter(function(m){return m.status==='FINISHED'||m.status==='IN_PLAY'||m.status==='PAUSED'}).map(function(m){return m.id})
     if (finishedIds.length > 0 && player) {
       var roomPlayersRes = await supabase.from('players').select('id').eq('room_code', player.room_code).limit(500)
       var rpIds = (roomPlayersRes.data || []).map(function(p){ return p.id })
@@ -232,8 +233,8 @@ export default function Scores() {
                     </div>
                   )}
                   <div style={{marginTop:3}}>
-                    <span className={`match-status status-${m.status==='IN_PLAY'?'live':m.status==='FINISHED'?'finished':'upcoming'}`}>
-                      {m.status==='IN_PLAY'?'LIVE':m.status==='FINISHED'?'FT':m.kickoff?'Upcoming':'TBD'}
+                    <span className={`match-status status-${(m.status==='IN_PLAY'||m.status==='PAUSED')?'live':m.status==='FINISHED'?'finished':'upcoming'}`}>
+                      {m.status==='IN_PLAY'?'LIVE':m.status==='PAUSED'?'HT':m.status==='FINISHED'?'FT':m.kickoff?'Upcoming':'TBD'}
                     </span>
                   </div>
                   {m.match_number && getVenue(m.match_number) && (
@@ -254,10 +255,10 @@ export default function Scores() {
               )}
               </div>
             ))}
-            {groupBy === 'group' && phase.startsWith('GROUP') && ms.some(function(m){return m.home_goals != null}) && (function() {
+            {groupBy === 'group' && phase.startsWith('GROUP') && ms.some(function(m){return m.status === 'FINISHED'}) && (function() {
               var teams = {}
               ms.forEach(function(m) {
-                if (m.home_goals == null) return
+                if (m.status !== 'FINISHED' || m.home_goals == null) return
                 if (!teams[m.home_team]) teams[m.home_team] = {name:m.home_team,p:0,w:0,d:0,l:0,gf:0,ga:0}
                 if (!teams[m.away_team]) teams[m.away_team] = {name:m.away_team,p:0,w:0,d:0,l:0,gf:0,ga:0}
                 var h = teams[m.home_team], a = teams[m.away_team]

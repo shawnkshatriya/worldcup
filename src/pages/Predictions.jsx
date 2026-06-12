@@ -29,7 +29,9 @@ function WinnerPickInline({ player, koOpen }) {
   const [saved, setSaved] = useState(false)
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const locked = koOpen  // locks when admin opens KO (bracket is set)
+  // Locks when admin opens KO predictions OR at the hard KO deadline (R32 starts Jun 28 2026)
+  const KO_DEADLINE = new Date('2026-06-28T00:00:00Z')
+  const locked = koOpen || new Date() >= KO_DEADLINE
 
   useEffect(() => {
     if (!player) return
@@ -122,7 +124,7 @@ function isLocked(match, koOpen) {
   // KO matches: locked until admin opens them
   if (match.phase && KO_PHASES.includes(match.phase) && !koOpen) return true
   // Match already started or finished
-  if (match.status === 'IN_PLAY' || match.status === 'FINISHED') return true
+  if (match.status === 'IN_PLAY' || match.status === 'PAUSED' || match.status === 'FINISHED') return true
   // Lock 15 minutes before kickoff
   if (match.kickoff) {
     var kickoff = new Date(match.kickoff)
@@ -183,8 +185,16 @@ export default function Predictions() {
       supabase.from('matches').select('*').order('kickoff').then(function(res) {
         var data = res.data || []
         setAllMatches(data)
-        if (!activeDay && data.length > 0 && data[0].kickoff) {
-          setActiveDay(new Date(data[0].kickoff).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}))
+        if (!activeDay && data.length > 0) {
+          // Default to today if there are matches today, else the next day with matches
+          var today = new Date().toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'})
+          var days = data.filter(function(m){ return m.kickoff }).map(function(m){ return new Date(m.kickoff).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}) })
+          if (days.includes(today)) {
+            setActiveDay(today)
+          } else {
+            var future = data.find(function(m){ return m.kickoff && new Date(m.kickoff) >= new Date() })
+            setActiveDay(future ? new Date(future.kickoff).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'numeric'}) : days[0])
+          }
         }
       })
     }
@@ -358,10 +368,13 @@ export default function Predictions() {
             </button>
           </div>
 
-          {matches.length === 0 && activePhase.startsWith('GROUP') && (
+          {matches.length === 0 && groupBy === 'day' && (
+            <p style={{color:'var(--c-muted)',fontSize:14}}>No matches on this day.</p>
+          )}
+          {matches.length === 0 && groupBy === 'group' && activePhase.startsWith('GROUP') && (
             <p style={{color:'var(--c-muted)',fontSize:14}}>No matches loaded yet for this group.</p>
           )}
-          {matches.length === 0 && !activePhase.startsWith('GROUP') && (
+          {matches.length === 0 && groupBy === 'group' && !activePhase.startsWith('GROUP') && (
             <p style={{color:'var(--c-muted)',fontSize:14}}>
               KO round fixtures are determined after the group stage. Come back once group results are in.
             </p>
@@ -398,6 +411,12 @@ export default function Predictions() {
                     )}
                     {locked && m.status !== 'FINISHED' && (
                       <span style={{color:'var(--c-danger)',marginLeft:6}}>· Locked</span>
+                    )}
+                    {m.status === 'FINISHED' && m.home_goals != null && (
+                      <span style={{color:'var(--c-success)',marginLeft:6,fontWeight:700}}>· FT {m.home_goals}-{m.away_goals}</span>
+                    )}
+                    {(m.status === 'IN_PLAY' || m.status === 'PAUSED') && m.home_goals != null && (
+                      <span style={{color:'var(--c-danger)',marginLeft:6,fontWeight:700}}>· {m.status === 'PAUSED' ? 'HT' : 'LIVE'} {m.home_goals}-{m.away_goals}</span>
                     )}
                   </div>
                 )}

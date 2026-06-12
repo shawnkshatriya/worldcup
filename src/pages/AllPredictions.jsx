@@ -20,7 +20,7 @@ const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f9731
 const LOCK_BUFFER_MS = 15 * 60 * 1000  // 15 minutes
 
 function isMatchRevealed(match) {
-  if (match.status === 'IN_PLAY' || match.status === 'FINISHED') return true
+  if (match.status === 'IN_PLAY' || match.status === 'PAUSED' || match.status === 'FINISHED') return true
   if (match.kickoff) {
     var kickoff = new Date(match.kickoff)
     if (new Date() >= new Date(kickoff.getTime() - LOCK_BUFFER_MS)) return true
@@ -112,9 +112,15 @@ export default function AllPredictions() {
     var allM = matchData || []
     if (groupBy === 'day') {
       setAllMatches(allM)
-      if (!activeDay && allM.length > 0 && allM[0].kickoff) {
-        var firstDay = new Date(allM[0].kickoff).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})
-        setActiveDay(firstDay)
+      if (!activeDay && allM.length > 0) {
+        var today = new Date().toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'})
+        var days = allM.filter(function(m){ return m.kickoff }).map(function(m){ return new Date(m.kickoff).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) })
+        if (days.includes(today)) {
+          setActiveDay(today)
+        } else {
+          var future = allM.find(function(m){ return m.kickoff && new Date(m.kickoff) >= new Date() })
+          setActiveDay(future ? new Date(future.kickoff).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : days[0])
+        }
       }
       var filtered = allM.filter(function(m) {
         if (!m.kickoff || !activeDay) return false
