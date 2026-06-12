@@ -799,7 +799,7 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
   .sidebar-mobile.open ~ .mobile-overlay,
   .mobile-overlay { display: block; }
 
-  .page-body { padding: 1rem; padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+  .page-body { padding: 1rem; padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); }
   .page-header { padding: 0 1rem; }
   .page-header-inner { padding: 0.75rem 0 0.5rem; }
   .metrics { grid-template-columns: 1fr 1fr; }

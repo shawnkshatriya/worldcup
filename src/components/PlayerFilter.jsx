@@ -27,11 +27,15 @@ export default function PlayerFilter({ players, selected, onChange }) {
       </button>
       {open && (
         <>
-          <div onClick={function(){ setOpen(false) }} style={{position:'fixed',inset:0,zIndex:40}} />
-          <div style={{position:'absolute',top:'100%',right:0,marginTop:4,background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:8,boxShadow:'0 8px 24px rgba(0,0,0,0.2)',zIndex:41,minWidth:200,maxHeight:300,overflowY:'auto',padding:6}}>
+          <div onClick={function(){ setOpen(false) }} style={{position:'fixed',inset:0,zIndex:200,background:'rgba(0,0,0,0.3)'}} />
+          <div style={{position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:12,boxShadow:'0 12px 40px rgba(0,0,0,0.35)',zIndex:201,width:'min(320px, 90vw)',maxHeight:'70vh',overflowY:'auto',padding:10}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+              <span style={{fontSize:13,fontWeight:700}}>Filter players</span>
+              <button onClick={function(){ setOpen(false) }} style={{background:'none',border:'none',color:'var(--c-muted)',fontSize:18,cursor:'pointer',lineHeight:1}}>×</button>
+            </div>
             <button
               onClick={selectAll}
-              style={{display:'block',width:'100%',textAlign:'left',padding:'8px 10px',fontSize:12,fontWeight:600,background:allSelected?'var(--c-accent)':'transparent',color:allSelected?'#fff':'var(--c-text)',border:'none',borderRadius:4,cursor:'pointer',marginBottom:2}}
+              style={{display:'block',width:'100%',textAlign:'left',padding:'10px 12px',fontSize:13,fontWeight:600,background:allSelected?'var(--c-accent)':'transparent',color:allSelected?'#fff':'var(--c-text)',border:'none',borderRadius:6,cursor:'pointer',marginBottom:2}}
             >
               All players
             </button>
@@ -41,9 +45,9 @@ export default function PlayerFilter({ players, selected, onChange }) {
                 <button
                   key={p.id}
                   onClick={function(){ toggle(p.id) }}
-                  style={{display:'flex',alignItems:'center',gap:8,width:'100%',textAlign:'left',padding:'8px 10px',fontSize:12,background:'transparent',color:'var(--c-text)',border:'none',borderRadius:4,cursor:'pointer'}}
+                  style={{display:'flex',alignItems:'center',gap:10,width:'100%',textAlign:'left',padding:'10px 12px',fontSize:13,background:'transparent',color:'var(--c-text)',border:'none',borderRadius:6,cursor:'pointer'}}
                 >
-                  <span style={{width:16,height:16,borderRadius:4,border:'1px solid var(--c-border)',background:isSel?'var(--c-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#fff',flexShrink:0}}>
+                  <span style={{width:18,height:18,borderRadius:4,border:'1px solid var(--c-border)',background:isSel?'var(--c-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'#fff',flexShrink:0}}>
                     {isSel ? '✓' : ''}
                   </span>
                   {p.name}

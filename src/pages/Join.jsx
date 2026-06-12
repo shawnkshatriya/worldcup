@@ -76,8 +76,8 @@ export default function Join() {
   if (loading) return null
 
   return (
-    <div style={{ background: 'var(--c-bg)', padding: '2rem 1rem calc(4rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', minHeight: '100%' }}>
-      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
+    <div style={{ background: 'var(--c-bg)', minHeight: '100vh', minHeight: '100dvh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', padding: 'calc(2rem + env(safe-area-inset-top, 0px)) 1rem calc(3rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
 
       {/* Brand */}
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
