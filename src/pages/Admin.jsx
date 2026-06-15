@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { supabase, recalcPlayerScores } from '../lib/supabase'
+import { supabase, recalcPlayerScores, recalcAllRooms } from '../lib/supabase'
 import { getAllRooms, createRoom, deleteRoom, updateRoom, regenToken, saveRoomWeights } from '../lib/rooms'
 import { runScoringTests } from '../lib/testRunner'
 import { seedDemoData, clearDemoData } from '../lib/demoData'
@@ -114,6 +114,16 @@ export default function Admin() {
       status: 'FINISHED', updated_at: new Date().toISOString()
     }).eq('id', m.id)
     setMatches(ms => ms.map(x => x.id === m.id ? { ...x, ...m, status: 'FINISHED' } : x))
+    // Auto-recalc all rooms so the leaderboard updates immediately
+    setRecalcing(true); setRecalcMsg('Recalculating...')
+    try {
+      await recalcAllRooms()
+      setRecalcMsg('Saved & scores recalculated!')
+    } catch (e) {
+      setRecalcMsg('Saved, but recalc failed - click Recalculate')
+    }
+    setRecalcing(false)
+    setTimeout(function(){ setRecalcMsg('') }, 4000)
   }
 
   async function removePlayer(id) {
