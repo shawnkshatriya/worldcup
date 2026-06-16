@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import CountUp from '../components/CountUp'
+import ShareCard from '../components/ShareCard'
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
 const MEDALS = ['🥇','🥈','🥉']
@@ -150,6 +151,18 @@ export default function Leaderboard() {
                   )}
                   {myIdx === 0 && <div style={{color:'var(--c-success)',fontWeight:700}}>👑 You're in the lead!</div>}
                 </div>
+              </div>
+              <div style={{marginTop:14}}>
+                <ShareCard
+                  player={me}
+                  rank={myIdx+1}
+                  totalPlayers={rows.length}
+                  points={me.pts}
+                  exactCount={me.exact||0}
+                  accuracy={me.pctWL||0}
+                  leaderName={rows[0].name}
+                  gapToLeader={rows[0].pts - me.pts}
+                />
               </div>
             </div>
           )
