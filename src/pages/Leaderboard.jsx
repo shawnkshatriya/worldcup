@@ -98,14 +98,15 @@ export default function Leaderboard() {
       const approx = ps.reduce((a,s)=>a+(s.pts_approx||0),0)
       const ko     = ps.reduce((a,s)=>a+(s.pts_ko_team||0),0)
       const winnerBonus = wp?.pts_awarded || 0
+      const played = finished || 0  // total finished matches - the fair denominator
       return {
         ...p, color:AVATAR_COLORS[idx%AVATAR_COLORS.length],
         pts:    ps.reduce((a,s)=>a+(s.pts_total||0),0) + winnerBonus,
         correct, diff, exact, approx, ko, winnerBonus,
         preds:  pp.length, scored,
-        pctWL:  scored>0?Math.round(correct/scored*100):0,
-        pctDiff:scored>0?Math.round(diff/scored*100):0,
-        pctExact:scored>0?Math.round(exact/scored*100):0,
+        pctWL:  played>0?Math.round(correct/played*100):0,
+        pctDiff:played>0?Math.round(diff/played*100):0,
+        pctExact:played>0?Math.round(exact/played*100):0,
       }
     }).sort((a,b)=>b.pts-a.pts)
 
@@ -261,6 +262,7 @@ export default function Leaderboard() {
                     <tr>
                       <th style={{width:44}}>#</th>
                       <SortTh field="name" label="Player" align="left" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="preds" label="Predicted" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="pts" label="Points" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="pctWL" label="% W/L" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="correct" label="W/L count" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
@@ -308,6 +310,7 @@ export default function Leaderboard() {
                               </div>
                             </div>
                           </td>
+                          <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.preds}/{totalFinished}</td>
                           <td style={{textAlign:'right'}}>
                             <span style={{fontFamily:'var(--font-display)',fontSize:24,color:(i<3)?MEDAL_COLORS[i]:'var(--c-text)'}}><CountUp value={p.pts}/></span>
                           </td>
