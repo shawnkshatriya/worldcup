@@ -61,6 +61,7 @@ export default function Dashboard() {
   const roomCode = player?.room_code || 'DEFAULT'
   const [stats, setStats]   = useState({ players:0, played:0, total:104 })
   const [leaders, setLeaders] = useState([])
+  const [topCalls, setTopCalls] = useState([])
   const [myRank, setMyRank]   = useState(null)
   const [myPts, setMyPts]     = useState(null)
   const [weights, setWeights] = useState(null)
@@ -142,6 +143,45 @@ export default function Dashboard() {
     })).sort((a,b)=>b.pts-a.pts)
 
     setLeaders(totals.slice(0,10))
+
+    // Top calls feed: highest-scoring predictions from recently finished matches
+    if (roomPlayerIds.length) {
+      var { data: finishedMatches } = await supabase.from('matches').select('id,home_team,away_team,home_goals,away_goals,updated_at')
+        .eq('status','FINISHED').not('home_goals','is',null).order('updated_at',{ascending:false}).limit(8)
+      var fIds = (finishedMatches||[]).map(function(m){ return m.id })
+      if (fIds.length) {
+        var topScores = []
+        var tFrom = 0
+        while (true) {
+          var tPage = await supabase.from('scores').select('player_id,match_id,pts_total,pts_exact')
+            .in('player_id', roomPlayerIds).in('match_id', fIds).gt('pts_total', 0).range(tFrom, tFrom + 999)
+          if (!tPage.data || tPage.data.length === 0) break
+          topScores = topScores.concat(tPage.data)
+          if (tPage.data.length < 1000) break
+          tFrom += 1000
+        }
+        // Get the predictions for those to show the scoreline
+        var { data: topPreds } = await supabase.from('predictions').select('player_id,match_id,home_goals,away_goals')
+          .in('player_id', roomPlayerIds).in('match_id', fIds)
+        var predLookup = {}
+        ;(topPreds||[]).forEach(function(p){ predLookup[p.player_id+'_'+p.match_id] = p })
+        var playerNames = {}
+        players.forEach(function(p){ playerNames[p.id] = p.name })
+        var matchLookup = {}
+        ;(finishedMatches||[]).forEach(function(m){ matchLookup[m.id] = m })
+
+        var calls = topScores.map(function(s){
+          var pr = predLookup[s.player_id+'_'+s.match_id]
+          var m = matchLookup[s.match_id]
+          if (!pr || !m) return null
+          return { name: playerNames[s.player_id]||'?', pts: s.pts_total, isExact: s.pts_exact>0,
+            ph: pr.home_goals, pa: pr.away_goals, home: m.home_team, away: m.away_team,
+            rh: m.home_goals, ra: m.away_goals }
+        }).filter(Boolean).sort(function(a,b){ return b.pts - a.pts }).slice(0,6)
+        setTopCalls(calls)
+      }
+    }
+
     if (player) {
       const rank = totals.findIndex(p=>p.id===player.id)+1
       setMyRank(rank||null)
@@ -278,6 +318,26 @@ export default function Dashboard() {
 
           {/* Right column: upcoming + your predictions */}
           <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+
+            {/* Top calls feed */}
+            {topCalls.length > 0 && (
+              <div className="card" style={{marginBottom:0}}>
+                <div className="card-title">🎯 Top calls</div>
+                {topCalls.map(function(call, idx) {
+                  return (
+                    <div key={idx} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:idx<topCalls.length-1?'1px solid var(--c-border)':'none',fontSize:13}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <span style={{fontWeight:700,color:call.isExact?'var(--c-accent)':'var(--c-text)'}}>{call.name}</span>
+                        <span style={{color:'var(--c-muted)'}}> called </span>
+                        <span style={{fontWeight:600}}>{call.home} {call.ph}-{call.pa} {call.away}</span>
+                        {call.isExact && <span style={{marginLeft:4}}>🎯</span>}
+                      </div>
+                      <span style={{fontFamily:'var(--font-display)',fontSize:16,color:'var(--c-success)',fontWeight:700,marginLeft:8,flexShrink:0}}>+{call.pts}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
             {/* Upcoming matches */}
             {nextMatch.length > 0 && (
               <div className="card" style={{marginBottom:0}}>

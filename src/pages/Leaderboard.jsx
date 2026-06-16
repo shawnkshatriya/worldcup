@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
+import CountUp from '../components/CountUp'
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
 const MEDALS = ['🥇','🥈','🥉']
@@ -160,7 +161,7 @@ export default function Leaderboard() {
                         marginBottom:8,
                       }}>{p.name.slice(0,2).toUpperCase()}</div>
                       <div style={{fontSize:isFirst?14:12,fontWeight:700,textAlign:'center',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'100%'}}>{p.name}</div>
-                      <div style={{fontFamily:'var(--font-display)',fontSize:isFirst?38:30,color:mc,lineHeight:1}}>{p.pts}</div>
+                      <div style={{fontFamily:'var(--font-display)',fontSize:isFirst?38:30,color:mc,lineHeight:1}}><CountUp value={p.pts}/></div>
                       <div style={{fontSize:10,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.06em'}}>pts</div>
                     </div>
                   )
@@ -223,7 +224,7 @@ export default function Leaderboard() {
                             </div>
                           </td>
                           <td style={{textAlign:'right'}}>
-                            <span style={{fontFamily:'var(--font-display)',fontSize:24,color:(i<3)?MEDAL_COLORS[i]:'var(--c-text)'}}>{p.pts}</span>
+                            <span style={{fontFamily:'var(--font-display)',fontSize:24,color:(i<3)?MEDAL_COLORS[i]:'var(--c-text)'}}><CountUp value={p.pts}/></span>
                           </td>
                           <td style={{textAlign:'right'}}><PctBadge val={p.pctWL}/></td>
                           <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.correct}</td>
