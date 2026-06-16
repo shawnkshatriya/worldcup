@@ -81,6 +81,7 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
 
       <div className="card" style={{marginBottom:0}}>
         <div className="card-title">⚽ Golden Boot race</div>
+        <p style={{fontSize:11,color:'var(--c-muted)',marginTop:-8,marginBottom:12}}>Big number = goals · ast = assists</p>
         {scorersLoading ? (
           <p style={{fontSize:12,color:'var(--c-hint)'}}>Loading scorers...</p>
         ) : scorers.length === 0 ? (
@@ -97,7 +98,7 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
                 </div>
                 <div style={{textAlign:'right'}}>
                   <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{s.goals}</span>
-                  {s.assists>0 && <span style={{fontSize:10,color:'var(--c-muted)',marginLeft:4}}>{s.assists}a</span>}
+                  {s.assists>0 && <span style={{fontSize:10,color:'var(--c-muted)',marginLeft:4}}>+{s.assists} ast</span>}
                 </div>
               </div>
             )
