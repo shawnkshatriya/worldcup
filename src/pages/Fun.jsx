@@ -285,14 +285,14 @@ export default function Fun() {
                 var a = sorted.find(function(p){return p.id===rivalA})
                 var b = sorted.find(function(p){return p.id===rivalB})
                 var rec = h2h[rivalA]?.[rivalB] || {wins:0,losses:0,draws:0}
-                // Match-by-match where they differed
+                // All matches both players predicted on
                 var rows = matches.filter(function(m){return m.home_goals!=null}).map(function(m){
                   var ms = scores.filter(function(s){return String(s.match_id)===String(m.id)})
                   var as = ms.find(function(s){return s.player_id===rivalA})?.pts_total
                   var bs = ms.find(function(s){return s.player_id===rivalB})?.pts_total
                   if (as==null && bs==null) return null
                   return { m:m, as:as||0, bs:bs||0 }
-                }).filter(Boolean).filter(function(r){ return r.as !== r.bs }).reverse().slice(0,10)
+                }).filter(Boolean).reverse()
                 return (
                   <div>
                     <div style={{display:'flex',justifyContent:'space-around',alignItems:'center',padding:'1rem 0',borderTop:'1px solid var(--c-border)',borderBottom:'1px solid var(--c-border)',marginBottom:'1rem'}}>
@@ -309,15 +309,16 @@ export default function Fun() {
                         <div style={{fontFamily:'var(--font-display)',fontSize:32,color:rec.losses>rec.wins?'var(--c-success)':'var(--c-text)'}}>{rec.losses}</div>
                       </div>
                     </div>
-                    <div style={{fontSize:11,color:'var(--c-muted)',marginBottom:8,fontWeight:600}}>Where they differed:</div>
+                    <div style={{fontSize:11,color:'var(--c-muted)',marginBottom:8,fontWeight:600}}>Every match both predicted ({rows.length}):</div>
                     {rows.length===0 ? <p style={{fontSize:12,color:'var(--c-hint)'}}>No decided matches yet.</p> :
                       rows.map(function(r){
                         var aWon = r.as > r.bs
+                        var tied = r.as === r.bs
                         return (
                           <div key={r.m.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--c-border)',fontSize:12}}>
-                            <span style={{color:aWon?'var(--c-success)':'var(--c-danger)',fontWeight:700,width:30}}>{r.as}</span>
-                            <span style={{flex:1,textAlign:'center',color:'var(--c-muted)'}}>{r.m.home_team} {r.m.home_goals}-{r.m.away_goals} {r.m.away_team}</span>
-                            <span style={{color:!aWon?'var(--c-success)':'var(--c-danger)',fontWeight:700,width:30,textAlign:'right'}}>{r.bs}</span>
+                            <span style={{color:tied?'var(--c-muted)':aWon?'var(--c-success)':'var(--c-danger)',fontWeight:700,width:30}}>{r.as}</span>
+                            <span style={{flex:1,textAlign:'center',color:'var(--c-muted)',fontSize:11}}>{r.m.home_team} {r.m.home_goals}-{r.m.away_goals} {r.m.away_team}</span>
+                            <span style={{color:tied?'var(--c-muted)':!aWon?'var(--c-success)':'var(--c-danger)',fontWeight:700,width:30,textAlign:'right'}}>{r.bs}</span>
                           </div>
                         )
                       })
