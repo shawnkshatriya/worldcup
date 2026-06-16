@@ -380,7 +380,10 @@ export default function Dashboard() {
                         <Flag team={m.away_team} size="sm"/><span style={{fontWeight:500}}>{m.away_team}</span>
                       </div>
                       {m.pred && m.pred.home_goals != null ? (
-                        <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{m.pred.home_goals} - {m.pred.away_goals}</span>
+                        <div style={{textAlign:'right'}}>
+                          <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{m.pred.home_goals} - {m.pred.away_goals}</span>
+                          <div style={{fontSize:9,color:'var(--c-muted)'}}>up to +{m.phase && m.phase.startsWith('GROUP') ? 9 : 12} pts</div>
+                        </div>
                       ) : (
                         <Link to="/predictions" style={{fontSize:11,color:'var(--c-warn)',fontWeight:600}}>Not predicted</Link>
                       )}

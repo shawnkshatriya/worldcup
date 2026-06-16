@@ -3,6 +3,7 @@ import { supabase, syncAndRecalc } from '../lib/supabase'
 import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
+import LiveWhatIf from '../components/LiveWhatIf'
 
 const PHASE_LABELS = {
   GROUP_A:'Group A', GROUP_B:'Group B', GROUP_C:'Group C', GROUP_D:'Group D',
@@ -36,6 +37,8 @@ export default function Scores() {
   const [demoMode, setDemoMode] = useState(false)
   const [groupBy, setGroupBy]   = useState('group')
   const [predDist, setPredDist] = useState({}) // 'group' or 'day'
+  const [myPicks, setMyPicks] = useState({})
+  const [whatIfMatch, setWhatIfMatch] = useState(null)
 
   useEffect(() => { loadMatches() }, [filter])
 
@@ -88,6 +91,17 @@ export default function Scores() {
         else d.draw++
       })
       setPredDist(dist)
+    }
+
+    // Fetch current user's predictions to show "your pick" + on-track status
+    if (player) {
+      var { data: myPreds } = await supabase.from('predictions')
+        .select('match_id,home_goals,away_goals')
+        .eq('player_id', player.id)
+        .not('home_goals','is',null)
+      var mine = {}
+      ;(myPreds || []).forEach(function(p){ mine[String(p.match_id)] = { h:p.home_goals, a:p.away_goals } })
+      setMyPicks(mine)
     }
   }
 
@@ -253,6 +267,41 @@ export default function Scores() {
                   <span>{predDist[m.id].draw} drew</span>
                   <span>{predDist[m.id].away} picked {m.away_team}</span>
                 </div>
+              )}
+              {myPicks[String(m.id)] && (m.status==='IN_PLAY'||m.status==='PAUSED'||m.status==='FINISHED') && m.home_goals != null && (function() {
+                var pick = myPicks[String(m.id)]
+                var rh = m.home_goals, ra = m.away_goals
+                var pr = Math.sign(pick.h - pick.a), rr = Math.sign(rh - ra)
+                var exact = pick.h === rh && pick.a === ra
+                var rightResult = pr === rr
+                var status, color
+                if (m.status === 'FINISHED') {
+                  if (exact) { status = '🎯 Exact!'; color = 'var(--c-accent)' }
+                  else if (rightResult) { status = '✓ Right result'; color = 'var(--c-success)' }
+                  else { status = '✗ Missed'; color = 'var(--c-danger)' }
+                } else {
+                  // live
+                  if (exact) { status = '🎯 On for exact!'; color = 'var(--c-accent)' }
+                  else if (rightResult) { status = '✓ On track'; color = 'var(--c-success)' }
+                  else { status = '⚠ Behind'; color = 'var(--c-danger)' }
+                }
+                return (
+                  <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,fontSize:11,paddingBottom:8}}>
+                    <span style={{color:'var(--c-muted)'}}>Your pick: <strong style={{color:'var(--c-text)'}}>{pick.h}-{pick.a}</strong></span>
+                    <span style={{color:color,fontWeight:700}}>{status}</span>
+                    {(m.status==='IN_PLAY'||m.status==='PAUSED') && (
+                      <button
+                        onClick={function(){ setWhatIfMatch(whatIfMatch === m.id ? null : m.id) }}
+                        style={{fontSize:10,padding:'2px 8px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface)',color:'var(--c-accent)',cursor:'pointer',fontWeight:600}}
+                      >
+                        {whatIfMatch === m.id ? 'Hide' : '📊 What if?'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })()}
+              {whatIfMatch === m.id && (m.status==='IN_PLAY'||m.status==='PAUSED') && (
+                <LiveWhatIf match={m} player={player} roomCode={player.room_code}/>
               )}
               </div>
             ))}
