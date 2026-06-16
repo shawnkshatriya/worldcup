@@ -4,6 +4,7 @@ import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
 import LiveWhatIf from '../components/LiveWhatIf'
+import MatchDetail from '../components/MatchDetail'
 
 const PHASE_LABELS = {
   GROUP_A:'Group A', GROUP_B:'Group B', GROUP_C:'Group C', GROUP_D:'Group D',
@@ -39,6 +40,7 @@ export default function Scores() {
   const [predDist, setPredDist] = useState({}) // 'group' or 'day'
   const [myPicks, setMyPicks] = useState({})
   const [whatIfMatch, setWhatIfMatch] = useState(null)
+  const [detailMatch, setDetailMatch] = useState(null)
 
   useEffect(() => { loadMatches() }, [filter])
 
@@ -303,6 +305,17 @@ export default function Scores() {
               {whatIfMatch === m.id && (m.status==='IN_PLAY'||m.status==='PAUSED') && (
                 <LiveWhatIf match={m} player={player} roomCode={player.room_code}/>
               )}
+              {(m.status==='IN_PLAY'||m.status==='PAUSED'||m.status==='FINISHED') && (
+                <div style={{textAlign:'center',paddingBottom:8}}>
+                  <button
+                    onClick={function(){ setDetailMatch(detailMatch === m.id ? null : m.id) }}
+                    style={{fontSize:10,padding:'2px 8px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface)',color:'var(--c-muted)',cursor:'pointer'}}
+                  >
+                    {detailMatch === m.id ? 'Hide details' : '⚽ Goals, stats & lineups'}
+                  </button>
+                </div>
+              )}
+              {detailMatch === m.id && <MatchDetail match={m}/>}
               </div>
             ))}
             {groupBy === 'group' && phase.startsWith('GROUP') && ms.some(function(m){return m.status === 'FINISHED'}) && (function() {

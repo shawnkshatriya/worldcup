@@ -4,6 +4,7 @@ import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
 import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import Flag from '../components/Flag'
+import MatchPreview from '../components/MatchPreview'
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
   {name:'Austria',flag:'🇦🇹'},{name:'Belgium',flag:'🇧🇪'},{name:'Bosnia and Herzegovina',flag:'🇧🇦'},
@@ -465,6 +466,7 @@ export default function Predictions() {
                     </div>
                   </div>
                 </div>
+                {!locked && m.home_team && m.away_team && <MatchPreview match={m}/>}
               </div>
             )
           })}
