@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 const TEAM_NAME_MAP = {
   'Korea Republic':'South Korea','Republic of Korea':'South Korea','Korea DPR':'North Korea',
   'Türkiye':'Turkey','Turkiye':'Turkey','Curaçao':'Curacao',"Côte d'Ivoire":'Ivory Coast',
-  'Czech Republic':'Czechia','Cabo Verde':'Cape Verde','Congo DR':'DR Congo',
+  'Czech Republic':'Czechia','Cabo Verde':'Cape Verde','Cape Verde Islands':'Cape Verde','Congo DR':'DR Congo',
   'Democratic Republic of the Congo':'DR Congo','IR Iran':'Iran','USA':'United States',
   'United States of America':'United States','Bosnia-Herzegovina':'Bosnia and Herzegovina',
 }

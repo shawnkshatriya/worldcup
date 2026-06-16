@@ -174,6 +174,7 @@ var TEAM_NAME_MAP = {
   "Côte d'Ivoire": 'Ivory Coast',
   'Czech Republic': 'Czechia',
   'Cabo Verde': 'Cape Verde',
+  'Cape Verde Islands': 'Cape Verde',
   'Congo DR': 'DR Congo',
   'DR Congo (Kinshasa)': 'DR Congo',
   'Democratic Republic of the Congo': 'DR Congo',
