@@ -79,6 +79,8 @@ export default function Fun() {
   const [loading, setLoading]   = useState(true)
   const [selectedPlayer, setSP] = useState(null)
   const [filterPlayers, setFilterPlayers] = useState([])
+  const [rivalA, setRivalA] = useState(null)
+  const [rivalB, setRivalB] = useState(null)
   const [commentMatch, setCM]   = useState(null)
 
   useEffect(() => {
@@ -264,6 +266,67 @@ export default function Fun() {
         {/* RIVALRIES */}
         {tab==='h2h' && (
           <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+
+            {/* 1v1 head-to-head picker */}
+            <div className="card" style={{marginBottom:0}}>
+              <div className="card-title">⚔️ Pick a rivalry</div>
+              <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:'1rem'}}>
+                <select value={rivalA||''} onChange={function(e){setRivalA(e.target.value)}} style={{fontSize:13,padding:'6px 10px',borderRadius:8,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}}>
+                  <option value="">Player 1</option>
+                  {sorted.map(function(p){ return <option key={p.id} value={p.id}>{p.name}</option> })}
+                </select>
+                <span style={{color:'var(--c-muted)',fontWeight:700}}>vs</span>
+                <select value={rivalB||''} onChange={function(e){setRivalB(e.target.value)}} style={{fontSize:13,padding:'6px 10px',borderRadius:8,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}}>
+                  <option value="">Player 2</option>
+                  {sorted.map(function(p){ return <option key={p.id} value={p.id}>{p.name}</option> })}
+                </select>
+              </div>
+              {rivalA && rivalB && rivalA !== rivalB && (function() {
+                var a = sorted.find(function(p){return p.id===rivalA})
+                var b = sorted.find(function(p){return p.id===rivalB})
+                var rec = h2h[rivalA]?.[rivalB] || {wins:0,losses:0,draws:0}
+                // Match-by-match where they differed
+                var rows = matches.filter(function(m){return m.home_goals!=null}).map(function(m){
+                  var ms = scores.filter(function(s){return String(s.match_id)===String(m.id)})
+                  var as = ms.find(function(s){return s.player_id===rivalA})?.pts_total
+                  var bs = ms.find(function(s){return s.player_id===rivalB})?.pts_total
+                  if (as==null && bs==null) return null
+                  return { m:m, as:as||0, bs:bs||0 }
+                }).filter(Boolean).filter(function(r){ return r.as !== r.bs }).reverse().slice(0,10)
+                return (
+                  <div>
+                    <div style={{display:'flex',justifyContent:'space-around',alignItems:'center',padding:'1rem 0',borderTop:'1px solid var(--c-border)',borderBottom:'1px solid var(--c-border)',marginBottom:'1rem'}}>
+                      <div style={{textAlign:'center'}}>
+                        <div style={{fontWeight:700,fontSize:14,color:a.color}}>{a.name}</div>
+                        <div style={{fontFamily:'var(--font-display)',fontSize:32,color:rec.wins>rec.losses?'var(--c-success)':'var(--c-text)'}}>{rec.wins}</div>
+                      </div>
+                      <div style={{textAlign:'center',color:'var(--c-muted)'}}>
+                        <div style={{fontSize:11}}>{rec.draws} draws</div>
+                        <div style={{fontSize:18,fontWeight:700}}>—</div>
+                      </div>
+                      <div style={{textAlign:'center'}}>
+                        <div style={{fontWeight:700,fontSize:14,color:b.color}}>{b.name}</div>
+                        <div style={{fontFamily:'var(--font-display)',fontSize:32,color:rec.losses>rec.wins?'var(--c-success)':'var(--c-text)'}}>{rec.losses}</div>
+                      </div>
+                    </div>
+                    <div style={{fontSize:11,color:'var(--c-muted)',marginBottom:8,fontWeight:600}}>Where they differed:</div>
+                    {rows.length===0 ? <p style={{fontSize:12,color:'var(--c-hint)'}}>No decided matches yet.</p> :
+                      rows.map(function(r){
+                        var aWon = r.as > r.bs
+                        return (
+                          <div key={r.m.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 0',borderBottom:'1px solid var(--c-border)',fontSize:12}}>
+                            <span style={{color:aWon?'var(--c-success)':'var(--c-danger)',fontWeight:700,width:30}}>{r.as}</span>
+                            <span style={{flex:1,textAlign:'center',color:'var(--c-muted)'}}>{r.m.home_team} {r.m.home_goals}-{r.m.away_goals} {r.m.away_team}</span>
+                            <span style={{color:!aWon?'var(--c-success)':'var(--c-danger)',fontWeight:700,width:30,textAlign:'right'}}>{r.bs}</span>
+                          </div>
+                        )
+                      })
+                    }
+                  </div>
+                )
+              })()}
+            </div>
+
             <div className="alert alert-info">
               <strong>How this works:</strong> For every match with a result, we compare who scored more points on that prediction. Green = winning that rivalry, red = losing. The number shows W-L record across all played matches.
             </div>

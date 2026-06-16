@@ -128,6 +128,33 @@ export default function Leaderboard() {
           <div className="alert alert-info">No players yet - invite friends to join!</div>
         )}
 
+        {!loading && player && rows.length > 1 && (function() {
+          var myIdx = rows.findIndex(function(r){ return r.id === player.id })
+          if (myIdx < 0) return null
+          var me = rows[myIdx]
+          var above = myIdx > 0 ? rows[myIdx-1] : null
+          var below = myIdx < rows.length-1 ? rows[myIdx+1] : null
+          return (
+            <div className="card" style={{marginBottom:'1.25rem',background:'var(--c-surface)',border:'1px solid var(--c-accent)'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+                <div>
+                  <div style={{fontSize:12,color:'var(--c-muted)'}}>You're</div>
+                  <div style={{fontFamily:'var(--font-display)',fontSize:28,color:'var(--c-accent)'}}>#{myIdx+1} <span style={{fontSize:16,color:'var(--c-text)'}}>· {me.pts} pts</span></div>
+                </div>
+                <div style={{fontSize:13,textAlign:'right',lineHeight:1.7}}>
+                  {above && (
+                    <div>📈 <strong>{above.pts - me.pts}</strong> pts behind {above.name} (#{myIdx})</div>
+                  )}
+                  {below && (
+                    <div style={{color:'var(--c-muted)'}}>📉 <strong>{me.pts - below.pts}</strong> pts ahead of {below.name} (#{myIdx+2})</div>
+                  )}
+                  {myIdx === 0 && <div style={{color:'var(--c-success)',fontWeight:700}}>👑 You're in the lead!</div>}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
         {!loading && rows.length > 0 && (
           <>
             {/* Podium - top 3 */}
