@@ -4,12 +4,12 @@ export function HBar({ label, value, max, color='var(--c-accent)', suffix='', no
   const pct = max > 0 ? Math.max((value/max)*100, value>0?2:0) : 0
   return (
     <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
-      <div style={{minWidth:80,maxWidth:120,fontSize:12,color:'var(--c-muted)',textAlign:'right',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</div>
-      <div style={{flex:1,height:20,background:'var(--c-surface2)',borderRadius:4,overflow:'hidden',position:'relative'}}>
+      <div style={{width:100,fontSize:12,color:'var(--c-muted)',textAlign:'right',flexShrink:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{label}</div>
+      <div style={{flex:1,height:20,background:'var(--c-surface2)',borderRadius:4,overflow:'hidden',position:'relative',minWidth:0}}>
         <div style={{height:'100%',width:pct+'%',background:color,borderRadius:4,transition:'width 0.6s'}}/>
       </div>
-      <div style={{width:55,fontSize:12,fontWeight:700,color:'var(--c-text)',textAlign:'right',flexShrink:0}}>{value}{suffix}</div>
-      {note && <div style={{fontSize:11,color:'var(--c-muted)',flexShrink:0}}>{note}</div>}
+      <div style={{width:48,fontSize:12,fontWeight:700,color:'var(--c-text)',textAlign:'right',flexShrink:0}}>{value}{suffix}</div>
+      {note && <div style={{width:40,fontSize:11,color:'var(--c-muted)',flexShrink:0,textAlign:'right'}}>{note}</div>}
     </div>
   )
 }

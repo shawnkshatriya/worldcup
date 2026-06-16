@@ -146,8 +146,8 @@ export default function Dashboard() {
 
     // Top calls feed: highest-scoring predictions from recently finished matches
     if (roomPlayerIds.length) {
-      var { data: finishedMatches } = await supabase.from('matches').select('id,home_team,away_team,home_goals,away_goals,updated_at')
-        .eq('status','FINISHED').not('home_goals','is',null).order('updated_at',{ascending:false}).limit(8)
+      var { data: finishedMatches } = await supabase.from('matches').select('id,home_team,away_team,home_goals,away_goals,kickoff')
+        .eq('status','FINISHED').not('home_goals','is',null).order('kickoff',{ascending:false}).limit(6)
       var fIds = (finishedMatches||[]).map(function(m){ return m.id })
       if (fIds.length) {
         var topScores = []
@@ -170,14 +170,20 @@ export default function Dashboard() {
         var matchLookup = {}
         ;(finishedMatches||[]).forEach(function(m){ matchLookup[m.id] = m })
 
+        // finishedMatches is already ordered by kickoff desc; preserve that order, top points within
+        var matchOrder = {}
+        ;(finishedMatches||[]).forEach(function(m, idx){ matchOrder[m.id] = idx })
         var calls = topScores.map(function(s){
           var pr = predLookup[s.player_id+'_'+s.match_id]
           var m = matchLookup[s.match_id]
           if (!pr || !m) return null
           return { name: playerNames[s.player_id]||'?', pts: s.pts_total, isExact: s.pts_exact>0,
             ph: pr.home_goals, pa: pr.away_goals, home: m.home_team, away: m.away_team,
-            rh: m.home_goals, ra: m.away_goals }
-        }).filter(Boolean).sort(function(a,b){ return b.pts - a.pts }).slice(0,6)
+            rh: m.home_goals, ra: m.away_goals, mOrder: matchOrder[s.match_id] }
+        }).filter(Boolean).sort(function(a,b){
+          if (a.mOrder !== b.mOrder) return a.mOrder - b.mOrder  // recent matches first
+          return b.pts - a.pts  // best calls within a match
+        }).slice(0,6)
         setTopCalls(calls)
       }
     }
