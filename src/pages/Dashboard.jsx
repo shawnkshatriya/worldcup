@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
+import Flag from '../components/Flag'
 import { Link } from 'react-router-dom'
 
 const WEIGHT_LABELS = {
@@ -284,8 +285,8 @@ export default function Dashboard() {
                 {nextMatch.map(function(nm, idx) {
                   return (
                     <div key={nm.id} style={{padding:'10px 0',borderBottom:idx < nextMatch.length-1 ? '1px solid var(--c-border)' : 'none',textAlign:'center'}}>
-                      <div style={{fontFamily:'var(--font-display)',fontSize:18,letterSpacing:'0.04em',marginBottom:2}}>
-                        {nm.home_team || 'TBD'} vs {nm.away_team || 'TBD'}
+                      <div style={{fontFamily:'var(--font-display)',fontSize:18,letterSpacing:'0.04em',marginBottom:2,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                        <Flag team={nm.home_team}/>{nm.home_team || 'TBD'} <span style={{color:'var(--c-muted)',fontSize:14}}>vs</span> {nm.away_team || 'TBD'}<Flag team={nm.away_team}/>
                       </div>
                       {nm.kickoff && (
                         <div style={{fontSize:12,color:'var(--c-muted)'}}>
@@ -307,10 +308,10 @@ export default function Dashboard() {
                 {myUpcoming.map(function(m) {
                   return (
                     <div key={m.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--c-border)',fontSize:13}}>
-                      <div style={{flex:1}}>
-                        <span style={{fontWeight:500}}>{m.home_team}</span>
-                        <span style={{color:'var(--c-muted)',margin:'0 4px'}}>vs</span>
-                        <span style={{fontWeight:500}}>{m.away_team}</span>
+                      <div style={{flex:1,display:'flex',alignItems:'center',gap:5}}>
+                        <Flag team={m.home_team} size="sm"/><span style={{fontWeight:500}}>{m.home_team}</span>
+                        <span style={{color:'var(--c-muted)',margin:'0 2px'}}>vs</span>
+                        <Flag team={m.away_team} size="sm"/><span style={{fontWeight:500}}>{m.away_team}</span>
                       </div>
                       {m.pred && m.pred.home_goals != null ? (
                         <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{m.pred.home_goals} - {m.pred.away_goals}</span>

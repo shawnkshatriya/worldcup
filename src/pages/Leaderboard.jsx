@@ -10,6 +10,7 @@ export default function Leaderboard() {
   const { player, loading: playerLoading } = usePlayer()
   const roomCode = player?.room_code || 'DEFAULT'
   const [rows, setRows]             = useState([])
+  const [movers, setMovers]         = useState({})
   const [loading, setLoading]       = useState(true)
   const [totalFinished, setFinished] = useState(0)
 
@@ -76,6 +77,27 @@ export default function Leaderboard() {
 
     setRows(built)
     setLoading(false)
+
+    // Compute movers: compare current ranks to last saved snapshot
+    try {
+      var prevSnapJSON = localStorage.getItem('wc26_rank_snapshot_' + roomCode)
+      var prevSnap = prevSnapJSON ? JSON.parse(prevSnapJSON) : {}
+      var moves = {}
+      built.forEach(function(r, idx) {
+        var prevRank = prevSnap[r.id]
+        if (prevRank != null) moves[r.id] = prevRank - (idx + 1) // positive = moved up
+      })
+      setMovers(moves)
+      // Save today's snapshot (once per day)
+      var todayKey = new Date().toLocaleDateString('en-US')
+      var lastSnapDay = localStorage.getItem('wc26_rank_snapshot_day_' + roomCode)
+      if (lastSnapDay !== todayKey) {
+        var snap = {}
+        built.forEach(function(r, idx){ snap[r.id] = idx + 1 })
+        localStorage.setItem('wc26_rank_snapshot_' + roomCode, JSON.stringify(snap))
+        localStorage.setItem('wc26_rank_snapshot_day_' + roomCode, todayKey)
+      }
+    } catch(e) {}
   }
 
   const maxPts = rows[0]?.pts||1
@@ -176,6 +198,11 @@ export default function Leaderboard() {
                               ? <span style={{fontSize:22}}>{MEDALS[i]}</span>
                               : <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-muted)'}}>{i+1}</span>
                             }
+                            {movers[p.id] != null && movers[p.id] !== 0 && (
+                              <div style={{fontSize:9,fontWeight:700,marginTop:1,color:movers[p.id]>0?'var(--c-success)':'var(--c-danger)'}}>
+                                {movers[p.id]>0 ? '▲'+movers[p.id] : '▼'+Math.abs(movers[p.id])}
+                              </div>
+                            )}
                           </td>
                           <td>
                             <div style={{display:'flex',alignItems:'center',gap:10}}>

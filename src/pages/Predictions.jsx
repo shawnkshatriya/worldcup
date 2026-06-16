@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
 import { getVenue } from '../lib/venues'
+import Flag from '../components/Flag'
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
   {name:'Austria',flag:'🇦🇹'},{name:'Belgium',flag:'🇧🇪'},{name:'Bosnia and Herzegovina',flag:'🇧🇦'},
@@ -142,7 +143,7 @@ export default function Predictions() {
   const [saved, setSaved] = useState({})
   const [koOpen, setKoOpen] = useState(false)
   const [progress, setProgress] = useState({ groupPred: 0, groupTotal: 72, koPred: 0, koTotal: 32 })
-  const [groupBy, setGroupBy] = useState('group') // 'group' or 'day'
+  const [groupBy, setGroupBy] = useState('day') // 'group' or 'day' - default day shows today
   const [allMatches, setAllMatches] = useState([])
   const [activeDay, setActiveDay] = useState(null)
 
@@ -425,7 +426,7 @@ export default function Predictions() {
                 )}
                 <div className="match-row pred-row" style={{borderBottom:'none',padding:0}}>
                   <div className="team-home">
-                    <div style={{fontWeight:500}}>{m.home_team || '?'}</div>
+                    <div style={{fontWeight:500,display:'flex',alignItems:'center',gap:6,justifyContent:'flex-end'}}><span>{m.home_team || '?'}</span><Flag team={m.home_team}/></div>
                   </div>
 
                   <input
@@ -454,6 +455,7 @@ export default function Predictions() {
 
                   <div className="team-away">
                     <div style={{fontWeight:500,display:'flex',alignItems:'center',gap:6}}>
+                      <Flag team={m.away_team}/>
                       {m.away_team || '?'}
                       {!locked && isSaving && <span style={{fontSize:12,color:'var(--c-muted)'}}>Saving...</span>}
                       {!locked && isSaved && <span className="badge badge-green" style={{fontSize:11,padding:'2px 8px'}}>Saved</span>}

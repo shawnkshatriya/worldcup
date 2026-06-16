@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase, syncAndRecalc } from '../lib/supabase'
 import { getVenue } from '../lib/venues'
 import { usePlayer } from '../hooks/usePlayer'
+import Flag from '../components/Flag'
 
 const PHASE_LABELS = {
   GROUP_A:'Group A', GROUP_B:'Group B', GROUP_C:'Group C', GROUP_D:'Group D',
@@ -206,7 +207,7 @@ export default function Scores() {
               <div key={m.id}>
               <div className="match-row">
                 <div className="team-home">
-                  <div style={{fontWeight:600,fontSize:13}}>{m.home_team||'TBD'}</div>
+                  <div style={{fontWeight:600,fontSize:13,display:'flex',alignItems:'center',gap:6,justifyContent:'flex-end'}}><span>{m.home_team||'TBD'}</span><Flag team={m.home_team}/></div>
                 </div>
 
                 <div className="match-center" style={{minWidth:80}}>
@@ -243,7 +244,7 @@ export default function Scores() {
                 </div>
 
                 <div className="team-away">
-                  <div style={{fontWeight:600,fontSize:13}}>{m.away_team||'TBD'}</div>
+                  <div style={{fontWeight:600,fontSize:13,display:'flex',alignItems:'center',gap:6}}><Flag team={m.away_team}/><span>{m.away_team||'TBD'}</span></div>
                 </div>
               </div>
               {predDist[m.id] && (

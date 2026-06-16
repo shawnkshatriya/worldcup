@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
+import Flag from '../components/Flag'
 
 const PHASES = ['GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F',
   'GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L',
@@ -37,7 +38,7 @@ export default function AllPredictions() {
   const [predictions, setPredictions] = useState({})
   const [scores, setScores] = useState({})
   const [loading, setLoading] = useState(true)
-  const [groupBy, setGroupBy] = useState('group')
+  const [groupBy, setGroupBy] = useState('day')
   const [allMatches, setAllMatches] = useState([])
   const [activeDay, setActiveDay] = useState(null)
 
@@ -246,9 +247,11 @@ export default function AllPredictions() {
                 {matches.map(m => (
                   <tr key={m.id}>
                     <td style={{position:'sticky',left:0,background:'var(--c-surface)',zIndex:1,borderBottom:'1px solid var(--c-border)'}}>
-                      <div style={{fontSize:12,fontWeight:500,lineHeight:1.4}}>
+                      <div style={{fontSize:12,fontWeight:500,lineHeight:1.4,display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
+                        <Flag team={m.home_team} size="sm"/>
                         <span>{m.home_team}</span>
-                        <span style={{color:'var(--c-muted)',margin:'0 4px'}}>vs</span>
+                        <span style={{color:'var(--c-muted)',margin:'0 2px'}}>vs</span>
+                        <Flag team={m.away_team} size="sm"/>
                         <span>{m.away_team}</span>
                       </div>
                       {m.kickoff && (
