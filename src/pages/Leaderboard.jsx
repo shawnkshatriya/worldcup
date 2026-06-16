@@ -6,6 +6,27 @@ import ShareCard from '../components/ShareCard'
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
 const MEDALS = ['🥇','🥈','🥉']
+
+function SortTh({ field, label, align, sortKey, sortDir, onSort }) {
+  const active = sortKey === field
+  return (
+    <th
+      onClick={function(){ onSort(field) }}
+      style={{
+        textAlign: align === 'left' ? 'left' : 'right',
+        cursor: 'pointer',
+        userSelect: 'none',
+        whiteSpace: 'nowrap',
+        color: active ? 'var(--c-accent)' : undefined,
+      }}
+    >
+      {label}
+      <span style={{marginLeft:3,fontSize:9,opacity:active?1:0.3}}>
+        {active ? (sortDir === 'desc' ? '▼' : '▲') : '⇅'}
+      </span>
+    </th>
+  )
+}
 const MEDAL_COLORS = ['var(--c-gold)','var(--c-silver)','var(--c-bronze)']
 
 export default function Leaderboard() {
@@ -13,6 +34,17 @@ export default function Leaderboard() {
   const roomCode = player?.room_code || 'DEFAULT'
   const [rows, setRows]             = useState([])
   const [movers, setMovers]         = useState({})
+  const [sortKey, setSortKey]       = useState('pts')
+  const [sortDir, setSortDir]       = useState('desc')
+
+  function handleSort(field) {
+    if (sortKey === field) {
+      setSortDir(sortDir === 'desc' ? 'asc' : 'desc')
+    } else {
+      setSortKey(field)
+      setSortDir(field === 'name' ? 'asc' : 'desc')
+    }
+  }
   const [loading, setLoading]       = useState(true)
   const [totalFinished, setFinished] = useState(0)
 
@@ -103,6 +135,18 @@ export default function Leaderboard() {
   }
 
   const maxPts = rows[0]?.pts||1
+
+  // Rank by points always (for the # column), but display in chosen sort order
+  const rankById = {}
+  rows.forEach(function(r, i){ rankById[r.id] = i + 1 })
+  const sortedRows = [...rows].sort(function(a, b) {
+    var av, bv
+    if (sortKey === 'name') { av = (a.name||'').toLowerCase(); bv = (b.name||'').toLowerCase() }
+    else { av = a[sortKey] || 0; bv = b[sortKey] || 0 }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1
+    if (av > bv) return sortDir === 'asc' ? 1 : -1
+    return 0
+  })
 
   function PctBadge({ val }) {
     const color = val>=60?'var(--c-success)':val>=40?'var(--c-accent2)':'var(--c-danger)'
@@ -216,20 +260,21 @@ export default function Leaderboard() {
                   <thead>
                     <tr>
                       <th style={{width:44}}>#</th>
-                      <th>Player</th>
-                      <th style={{textAlign:'right'}}>Points</th>
-                      <th style={{textAlign:'right'}}>% W/L</th>
-                      <th style={{textAlign:'right'}}>W/L count</th>
-                      <th style={{textAlign:'right'}}>% Diff</th>
-                      <th style={{textAlign:'right'}}>Diff count</th>
-                      <th style={{textAlign:'right'}}>% Exact</th>
-                      <th style={{textAlign:'right'}}>Exact count</th>
-                      <th style={{textAlign:'right'}}>Approx Bonus</th>
-                      <th style={{textAlign:'right'}}>Winner Pick</th>
+                      <SortTh field="name" label="Player" align="left" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="pts" label="Points" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="pctWL" label="% W/L" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="correct" label="W/L count" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="pctDiff" label="% Diff" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="diff" label="Diff count" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="pctExact" label="% Exact" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="exact" label="Exact count" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="approx" label="Approx Bonus" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="winnerBonus" label="Winner Pick" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((p,i) => {
+                    {sortedRows.map((p) => {
+                      const i = rankById[p.id] - 1
                       const isMe = player?.id===p.id
                       const barW = maxPts>0?Math.max((p.pts/maxPts)*100,p.pts>0?2:0):0
                       return (
