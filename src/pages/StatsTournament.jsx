@@ -1,8 +1,21 @@
+import { useState, useEffect } from 'react'
 import { HBar, Donut, ColChart } from './StatsCharts'
+import Flag from '../components/Flag'
 
 const noResults = <p style={{color:'var(--c-muted)',fontSize:13}}>No results yet</p>
 
+
 export default function StatsTournament({ finished, totalGoals, avgGoals, topScorer, goalsHist, groupGoals, groupCounts, topTeams, scoreless, highScoring, predictions }) {
+  const [scorers, setScorers] = useState([])
+  const [scorersLoading, setScorersLoading] = useState(true)
+
+  useEffect(function() {
+    fetch('/api/scorers')
+      .then(function(r){ return r.json() })
+      .then(function(d){ if (d.ok) setScorers(d.scorers || []); setScorersLoading(false) })
+      .catch(function(){ setScorersLoading(false) })
+  }, [])
+
   const matchFacts = [
     {label:'Finished',   value:finished.length},
     {label:'Total goals',value:totalGoals},
@@ -64,6 +77,32 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
             )
           })
         }
+      </div>
+
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">⚽ Golden Boot race</div>
+        {scorersLoading ? (
+          <p style={{fontSize:12,color:'var(--c-hint)'}}>Loading scorers...</p>
+        ) : scorers.length === 0 ? (
+          <p style={{fontSize:12,color:'var(--c-hint)'}}>No goals scored yet.</p>
+        ) : (
+          scorers.slice(0,10).map(function(s, i) {
+            return (
+              <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 0',borderBottom:i<9?'1px solid var(--c-border)':'none',fontSize:13}}>
+                <span style={{width:20,fontFamily:'var(--font-display)',fontSize:15,color:i===0?'var(--c-gold)':i===1?'var(--c-silver)':i===2?'var(--c-bronze)':'var(--c-muted)',textAlign:'center'}}>{i+1}</span>
+                <Flag team={s.team} size="sm"/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.name}</div>
+                  <div style={{fontSize:10,color:'var(--c-muted)'}}>{s.team}</div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{s.goals}</span>
+                  {s.assists>0 && <span style={{fontSize:10,color:'var(--c-muted)',marginLeft:4}}>{s.assists}a</span>}
+                </div>
+              </div>
+            )
+          })
+        )}
       </div>
 
       <div className="card" style={{marginBottom:0}}>

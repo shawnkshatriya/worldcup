@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { HBar, StatPct } from './StatsCharts'
+import Flag from '../components/Flag'
 
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
 
@@ -22,10 +24,28 @@ function barWidth(total, maxPts) {
   return pct + '%'
 }
 
-export default function StatsPlayers({ sorted, maxPts, leader, playerStats, poolAccuracy, poolExactRate, players, currentPlayer, finished }) {
+export default function StatsPlayers({ sorted, maxPts, leader, playerStats, poolAccuracy, poolExactRate, players, currentPlayer, finished, predictions, scores, matches }) {
   // Find current player's stats
   var myStats = currentPlayer ? sorted.find(function(p){ return p.id === currentPlayer.id }) : null
   var myRank = currentPlayer ? sorted.findIndex(function(p){ return p.id === currentPlayer.id }) + 1 : null
+  const [showHistory, setShowHistory] = useState(false)
+
+  // Build personal prediction history (finished matches I predicted)
+  var myHistory = []
+  if (currentPlayer && predictions && matches) {
+    var finishedById = {}
+    matches.forEach(function(m){ if (m.home_goals != null) finishedById[String(m.id)] = m })
+    var scoreById = {}
+    ;(scores || []).forEach(function(s){ if (s.player_id === currentPlayer.id) scoreById[String(s.match_id)] = s })
+    myHistory = (predictions || [])
+      .filter(function(p){ return p.player_id === currentPlayer.id && p.home_goals != null && finishedById[String(p.match_id)] })
+      .map(function(p){
+        var m = finishedById[String(p.match_id)]
+        var sc = scoreById[String(p.match_id)]
+        return { m:m, ph:p.home_goals, pa:p.away_goals, pts: sc ? sc.pts_total : 0, kickoff:m.kickoff }
+      })
+      .sort(function(a,b){ return new Date(b.kickoff) - new Date(a.kickoff) })
+  }
   var metrics = [
     {label:'% W/L correct',  key:'pctWL',   color:'var(--c-accent)',  suffix:'%'},
     {label:'% goal diff',    key:'pctDiff',  color:'var(--c-info)',    suffix:'%'},
@@ -60,6 +80,34 @@ export default function StatsPlayers({ sorted, maxPts, leader, playerStats, pool
           {leader && myStats.id !== leader.id && (
             <div style={{fontSize:12,color:'var(--c-muted)',marginTop:8,textAlign:'center'}}>
               {leader.total - myStats.total} pts behind {leader.name}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* My prediction history */}
+      {myHistory.length > 0 && (
+        <div className="card" style={{marginBottom:0}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer'}} onClick={function(){ setShowHistory(!showHistory) }}>
+            <div className="card-title" style={{marginBottom:0}}>📜 My prediction history ({myHistory.length})</div>
+            <span style={{fontSize:12,color:'var(--c-muted)'}}>{showHistory ? '▲ hide' : '▼ show'}</span>
+          </div>
+          {showHistory && (
+            <div style={{marginTop:12}}>
+              {myHistory.map(function(h, i) {
+                var exact = h.ph === h.m.home_goals && h.pa === h.m.away_goals
+                return (
+                  <div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 0',borderBottom:i<myHistory.length-1?'1px solid var(--c-border)':'none',fontSize:12}}>
+                    <Flag team={h.m.home_team} size="sm"/>
+                    <span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h.m.home_team} v {h.m.away_team}</span>
+                    <span style={{color:'var(--c-muted)'}}>you: {h.ph}-{h.pa}</span>
+                    <span style={{fontWeight:600}}>actual: {h.m.home_goals}-{h.m.away_goals}</span>
+                    <span style={{width:42,textAlign:'right',fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,color:h.pts>0?(exact?'var(--c-accent)':'var(--c-success)'):'var(--c-hint)'}}>
+                      {h.pts>0?'+'+h.pts:'0'}{exact?' 🎯':''}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

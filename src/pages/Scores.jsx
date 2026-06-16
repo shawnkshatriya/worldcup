@@ -272,7 +272,7 @@ export default function Scores() {
                 .sort(function(a,b){ return b.pts - a.pts || b.gd - a.gd || b.gf - a.gf })
               return (
                 <div style={{marginTop:12,borderTop:'1px solid var(--c-border)',paddingTop:10}}>
-                  <div style={{fontSize:11,fontWeight:700,color:'var(--c-muted)',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Standings</div>
+                  <div style={{fontSize:11,fontWeight:700,color:'var(--c-muted)',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.05em'}}>Standings <span style={{color:'var(--c-success)',fontWeight:600,textTransform:'none',letterSpacing:0}}>· green = advancing</span></div>
                   <table style={{width:'100%',fontSize:12}}>
                     <thead><tr style={{color:'var(--c-muted)'}}>
                       <th style={{textAlign:'left',fontWeight:600}}>Team</th>
@@ -286,8 +286,14 @@ export default function Scores() {
                     <tbody>
                       {sorted.map(function(t,i) {
                         return (
-                          <tr key={t.name} style={{fontWeight: i < 2 ? 600 : 400, color: i < 2 ? 'var(--c-text)' : 'var(--c-muted)'}}>
-                            <td>{t.name}</td>
+                          <tr key={t.name} style={{fontWeight: i < 2 ? 600 : 400, color: i < 2 ? 'var(--c-text)' : 'var(--c-muted)', background: i < 2 ? 'rgba(34,197,94,0.05)' : 'transparent'}}>
+                            <td>
+                              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                <span style={{width:14,fontSize:10,color:i<2?'var(--c-success)':'var(--c-hint)'}}>{i+1}</span>
+                                <Flag team={t.name} size="sm"/>
+                                <span>{t.name}</span>
+                              </div>
+                            </td>
                             <td style={{textAlign:'center'}}>{t.p}</td>
                             <td style={{textAlign:'center'}}>{t.w}</td>
                             <td style={{textAlign:'center'}}>{t.d}</td>
