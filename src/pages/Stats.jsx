@@ -5,12 +5,13 @@ import { FunFacts } from './StatsCharts'
 import StatsTournament from './StatsTournament'
 import StatsPlayers from './StatsPlayers'
 import StatsChartsTab from './StatsChartsTab'
+import StatsInsights from './StatsInsights'
 import PlayerFilter from '../components/PlayerFilter'
 
 var AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
 var GROUP_NAMES = { GROUP_A:'A',GROUP_B:'B',GROUP_C:'C',GROUP_D:'D',GROUP_E:'E',GROUP_F:'F', GROUP_G:'G',GROUP_H:'H',GROUP_I:'I',GROUP_J:'J',GROUP_K:'K',GROUP_L:'L' }
 
-var TAB_LABELS = {tournament:'Tournament',players:'Participants',charts:'Pool Trends',funfacts:'Fun Facts'}
+var TAB_LABELS = {tournament:'Tournament',players:'Participants',insights:'Insights',charts:'Pool Trends',funfacts:'Fun Facts'}
 
 export default function Stats() {
   var ctx = usePlayer()
@@ -164,7 +165,7 @@ export default function Stats() {
     </div>
   )
 
-  var tabs = ['tournament','players','charts','funfacts']
+  var tabs = ['tournament','players','insights','charts','funfacts']
 
   return (
     <div>
@@ -193,6 +194,7 @@ export default function Stats() {
 
       {tab==='tournament' ? <StatsTournament finished={finished} totalGoals={totalGoals} avgGoals={avgGoals} topScorer={topScorer} goalsHist={goalsHist} groupGoals={groupGoals} groupCounts={groupCounts} topTeams={topTeams} scoreless={scoreless} highScoring={highScoring} predictions={predictions}/> : null}
       {tab==='players' ? <StatsPlayers sorted={filteredSorted} maxPts={maxPts} leader={leader} playerStats={playerStats} poolAccuracy={poolAccuracy} poolExactRate={poolExactRate} players={players} currentPlayer={player} finished={finished} predictions={predictions} scores={scores} matches={matches}/> : null}
+      {tab==='insights' ? <StatsInsights players={players} scores={scores} matches={matches} predictions={predictions}/> : null}
       {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} selectedPlayers={selectedPlayers}/> : null}
       {tab==='funfacts' ? <FunFacts sorted={filteredSorted} playerStats={playerStats} leader={leader} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
       </div>
