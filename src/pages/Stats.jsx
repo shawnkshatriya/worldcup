@@ -71,7 +71,7 @@ export default function Stats() {
 
   var finished = useMemo(function(){ return matches.filter(function(m){ return m.home_goals!=null }) },[matches])
 
-  var playerStats = useMemo(function(){ return players.map(function(p,idx){
+  var playerStats = useMemo(function(){ var totalFinished = finished.length; return players.map(function(p,idx){
     var ps=scores.filter(function(s){return s.player_id===p.id})
     var pp=predictions.filter(function(pr){return pr.player_id===p.id&&pr.home_goals!=null})
     var scored=ps.length
@@ -82,11 +82,11 @@ export default function Stats() {
     var approx=ps.filter(function(s){return s.pts_approx>0}).length
     return { id:p.id,name:p.name,color:AVATAR_COLORS[idx%AVATAR_COLORS.length],
       total:total,correct:correct,diff:diff,exact:exact,approx:approx,preds:pp.length,scored:scored,
-      pctWL:scored>0?Math.round(correct/scored*100):0,
-      pctDiff:scored>0?Math.round(diff/scored*100):0,
-      pctExact:scored>0?Math.round(exact/scored*100):0,
+      pctWL:totalFinished>0?Math.round(correct/totalFinished*100):0,
+      pctDiff:totalFinished>0?Math.round(diff/totalFinished*100):0,
+      pctExact:totalFinished>0?Math.round(exact/totalFinished*100):0,
     }
-  })},[players,scores,predictions])
+  })},[players,scores,predictions,finished])
 
   var sorted = playerStats.slice().sort(function(a,b){return b.total-a.total})
 
@@ -122,8 +122,9 @@ export default function Stats() {
   }})
 
   var poolCorrect=scores.filter(function(s){return s.pts_result>0||s.pts_exact>0}).length
-  var poolAccuracy=scores.length>0?Math.round(poolCorrect/scores.length*100):0
-  var poolExactRate=scores.length>0?Math.round(scores.filter(function(s){return s.pts_exact>0}).length/scores.length*100):0
+  var poolDenom=players.length*finished.length
+  var poolAccuracy=poolDenom>0?Math.round(poolCorrect/poolDenom*100):0
+  var poolExactRate=poolDenom>0?Math.round(scores.filter(function(s){return s.pts_exact>0}).length/poolDenom*100):0
 
   var accuracyOverTime=useMemo(function(){
     var pts=[]
