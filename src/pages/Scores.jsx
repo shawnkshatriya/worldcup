@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, syncAndRecalc } from '../lib/supabase'
-import { getVenue } from '../lib/venues'
+import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
 
@@ -238,8 +238,8 @@ export default function Scores() {
                       {m.status==='IN_PLAY'?'LIVE':m.status==='PAUSED'?'HT':m.status==='FINISHED'?'FT':m.kickoff?'Upcoming':'TBD'}
                     </span>
                   </div>
-                  {m.match_number && getVenue(m.match_number) && (
-                    <div style={{fontSize:9,color:'var(--c-hint)',marginTop:2}}>{getVenue(m.match_number)}</div>
+                  {(getVenueByMatchup(m.home_team, m.away_team) || getKnockoutVenue(m.match_number) || (m.match_number && getVenue(m.match_number))) && (
+                    <div style={{fontSize:9,color:'var(--c-hint)',marginTop:2}}>{getVenueByMatchup(m.home_team, m.away_team) || getKnockoutVenue(m.match_number) || getVenue(m.match_number)}</div>
                   )}
                 </div>
 

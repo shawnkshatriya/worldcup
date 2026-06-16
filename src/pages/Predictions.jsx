@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
-import { getVenue } from '../lib/venues'
+import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import Flag from '../components/Flag'
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
@@ -421,8 +421,8 @@ export default function Predictions() {
                     )}
                   </div>
                 )}
-                {m.match_number && getVenue(m.match_number) && (
-                  <div style={{textAlign:'center',fontSize:12,color:'var(--c-hint)',marginBottom:4}}>{getVenue(m.match_number)}</div>
+                {(getVenueByMatchup(m.home_team, m.away_team) || getKnockoutVenue(m.match_number) || (m.match_number && getVenue(m.match_number))) && (
+                  <div style={{textAlign:'center',fontSize:12,color:'var(--c-hint)',marginBottom:4}}>{getVenueByMatchup(m.home_team, m.away_team) || getKnockoutVenue(m.match_number) || getVenue(m.match_number)}</div>
                 )}
                 <div className="match-row pred-row" style={{borderBottom:'none',padding:0}}>
                   <div className="team-home">
