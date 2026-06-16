@@ -41,6 +41,7 @@ export default function Scores() {
   const [myPicks, setMyPicks] = useState({})
   const [whatIfMatch, setWhatIfMatch] = useState(null)
   const [detailMatch, setDetailMatch] = useState(null)
+  const [espnLive, setEspnLive] = useState({}) // norm(home)+norm(away) -> {home, away, clock}
 
   useEffect(() => { loadMatches() }, [filter])
 
@@ -137,6 +138,34 @@ export default function Scores() {
     return function() { clearInterval(id) }
   }, [demoMode, syncing, filter])
 
+  // Fast ESPN live-score overlay (every 25s) - keeps the headline score fresh
+  // even though football-data sync (scoring source) is slower.
+  const anyLive = matches.some(function(m){ return m.status==='IN_PLAY' || m.status==='PAUSED' })
+  useEffect(function() {
+    if (!anyLive) { setEspnLive({}); return }
+    function norm(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
+    function pull() {
+      var today = new Date()
+      var dateStr = '' + today.getFullYear() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0')
+      fetch('/api/live-scores?date=' + dateStr)
+        .then(function(r){ return r.json() })
+        .then(function(d){
+          if (!d.ok || !d.matches) return
+          var map = {}
+          d.matches.forEach(function(em){
+            if (em.state === 'in') {
+              map[norm(em.home)+'|'+norm(em.away)] = { home: em.homeScore, away: em.awayScore, clock: em.clock }
+            }
+          })
+          setEspnLive(map)
+        })
+        .catch(function(){})
+    }
+    pull()
+    var id = setInterval(pull, 25000)
+    return function() { clearInterval(id) }
+  }, [anyLive])
+
   // Group matches by phase or by day
   const grouped = matches.reduce((acc, m) => {
     var k
@@ -227,13 +256,25 @@ export default function Scores() {
                 </div>
 
                 <div className="match-center" style={{minWidth:80}}>
-                  {m.home_goals!=null ? (
-                    <div style={{fontFamily:'var(--font-display)',fontSize:28,fontWeight:400,lineHeight:1,letterSpacing:'0.04em'}}>
-                      {m.home_goals} - {m.away_goals}
-                    </div>
-                  ) : (
-                    <div style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-muted)'}}>vs</div>
-                  )}
+                  {(function() {
+                    var norm = function(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
+                    var live = (m.status==='IN_PLAY'||m.status==='PAUSED') ? espnLive[norm(m.home_team)+'|'+norm(m.away_team)] : null
+                    var dh = live ? live.home : m.home_goals
+                    var da = live ? live.away : m.away_goals
+                    if (dh == null) {
+                      return <div style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-muted)'}}>vs</div>
+                    }
+                    return (
+                      <div>
+                        <div style={{fontFamily:'var(--font-display)',fontSize:28,fontWeight:400,lineHeight:1,letterSpacing:'0.04em'}}>
+                          {dh} - {da}
+                        </div>
+                        {live && live.clock && (
+                          <div style={{fontSize:10,color:'var(--c-danger)',fontWeight:700}}>{live.clock}</div>
+                        )}
+                      </div>
+                    )
+                  })()}
                   {m.home_goals_pen!=null && (
                     <div style={{fontSize:10,color:'var(--c-muted)'}}>
                       (pen {m.home_goals_pen}-{m.away_goals_pen})

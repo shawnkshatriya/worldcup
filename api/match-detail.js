@@ -29,6 +29,25 @@ export default async function handler(req, res) {
 
     if (!target) return res.status(200).json({ ok: false, error: 'event not found' })
 
+    // Extract live score + clock from the scoreboard event (faster than football-data)
+    var liveScore = null
+    var comp0 = target.competitions && target.competitions[0]
+    if (comp0) {
+      var compsArr = comp0.competitors || []
+      var homeComp = compsArr.find(function(c){ return norm(c.team && c.team.displayName) === norm(home) })
+      var awayComp = compsArr.find(function(c){ return norm(c.team && c.team.displayName) === norm(away) })
+      if (homeComp && awayComp) {
+        liveScore = {
+          home: Number(homeComp.score),
+          away: Number(awayComp.score),
+          clock: comp0.status && comp0.status.displayClock,
+          period: comp0.status && comp0.status.period,
+          state: comp0.status && comp0.status.type && comp0.status.type.state, // pre / in / post
+          detail: comp0.status && comp0.status.type && comp0.status.type.shortDetail,
+        }
+      }
+    }
+
     // 2. Fetch the summary for that event
     var sumRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=' + target.id, { headers: { 'User-Agent': 'Mozilla/5.0' } })
     if (!sumRes.ok) return res.status(200).json({ ok: false, error: 'summary ' + sumRes.status })
@@ -82,6 +101,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       eventId: target.id,
+      liveScore: liveScore,
       goals: goals,
       stats: stats,
       lineups: lineups,
