@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.6, maxOutputTokens: 250 },
+        generationConfig: { temperature: 0.6, maxOutputTokens: 600, thinkingConfig: { thinkingBudget: 0 } },
       }),
     })
     if (!r.ok) return res.status(200).json({ ok: false, error: 'gemini ' + r.status })
