@@ -77,19 +77,24 @@ export default function Leaderboard() {
 
   async function load() {
     setLoading(true)
-    const [{ data:players }, scores, predictions, { count:finished }, { data:winnerPicks }] = await Promise.all([
+    const [{ data:players }, scores, predictions, { count:finished }, { data:winnerPicks }, { data:finishedMatchRows }] = await Promise.all([
       supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500),
       fetchAll('scores', '*'),
       fetchAll('predictions', 'player_id,match_id,home_goals,away_goals'),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
       supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode),
+      supabase.from('matches').select('id').eq('status','FINISHED'),
     ])
     setFinished(finished||0)
     if (!players) { setLoading(false); return }
 
+    var finishedIds = new Set((finishedMatchRows||[]).map(function(m){ return String(m.id) }))
+
     const built = players.map((p,idx) => {
       const ps = scores?.filter(s=>s.player_id===p.id)||[]
       const pp = predictions?.filter(pr=>pr.player_id===p.id&&pr.home_goals!=null)||[]
+      // Predictions made for matches that have actually finished
+      const predsForFinished = pp.filter(function(pr){ return finishedIds.has(String(pr.match_id)) }).length
       const wp = winnerPicks?.find(w=>w.player_id===p.id)
       const scored = ps.length
       const correct= ps.filter(s=>s.pts_result>0||s.pts_exact>0).length
@@ -103,7 +108,7 @@ export default function Leaderboard() {
         ...p, color:AVATAR_COLORS[idx%AVATAR_COLORS.length],
         pts:    ps.reduce((a,s)=>a+(s.pts_total||0),0) + winnerBonus,
         correct, diff, exact, approx, ko, winnerBonus,
-        preds:  pp.length, scored,
+        preds:  predsForFinished, scored,
         pctWL:  played>0?Math.round(correct/played*100):0,
         pctDiff:played>0?Math.round(diff/played*100):0,
         pctExact:played>0?Math.round(exact/played*100):0,
