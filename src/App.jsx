@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { PlayerProvider } from './hooks/usePlayer'
 import ErrorBoundary from './components/ErrorBoundary'
 import Sidebar from './components/Sidebar'
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/*"             element={<AppShell />} />
         </Routes>
+        <Analytics />
       </PlayerProvider>
     </BrowserRouter>
     </ErrorBoundary>
