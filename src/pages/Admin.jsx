@@ -107,12 +107,18 @@ export default function Admin() {
   }
 
   async function saveResult(m) {
-    await supabase.from('matches').update({
+    var updateData = {
       home_goals: m.home_goals, away_goals: m.away_goals,
       home_goals_et: m.home_goals_et, away_goals_et: m.away_goals_et,
       home_goals_pen: m.home_goals_pen, away_goals_pen: m.away_goals_pen,
-      status: 'FINISHED', updated_at: new Date().toISOString()
-    }).eq('id', m.id)
+      status: 'FINISHED', result_source: 'admin', updated_at: new Date().toISOString()
+    }
+    var saveRes = await supabase.from('matches').update(updateData).eq('id', m.id)
+    if (saveRes.error) {
+      // result_source column may not exist yet - retry without it
+      delete updateData.result_source
+      await supabase.from('matches').update(updateData).eq('id', m.id)
+    }
     setMatches(ms => ms.map(x => x.id === m.id ? { ...x, ...m, status: 'FINISHED' } : x))
     // Auto-recalc all rooms so the leaderboard updates immediately
     setRecalcing(true); setRecalcMsg('Recalculating...')

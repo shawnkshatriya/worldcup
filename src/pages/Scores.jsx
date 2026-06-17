@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase, syncAndRecalc } from '../lib/supabase'
+import { supabase, syncAndRecalc, mapTeamName } from '../lib/supabase'
 import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
@@ -34,6 +34,7 @@ export default function Scores() {
   const [filter, setFilter]   = useState('all')
   const [loading, setLoading] = useState(true)
   const [lastSync, setLastSync] = useState(null)
+  const [lastSyncClean, setLastSyncClean] = useState(null)
   const [syncing, setSyncing]   = useState(false)
   const [demoMode, setDemoMode] = useState(false)
   const [groupBy, setGroupBy]   = useState('group')
@@ -112,14 +113,25 @@ export default function Scores() {
     setSyncing(true)
     try {
       var result = await syncAndRecalc()
-      if (result.sync.ok) {
+      if (result.sync.ok || (result.espn && result.espn.ok)) {
         var msg = new Date().toLocaleTimeString()
-        if (result.sync.updated > 0) msg += ' · ' + result.sync.updated + ' matches updated'
+        var espnUp = result.espn && result.espn.updated || 0
+        var fdUp = result.sync.updated || 0
+        if (espnUp > 0) msg += ' · ' + espnUp + ' via ESPN (fast)'
+        if (fdUp > 0) msg += ' · ' + fdUp + ' via official'
         if (result.sync.unmatched && result.sync.unmatched.length > 0) {
           msg += ' · UNMATCHED: ' + result.sync.unmatched.slice(0,3).join(', ')
         }
-        if (result.recalcedRooms > 0) msg += ' · scores recalculated'
+        if (result.espn && result.espn.unmatched && result.espn.unmatched.length > 0) {
+          msg += ' · ESPN UNMATCHED: ' + result.espn.unmatched.slice(0,2).join(', ')
+        }
+        if (result.sync.conflicts && result.sync.conflicts.length > 0) {
+          msg += ' · ⚠ ' + result.sync.conflicts[0]
+        }
+        if (result.recalcedRooms > 0) msg += ' · recalculated'
         setLastSync(msg)
+        // Clean version for non-admins: just a timestamp
+        setLastSyncClean(new Date().toLocaleTimeString())
         loadMatches()
       } else {
         alert('Sync failed: ' + result.sync.error)
@@ -154,7 +166,8 @@ export default function Scores() {
           var map = {}
           d.matches.forEach(function(em){
             if (em.state === 'in') {
-              map[norm(em.home)+'|'+norm(em.away)] = { home: em.homeScore, away: em.awayScore, clock: em.clock }
+              var h = mapTeamName(em.home), a = mapTeamName(em.away)
+              map[norm(h)+'|'+norm(a)] = { home: em.homeScore, away: em.awayScore, clock: em.clock }
             }
           })
           setEspnLive(map)
@@ -189,7 +202,7 @@ export default function Scores() {
           <h1>Live Scores</h1>
           <p>
             {demoMode ? `Demo mode — ${finishedCount} simulated matches` : 'Powered by football-data.org'}
-            {lastSync && <span style={{color:'var(--c-muted)',marginLeft:8}}>· Synced {lastSync}</span>}
+            {(isAdmin ? lastSync : lastSyncClean) && <span style={{color:'var(--c-muted)',marginLeft:8}}>· Synced {isAdmin ? lastSync : lastSyncClean}</span>}
           </p>
         </div>
       </div>
@@ -229,9 +242,14 @@ export default function Scores() {
           </div>
         </div>
 
-        {lastSync && (
+        {isAdmin && lastSync && (
           <div className="alert alert-info" style={{marginBottom:'1.25rem',fontSize:13}}>
             Last sync: {lastSync}
+          </div>
+        )}
+        {!isAdmin && lastSyncClean && (
+          <div style={{marginBottom:'1.25rem',fontSize:12,color:'var(--c-muted)',textAlign:'center'}}>
+            Scores updated {lastSyncClean}
           </div>
         )}
 
