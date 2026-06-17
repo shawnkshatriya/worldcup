@@ -29,7 +29,7 @@ export default function MatchDetail({ match }) {
   }, [match && match.id])
 
   if (loading) return <div style={{fontSize:11,color:'var(--c-hint)',padding:'8px 12px'}}>Loading match details…</div>
-  if (!detail) return <div style={{fontSize:11,color:'var(--c-hint)',padding:'8px 12px'}}>Match details unavailable.</div>
+  if (!detail) return <div style={{fontSize:11,color:'var(--c-hint)',padding:'8px 12px'}}>Goals & stats not available yet for this match.</div>
 
   var hasGoals = detail.goals && detail.goals.length > 0
   var hasStats = detail.stats && detail.stats.length > 0

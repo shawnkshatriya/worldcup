@@ -99,6 +99,13 @@ export default function AllPredictions() {
       scoreMap[String(s.match_id)][String(s.player_id)] = s.pts_total || 0
     }
     setScores(scoreMap)
+
+    // Sort players by total points, leader first
+    var totals = {}
+    ;(playerData || []).forEach(function(p){ totals[p.id] = 0 })
+    allScores.forEach(function(s){ totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0) })
+    var sortedPlayers = [...(playerData || [])].sort(function(a,b){ return (totals[b.id]||0) - (totals[a.id]||0) })
+    setPlayers(sortedPlayers)
   }
 
   async function loadMatchData() {

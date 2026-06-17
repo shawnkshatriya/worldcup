@@ -19,23 +19,35 @@ export default async function handler(req, res) {
     '- If one side is a heavy favorite, say so and why. If it is a toss-up, say what decides it.\n' +
     '- Plain text only, no markdown. Exactly 2 sentences.'
 
-  try {
+  async function callGemini(useSearch) {
+    var body = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 800 },
+    }
+    if (useSearch) body.tools = [{ google_search: {} }]
     var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.6, maxOutputTokens: 600, thinkingConfig: { thinkingBudget: 0 } },
-      }),
+      body: JSON.stringify(body),
     })
-    if (!r.ok) return res.status(200).json({ ok: false, error: 'gemini ' + r.status })
+    if (!r.ok) return { error: 'gemini ' + r.status }
     var data = await r.json()
     var parts = data.candidates && data.candidates[0] && data.candidates[0].content &&
                 data.candidates[0].content.parts
     var text = parts ? parts.map(function(p){ return p.text || '' }).join(' ').trim() : ''
-    if (!text) return res.status(200).json({ ok: false, error: 'empty' })
-    return res.status(200).json({ ok: true, preview: text })
+    return { text: text }
+  }
+
+  try {
+    // Try with search grounding first; if it fails or returns empty, retry plain
+    var res1 = await callGemini(true)
+    var preview = res1.text
+    if (!preview) {
+      var res2 = await callGemini(false)
+      preview = res2.text
+    }
+    if (!preview) return res.status(200).json({ ok: false, error: res1.error || 'empty' })
+    return res.status(200).json({ ok: true, preview: preview })
   } catch (e) {
     return res.status(200).json({ ok: false, error: String(e) })
   }

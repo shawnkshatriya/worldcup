@@ -11,20 +11,45 @@ export default async function handler(req, res) {
   if (!home || !away) return res.status(400).json({ ok: false, error: 'home and away required' })
 
   try {
-    // 1. Find the ESPN event by matching team names on the scoreboard for that date
+    // 1. Find the ESPN event by matching team names on the scoreboard.
+    // Query a 3-day window around the kickoff to handle UTC/local day shifts.
     var sbUrl = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard'
-    if (dateStr) sbUrl += '?dates=' + dateStr
+    if (dateStr && dateStr.length === 8) {
+      var y = +dateStr.slice(0,4), mo = +dateStr.slice(4,6), da = +dateStr.slice(6,8)
+      var center = new Date(Date.UTC(y, mo-1, da))
+      var start = new Date(center); start.setUTCDate(center.getUTCDate()-1)
+      var end = new Date(center); end.setUTCDate(center.getUTCDate()+1)
+      function fmt(d){ return '' + d.getUTCFullYear() + String(d.getUTCMonth()+1).padStart(2,'0') + String(d.getUTCDate()).padStart(2,'0') }
+      sbUrl += '?dates=' + fmt(start) + '-' + fmt(end)
+    } else if (dateStr) {
+      sbUrl += '?dates=' + dateStr
+    }
     var sbRes = await fetch(sbUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } })
     if (!sbRes.ok) return res.status(200).json({ ok: false, error: 'scoreboard ' + sbRes.status })
     var sb = await sbRes.json()
 
     var events = sb.events || []
-    function norm(s) { return (s || '').toLowerCase().replace(/[^a-z]/g, '') }
+    function norm(s) { return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z]/g, '') }
+    // Compact alias map -> canonical normalized key (handles ESPN vs our DB names)
+    var ALIASES = {
+      'drcongo':'drcongo','congodr':'drcongo','democraticrepublicofcongo':'drcongo','democraticrepublicofthecongo':'drcongo',
+      'southkorea':'southkorea','korearepublic':'southkorea','republicofkorea':'southkorea',
+      'czechia':'czechia','czechrepublic':'czechia',
+      'capeverde':'capeverde','caboverde':'capeverde','capeverdeislands':'capeverde',
+      'ivorycoast':'ivorycoast','cotedivoire':'ivorycoast',
+      'iran':'iran','iriran':'iran',
+      'unitedstates':'unitedstates','usa':'unitedstates','unitedstatesofamerica':'unitedstates',
+      'turkey':'turkey','turkiye':'turkey',
+      'curacao':'curacao',
+      'saudiarabia':'saudiarabia','saudiarabiaksa':'saudiarabia',
+      'bosniaandherzegovina':'bosnia','bosniaherzegovina':'bosnia','bosnia':'bosnia',
+    }
+    function canon(s) { var n = norm(s); return ALIASES[n] || n }
     var target = events.find(function(ev) {
       var comp = ev.competitions && ev.competitions[0]
       if (!comp) return false
-      var teams = (comp.competitors || []).map(function(c) { return norm(c.team && c.team.displayName) })
-      return teams.includes(norm(home)) && teams.includes(norm(away))
+      var teams = (comp.competitors || []).map(function(c) { return canon(c.team && c.team.displayName) })
+      return teams.includes(canon(home)) && teams.includes(canon(away))
     })
 
     if (!target) return res.status(200).json({ ok: false, error: 'event not found' })
