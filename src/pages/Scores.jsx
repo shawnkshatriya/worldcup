@@ -53,7 +53,10 @@ export default function Scores() {
     if (filter === 'finished') {
       query = query.eq('status','FINISHED').order('match_number', {ascending:true})
     } else if (filter === 'live') {
-      query = query.in('status',['IN_PLAY','PAUSED'])
+      // Include DB-live AND today's scheduled (which ESPN may report as live before DB catches up)
+      var todayStart = new Date(); todayStart.setHours(0,0,0,0)
+      var todayEnd = new Date(); todayEnd.setHours(23,59,59,999)
+      query = query.or('status.in.(IN_PLAY,PAUSED),and(status.eq.SCHEDULED,kickoff.gte.' + todayStart.toISOString() + ',kickoff.lte.' + todayEnd.toISOString() + ')')
     } else if (filter === 'upcoming') {
       query = query.eq('status','SCHEDULED').limit(30)
     }
@@ -152,7 +155,16 @@ export default function Scores() {
 
   // Fast ESPN live-score overlay (every 25s) - keeps the headline score fresh
   // even though football-data sync (scoring source) is slower.
-  const anyLive = matches.some(function(m){ return m.status==='IN_PLAY' || m.status==='PAUSED' })
+  const anyLive = matches.some(function(m){
+    if (m.status==='IN_PLAY' || m.status==='PAUSED') return true
+    // Also poll if a scheduled match's kickoff time has passed (likely live, DB just stale)
+    if (m.status==='SCHEDULED' && m.kickoff) {
+      var ko = new Date(m.kickoff)
+      var now = new Date()
+      if (now >= ko && now - ko < 2.5*60*60*1000) return true
+    }
+    return false
+  })
   useEffect(function() {
     if (!anyLive) { setEspnLive({}); return }
     function norm(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
@@ -180,7 +192,16 @@ export default function Scores() {
   }, [anyLive])
 
   // Group matches by phase or by day
-  const grouped = matches.reduce((acc, m) => {
+  var nrmTeam = function(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
+  var displayMatches = matches
+  if (filter === 'live') {
+    // Keep only matches that are live per DB OR per ESPN (hides scheduled-not-yet-started)
+    displayMatches = matches.filter(function(m){
+      var espnL = espnLive[nrmTeam(m.home_team)+'|'+nrmTeam(m.away_team)]
+      return m.status==='IN_PLAY' || m.status==='PAUSED' || !!espnL
+    })
+  }
+  const grouped = displayMatches.reduce((acc, m) => {
     var k
     if (groupBy === 'day' && m.kickoff) {
       k = new Date(m.kickoff).toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' })
