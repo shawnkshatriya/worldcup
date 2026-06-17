@@ -10,10 +10,31 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
   const [scorersLoading, setScorersLoading] = useState(true)
 
   useEffect(function() {
-    fetch('/api/scorers')
-      .then(function(r){ return r.json() })
-      .then(function(d){ if (d.ok) setScorers(d.scorers || []); setScorersLoading(false) })
-      .catch(function(){ setScorersLoading(false) })
+    Promise.all([
+      fetch('/api/scorers').then(function(r){ return r.json() }).catch(function(){ return {ok:false} }),
+      fetch('/api/espn-stats').then(function(r){ return r.json() }).catch(function(){ return {ok:false} }),
+    ]).then(function(results) {
+      var fd = results[0], espn = results[1]
+      // Merge: key by normalized name, take max goals/assists from either source
+      var merged = {}
+      function norm(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
+      function add(name, team, goals, assists) {
+        if (!name) return
+        var k = norm(name)
+        if (!merged[k]) merged[k] = { name: name, team: team, goals: 0, assists: 0 }
+        merged[k].goals = Math.max(merged[k].goals, goals || 0)
+        merged[k].assists = Math.max(merged[k].assists, assists || 0)
+        if (!merged[k].team && team) merged[k].team = team
+      }
+      if (fd.ok && fd.scorers) fd.scorers.forEach(function(s){ add(s.name, s.team, s.goals, s.assists) })
+      if (espn.ok) {
+        ;(espn.goals||[]).forEach(function(s){ add(s.name, s.team, s.goals, 0) })
+        ;(espn.assists||[]).forEach(function(s){ add(s.name, s.team, 0, s.assists) })
+      }
+      var arr = Object.keys(merged).map(function(k){ return merged[k] })
+      setScorers(arr.sort(function(a,b){ return b.goals - a.goals }))
+      setScorersLoading(false)
+    })
   }, [])
 
   // Compute extra tournament stats from finished matches
