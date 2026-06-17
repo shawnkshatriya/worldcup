@@ -216,23 +216,6 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
       </div>
 
       <div className="card" style={{marginBottom:0}}>
-        <div className="card-title">⚔️ Best attack</div>
-        <p style={{fontSize:11,color:'var(--c-muted)',marginTop:-8,marginBottom:12}}>Most goals scored per match</p>
-        {extraStats.bestAttack.length === 0 ? <p style={{fontSize:13,color:'var(--c-hint)'}}>No data yet.</p> :
-          extraStats.bestAttack.map(function(t,i){
-            return (
-              <div key={t.name} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0',borderBottom:i<extraStats.bestAttack.length-1?'1px solid var(--c-border)':'none',fontSize:13}}>
-                <Flag team={t.name} size="sm"/>
-                <span style={{flex:1}}>{t.name}</span>
-                <span style={{color:'var(--c-muted)',fontSize:11}}>{t.scored} in {t.played}</span>
-                <span style={{fontWeight:700,color:'var(--c-accent)'}}>{(t.scored/t.played).toFixed(2)}</span>
-              </div>
-            )
-          })
-        }
-      </div>
-
-      <div className="card" style={{marginBottom:0}}>
         <div className="card-title">Top scoring nations</div>
         {topTeams.length === 0 ? noResults :
           topTeams.map(function(t,i){

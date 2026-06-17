@@ -61,7 +61,11 @@ export default function StatsInsights({ players, scores, matches, predictions })
     // Compute per finished match the pool's majority predicted result
     const contrarianWins = [] // { match, players: [...], crowdPick }
     finished.forEach(m => {
-      const preds = predictions.filter(pr => String(pr.match_id) === String(m.id) && pr.home_goals != null)
+      var rawPreds = predictions.filter(pr => String(pr.match_id) === String(m.id) && pr.home_goals != null)
+      // Dedupe: one prediction per player (keep last seen)
+      var byPlayer = {}
+      rawPreds.forEach(pr => { byPlayer[pr.player_id] = pr })
+      const preds = Object.keys(byPlayer).map(k => byPlayer[k])
       if (preds.length < 3) return
       let h=0,d=0,a=0
       preds.forEach(pr => {
@@ -83,7 +87,7 @@ export default function StatsInsights({ players, scores, matches, predictions })
           contrarianWins.push({
             match: m,
             crowdPick: crowdPick === 'h' ? m.home_team : crowdPick === 'a' ? m.away_team : 'Draw',
-            winnerNames: winners.map(w => nameById[w.player_id]).filter(Boolean),
+            winnerNames: [...new Set(winners.map(w => nameById[w.player_id]).filter(Boolean))],
           })
         }
       }

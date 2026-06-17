@@ -119,9 +119,16 @@ export default function Fun() {
     setLoading(false)
   }
 
-  const playerStats = useMemo(() => players.map((p,idx) => {
+  const playerStats = useMemo(() => {
+    // Matches that can actually be predicted (both teams assigned)
+    const predictableCount = matches.filter(m => m.home_team && m.away_team).length
+    return players.map((p,idx) => {
     const ps = scores.filter(s=>s.player_id===p.id)
-    const pp = predictions.filter(pr=>pr.player_id===p.id&&pr.home_goals!=null)
+    const ppRaw = predictions.filter(pr=>pr.player_id===p.id&&pr.home_goals!=null)
+    // Dedupe: one prediction per match
+    const ppMap = {}
+    ppRaw.forEach(pr => { ppMap[String(pr.match_id)] = pr })
+    const pp = Object.keys(ppMap).map(k => ppMap[k])
     const draws = pp.filter(pred=>{
       const m=matches.find(m=>m.id===pred.match_id)
       return m?.home_goals!=null&&Math.sign(pred.home_goals-pred.away_goals)===0&&Math.sign(m.home_goals-m.away_goals)===0
@@ -139,8 +146,9 @@ export default function Fun() {
       approx:ps.filter(s=>s.pts_approx>0).length,
       ko:ps.filter(s=>s.pts_ko_team>0).length,
       preds:pp.length, scored:ps.length, draws, correct00,
+      predictableCount,
     }
-  }), [players, scores, predictions, matches])
+  })}, [players, scores, predictions, matches])
 
   const sorted = [...playerStats].sort((a,b)=>b.total-a.total)
   const sortedFiltered = filterPlayers.length === 0 ? sorted : sorted.filter(p => filterPlayers.includes(p.id))

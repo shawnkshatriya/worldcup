@@ -7,7 +7,7 @@ export const ACHIEVEMENTS = [
   { id:'diff_king',     icon:'📐', name:'Diff King',         desc:'10 correct goal differences',                       tier:'silver', check: s => s.diff >= 10 },
   { id:'high_roller',   icon:'🎲', name:'High Roller',       desc:'5 approx bonuses on big-scoring games',             tier:'silver', check: s => s.approx >= 5 },
   { id:'ko_hunter',     icon:'🎯', name:'KO Hunter',         desc:'5 KO round team bonuses',                           tier:'silver', check: s => s.ko >= 5 },
-  { id:'completionist', icon:'📋', name:'Completionist',     desc:'Predicted all 104 matches',                         tier:'gold',   check: s => s.preds >= 104 },
+  { id:'completionist', icon:'📋', name:'Completionist',     desc:'Predicted every available match',                    tier:'gold',   check: s => s.predictableCount > 0 && s.preds >= s.predictableCount },
   { id:'psychic',       icon:'🔮', name:'Psychic',           desc:'5 exact scores - seriously how',                    tier:'gold',   check: s => s.exact >= 5 },
   { id:'consistent',   icon:'📈', name:'Mr Consistent',     desc:'100+ total points',                                 tier:'gold',   check: s => s.total >= 100 },
   { id:'oracle',        icon:'🧿', name:'Oracle',            desc:'10 exact scores. Statistically impossible.',        tier:'gold',   check: s => s.exact >= 10 },
