@@ -3,7 +3,16 @@ import { resolveTeam } from './teams.js'
 
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,        // keep session in localStorage across refreshes
+      autoRefreshToken: true,      // silently refresh the access token before it expires
+      detectSessionInUrl: true,    // handle auth redirects
+      storageKey: 'wc26-auth',     // stable key so the session survives
+      flowType: 'pkce',
+    },
+  }
 )
 
 // --- Scoring engine ----------------------------------------------------------

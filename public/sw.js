@@ -1,4 +1,4 @@
-const CACHE = 'wc26-v5'
+const CACHE = 'wc26-v6'
 
 self.addEventListener('install', e => {
   self.skipWaiting()
@@ -12,10 +12,23 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  // Network first, fall back to cache only if offline
+  var url = e.request.url
+  // NEVER intercept auth, Supabase, or API calls - these must always hit the network
+  // directly so token refresh and live data work correctly.
+  if (
+    url.includes('supabase.co') ||
+    url.includes('/auth/') ||
+    url.includes('/api/') ||
+    url.includes('/rest/') ||
+    e.request.method !== 'GET'
+  ) {
+    return // let the browser handle it normally, no SW involvement
+  }
+
+  // For everything else (app shell, assets): network first, cache fallback when offline
   e.respondWith(
     fetch(e.request).then(res => {
-      if (res.ok && e.request.method === 'GET') {
+      if (res.ok) {
         var clone = res.clone()
         caches.open(CACHE).then(c => c.put(e.request, clone))
       }
