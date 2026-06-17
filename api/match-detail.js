@@ -55,17 +55,30 @@ export default async function handler(req, res) {
 
     // 3. Extract goalscorers (key events)
     var goals = []
-    ;(sum.keyEvents || sum.commentary || []).forEach(function(ev) {
+    var evs = sum.keyEvents || (sum.commentary || [])
+    evs.forEach(function(ev) {
       var t = (ev.type && ev.type.text) || ''
-      if (/goal/i.test(t) && !/disallowed|var/i.test(t)) {
-        goals.push({
-          player: ev.athletesInvolved && ev.athletesInvolved[0] ? ev.athletesInvolved[0].displayName : (ev.text || '').split(' ')[0],
-          minute: ev.clock && ev.clock.displayValue ? ev.clock.displayValue : (ev.time && ev.time.displayValue) || '',
-          team: ev.team && ev.team.displayName,
-          ownGoal: /own goal/i.test(t),
-          penalty: /penalty/i.test(t),
-        })
+      var isGoal = ev.scoringPlay === true || (/goal/i.test(t) && !/disallowed|var|no goal/i.test(t))
+      if (!isGoal) return
+      // Try every path ESPN uses for the scorer
+      var scorer = null
+      var pools = [ev.athletesInvolved, ev.participants].filter(Boolean)
+      for (var pi = 0; pi < pools.length && !scorer; pi++) {
+        var arr = pools[pi]
+        if (arr && arr[0]) {
+          var a0 = arr[0]
+          scorer = a0.displayName || a0.shortName ||
+                   (a0.athlete && (a0.athlete.displayName || a0.athlete.shortName))
+        }
       }
+      if (!scorer && ev.text) scorer = ev.text.replace(/^goal!?\s*/i, '').trim()
+      goals.push({
+        player: scorer || 'Unknown',
+        minute: (ev.clock && ev.clock.displayValue) || (ev.time && ev.time.displayValue) || '',
+        team: ev.team && ev.team.displayName,
+        ownGoal: /own goal/i.test(t),
+        penalty: /penalty/i.test(t),
+      })
     })
 
     // 4. Extract match stats (possession, shots, etc.)
@@ -105,6 +118,8 @@ export default async function handler(req, res) {
       goals: goals,
       stats: stats,
       lineups: lineups,
+      // debug: shape of first key event, helps diagnose missing scorer names
+      _debug: (evs && evs[0]) ? Object.keys(evs[0]) : null,
     })
   } catch (e) {
     return res.status(200).json({ ok: false, error: String(e) })

@@ -16,6 +16,35 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
       .catch(function(){ setScorersLoading(false) })
   }, [])
 
+  // Compute extra tournament stats from finished matches
+  var extraStats = (function() {
+    var teams = {} // name -> {scored, conceded, cleanSheets, played, wins, biggestWinMargin}
+    function ensure(n){ if(!teams[n]) teams[n]={name:n,scored:0,conceded:0,cleanSheets:0,played:0,failedToScore:0} }
+    var biggestWin = null
+    var totalFirstHalf = 0, comebacks = 0
+    ;(finished||[]).forEach(function(m){
+      if (m.home_goals==null) return
+      ensure(m.home_team); ensure(m.away_team)
+      var h=teams[m.home_team], a=teams[m.away_team]
+      h.played++; a.played++
+      h.scored+=m.home_goals; h.conceded+=m.away_goals
+      a.scored+=m.away_goals; a.conceded+=m.home_goals
+      if (m.away_goals===0) h.cleanSheets++
+      if (m.home_goals===0) a.cleanSheets++
+      if (m.home_goals===0) h.failedToScore++
+      if (m.away_goals===0) a.failedToScore++
+      var margin = Math.abs(m.home_goals - m.away_goals)
+      if (!biggestWin || margin > biggestWin.margin) {
+        biggestWin = { margin: margin, label: m.home_team+' '+m.home_goals+'-'+m.away_goals+' '+m.away_team }
+      }
+    })
+    var teamArr = Object.keys(teams).map(function(k){ return teams[k] })
+    var bestDefense = teamArr.filter(function(t){return t.played>0}).sort(function(x,y){ return (x.conceded/x.played)-(y.conceded/y.played) }).slice(0,5)
+    var bestAttack = teamArr.filter(function(t){return t.played>0}).sort(function(x,y){ return (y.scored/y.played)-(x.scored/x.played) }).slice(0,5)
+    var cleanSheetLeaders = teamArr.filter(function(t){return t.cleanSheets>0}).sort(function(x,y){ return y.cleanSheets-x.cleanSheets }).slice(0,5)
+    return { biggestWin: biggestWin, bestDefense: bestDefense, bestAttack: bestAttack, cleanSheetLeaders: cleanSheetLeaders }
+  })()
+
   const matchFacts = [
     {label:'Finished',   value:finished.length},
     {label:'Total goals',value:totalGoals},
@@ -105,6 +134,65 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
           })
         )}
       </div>
+
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">🧤 Clean sheets</div>
+        {extraStats.cleanSheetLeaders.length === 0 ? <p style={{fontSize:13,color:'var(--c-hint)'}}>No clean sheets yet.</p> :
+          extraStats.cleanSheetLeaders.map(function(t,i){
+            return (
+              <div key={t.name} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0',borderBottom:i<extraStats.cleanSheetLeaders.length-1?'1px solid var(--c-border)':'none',fontSize:13}}>
+                <Flag team={t.name} size="sm"/>
+                <span style={{flex:1}}>{t.name}</span>
+                <span style={{fontWeight:700,color:'var(--c-success)'}}>{t.cleanSheets}</span>
+              </div>
+            )
+          })
+        }
+      </div>
+
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">🛡️ Best defense</div>
+        <p style={{fontSize:11,color:'var(--c-muted)',marginTop:-8,marginBottom:12}}>Fewest goals conceded per match</p>
+        {extraStats.bestDefense.length === 0 ? <p style={{fontSize:13,color:'var(--c-hint)'}}>No data yet.</p> :
+          extraStats.bestDefense.map(function(t,i){
+            return (
+              <div key={t.name} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0',borderBottom:i<extraStats.bestDefense.length-1?'1px solid var(--c-border)':'none',fontSize:13}}>
+                <Flag team={t.name} size="sm"/>
+                <span style={{flex:1}}>{t.name}</span>
+                <span style={{color:'var(--c-muted)',fontSize:11}}>{t.conceded} in {t.played}</span>
+                <span style={{fontWeight:700}}>{(t.conceded/t.played).toFixed(2)}</span>
+              </div>
+            )
+          })
+        }
+      </div>
+
+      <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">⚔️ Best attack</div>
+        <p style={{fontSize:11,color:'var(--c-muted)',marginTop:-8,marginBottom:12}}>Most goals scored per match</p>
+        {extraStats.bestAttack.length === 0 ? <p style={{fontSize:13,color:'var(--c-hint)'}}>No data yet.</p> :
+          extraStats.bestAttack.map(function(t,i){
+            return (
+              <div key={t.name} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 0',borderBottom:i<extraStats.bestAttack.length-1?'1px solid var(--c-border)':'none',fontSize:13}}>
+                <Flag team={t.name} size="sm"/>
+                <span style={{flex:1}}>{t.name}</span>
+                <span style={{color:'var(--c-muted)',fontSize:11}}>{t.scored} in {t.played}</span>
+                <span style={{fontWeight:700,color:'var(--c-accent)'}}>{(t.scored/t.played).toFixed(2)}</span>
+              </div>
+            )
+          })
+        }
+      </div>
+
+      {extraStats.biggestWin && (
+        <div className="card" style={{marginBottom:0}}>
+          <div className="card-title">💥 Biggest win</div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0'}}>
+            <span style={{fontSize:14,fontWeight:600}}>{extraStats.biggestWin.label}</span>
+            <span style={{fontFamily:'var(--font-display)',fontSize:20,color:'var(--c-accent)'}}>+{extraStats.biggestWin.margin}</span>
+          </div>
+        </div>
+      )}
 
       <div className="card" style={{marginBottom:0}}>
         <div className="card-title">Top scoring nations</div>
