@@ -267,8 +267,8 @@ export default function Leaderboard() {
                     <tr>
                       <th style={{width:44}}>#</th>
                       <SortTh field="name" label="Player" align="left" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
-                      <SortTh field="preds" label="Predicted" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="pts" label="Points" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="preds" label="Predicted" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="pctWL" label="% W/L" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="correct" label="W/L count" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="pctDiff" label="% Diff" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
@@ -315,10 +315,10 @@ export default function Leaderboard() {
                               </div>
                             </div>
                           </td>
-                          <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.preds}/{totalFinished}</td>
                           <td style={{textAlign:'right'}}>
                             <span style={{fontFamily:'var(--font-display)',fontSize:24,color:(i<3)?MEDAL_COLORS[i]:'var(--c-text)'}}><CountUp value={p.pts}/></span>
                           </td>
+                          <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.preds}/{totalFinished}</td>
                           <td style={{textAlign:'right'}}><PctBadge val={p.pctWL}/></td>
                           <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.correct}</td>
                           <td style={{textAlign:'right'}}><PctBadge val={p.pctDiff}/></td>
