@@ -136,6 +136,33 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
       </div>
 
       <div className="card" style={{marginBottom:0}}>
+        <div className="card-title">🅰️ Top assists</div>
+        {scorersLoading ? (
+          <p style={{fontSize:12,color:'var(--c-hint)'}}>Loading...</p>
+        ) : (function() {
+          var withAssists = scorers.filter(function(s){ return s.assists > 0 })
+            .sort(function(a,b){ return b.assists - a.assists || b.goals - a.goals }).slice(0,10)
+          if (withAssists.length === 0) return <p style={{fontSize:12,color:'var(--c-hint)'}}>No assists recorded yet.</p>
+          return withAssists.map(function(s, i) {
+            return (
+              <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 0',borderBottom:i<withAssists.length-1?'1px solid var(--c-border)':'none',fontSize:13}}>
+                <span style={{width:20,fontFamily:'var(--font-display)',fontSize:15,color:i===0?'var(--c-gold)':i===1?'var(--c-silver)':i===2?'var(--c-bronze)':'var(--c-muted)',textAlign:'center'}}>{i+1}</span>
+                <Flag team={s.team} size="sm"/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{s.name}</div>
+                  <div style={{fontSize:10,color:'var(--c-muted)'}}>{s.team}</div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent2)'}}>{s.assists}</span>
+                  {s.goals>0 && <span style={{fontSize:10,color:'var(--c-muted)',marginLeft:4}}>{s.goals}g</span>}
+                </div>
+              </div>
+            )
+          })
+        })()}
+      </div>
+
+      <div className="card" style={{marginBottom:0}}>
         <div className="card-title">🧤 Clean sheets</div>
         {extraStats.cleanSheetLeaders.length === 0 ? <p style={{fontSize:13,color:'var(--c-hint)'}}>No clean sheets yet.</p> :
           extraStats.cleanSheetLeaders.map(function(t,i){
@@ -183,16 +210,6 @@ export default function StatsTournament({ finished, totalGoals, avgGoals, topSco
           })
         }
       </div>
-
-      {extraStats.biggestWin && (
-        <div className="card" style={{marginBottom:0}}>
-          <div className="card-title">💥 Biggest win</div>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0'}}>
-            <span style={{fontSize:14,fontWeight:600}}>{extraStats.biggestWin.label}</span>
-            <span style={{fontFamily:'var(--font-display)',fontSize:20,color:'var(--c-accent)'}}>+{extraStats.biggestWin.margin}</span>
-          </div>
-        </div>
-      )}
 
       <div className="card" style={{marginBottom:0}}>
         <div className="card-title">Top scoring nations</div>
