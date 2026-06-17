@@ -266,7 +266,13 @@ export default function Scores() {
         {Object.entries(grouped).map(([phase, ms]) => (
           <div className="card" key={phase} style={{marginBottom:'1rem'}}>
             <div className="card-title">{groupBy === 'group' ? (PHASE_LABELS[phase] || phase) : phase}</div>
-            {ms.map(m => (
+            {ms.map(m => {
+              var nrm = function(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
+              var espnL = espnLive[nrm(m.home_team)+'|'+nrm(m.away_team)]
+              // Effective live = DB says live OR ESPN reports it in-play (covers stale DB status)
+              var isLiveEff = m.status==='IN_PLAY' || m.status==='PAUSED' || !!espnL
+              var isFinishedEff = m.status==='FINISHED'
+              return (
               <div key={m.id}>
               <div className="match-row">
                 <div className="team-home">
@@ -275,8 +281,7 @@ export default function Scores() {
 
                 <div className="match-center" style={{minWidth:80}}>
                   {(function() {
-                    var norm = function(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
-                    var live = (m.status==='IN_PLAY'||m.status==='PAUSED') ? espnLive[norm(m.home_team)+'|'+norm(m.away_team)] : null
+                    var live = isLiveEff ? espnL : null
                     var dh = live ? live.home : m.home_goals
                     var da = live ? live.away : m.away_goals
                     if (dh == null) {
@@ -309,8 +314,8 @@ export default function Scores() {
                     </div>
                   )}
                   <div style={{marginTop:3}}>
-                    <span className={`match-status status-${(m.status==='IN_PLAY'||m.status==='PAUSED')?'live':m.status==='FINISHED'?'finished':'upcoming'}`}>
-                      {m.status==='IN_PLAY'?'LIVE':m.status==='PAUSED'?'HT':m.status==='FINISHED'?'FT':m.kickoff?'Upcoming':'TBD'}
+                    <span className={`match-status status-${isLiveEff?'live':isFinishedEff?'finished':'upcoming'}`}>
+                      {isLiveEff?(m.status==='PAUSED'?'HT':'LIVE'):isFinishedEff?'FT':m.kickoff?'Upcoming':'TBD'}
                     </span>
                   </div>
                   {(getVenueByMatchup(m.home_team, m.away_team) || getKnockoutVenue(m.match_number) || (m.match_number && getVenue(m.match_number))) && (
@@ -329,14 +334,15 @@ export default function Scores() {
                   <span>{predDist[m.id].away} picked {m.away_team}</span>
                 </div>
               )}
-              {myPicks[String(m.id)] && (m.status==='IN_PLAY'||m.status==='PAUSED'||m.status==='FINISHED') && m.home_goals != null && (function() {
+              {myPicks[String(m.id)] && (isLiveEff || isFinishedEff) && (espnL ? espnL.home != null : m.home_goals != null) && (function() {
                 var pick = myPicks[String(m.id)]
-                var rh = m.home_goals, ra = m.away_goals
+                var rh = (isLiveEff && espnL) ? espnL.home : m.home_goals
+                var ra = (isLiveEff && espnL) ? espnL.away : m.away_goals
                 var pr = Math.sign(pick.h - pick.a), rr = Math.sign(rh - ra)
                 var exact = pick.h === rh && pick.a === ra
                 var rightResult = pr === rr
                 var status, color
-                if (m.status === 'FINISHED') {
+                if (isFinishedEff) {
                   if (exact) { status = '🎯 Exact!'; color = 'var(--c-accent)' }
                   else if (rightResult) { status = '✓ Right result'; color = 'var(--c-success)' }
                   else { status = '✗ Missed'; color = 'var(--c-danger)' }
@@ -350,7 +356,7 @@ export default function Scores() {
                   <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,fontSize:11,paddingBottom:8}}>
                     <span style={{color:'var(--c-muted)'}}>Your pick: <strong style={{color:'var(--c-text)'}}>{pick.h}-{pick.a}</strong></span>
                     <span style={{color:color,fontWeight:700}}>{status}</span>
-                    {(m.status==='IN_PLAY'||m.status==='PAUSED') && (
+                    {isLiveEff && (
                       <button
                         onClick={function(){ setWhatIfMatch(whatIfMatch === m.id ? null : m.id) }}
                         style={{fontSize:10,padding:'2px 8px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface)',color:'var(--c-accent)',cursor:'pointer',fontWeight:600}}
@@ -361,10 +367,10 @@ export default function Scores() {
                   </div>
                 )
               })()}
-              {whatIfMatch === m.id && (m.status==='IN_PLAY'||m.status==='PAUSED') && (
+              {whatIfMatch === m.id && isLiveEff && (
                 <LiveWhatIf match={m} player={player} roomCode={player.room_code}/>
               )}
-              {(m.status==='IN_PLAY'||m.status==='PAUSED'||m.status==='FINISHED') && (
+              {(isLiveEff || isFinishedEff) && (
                 <div style={{textAlign:'center',paddingBottom:8}}>
                   <button
                     onClick={function(){ setDetailMatch(detailMatch === m.id ? null : m.id) }}
@@ -376,7 +382,7 @@ export default function Scores() {
               )}
               {detailMatch === m.id && <MatchDetail match={m}/>}
               </div>
-            ))}
+            )})}
             {groupBy === 'group' && phase.startsWith('GROUP') && ms.some(function(m){return m.status === 'FINISHED'}) && (function() {
               var teams = {}
               ms.forEach(function(m) {
