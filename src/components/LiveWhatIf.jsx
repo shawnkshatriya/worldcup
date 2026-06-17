@@ -51,11 +51,20 @@ export default function LiveWhatIf({ match, player, roomCode }) {
 
       // 3. Everyone's prediction for THIS match only
       var { data: preds } = await supabase.from('predictions')
-        .select('player_id,home_goals,away_goals')
+        .select('player_id,home_goals,away_goals,submitted_at,id')
         .eq('match_id', match.id)
         .in('player_id', ids)
       var predByPlayer = {}
-      ;(preds||[]).forEach(function(p){ predByPlayer[p.player_id] = p })
+      ;(preds||[]).forEach(function(p){
+        var ex = predByPlayer[p.player_id]
+        if (!ex) { predByPlayer[p.player_id] = p; return }
+        // Deterministic: prefer scored row, then latest submitted, then highest id
+        var pScore = p.home_goals != null, exScore = ex.home_goals != null
+        if (pScore && !exScore) { predByPlayer[p.player_id] = p; return }
+        if (!pScore && exScore) return
+        var pt = new Date(p.submitted_at||0).getTime(), et = new Date(ex.submitted_at||0).getTime()
+        if (pt > et || (pt === et && String(p.id) > String(ex.id))) predByPlayer[p.player_id] = p
+      })
 
       // 4. Current points already counted for this match (so we don't double-count if live score is in scores table)
       var { data: existingMatchScores } = await supabase.from('scores')

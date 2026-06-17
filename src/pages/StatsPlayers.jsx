@@ -37,8 +37,10 @@ export default function StatsPlayers({ sorted, maxPts, leader, playerStats, pool
     matches.forEach(function(m){ if (m.home_goals != null) finishedById[String(m.id)] = m })
     var scoreById = {}
     ;(scores || []).forEach(function(s){ if (s.player_id === currentPlayer.id) scoreById[String(s.match_id)] = s })
+    var seenMatch = {}
     myHistory = (predictions || [])
       .filter(function(p){ return p.player_id === currentPlayer.id && p.home_goals != null && finishedById[String(p.match_id)] })
+      .filter(function(p){ var k = String(p.match_id); if (seenMatch[k]) return false; seenMatch[k] = true; return true })
       .map(function(p){
         var m = finishedById[String(p.match_id)]
         var sc = scoreById[String(p.match_id)]

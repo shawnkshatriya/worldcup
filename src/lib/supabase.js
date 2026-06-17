@@ -98,10 +98,29 @@ export async function recalcPlayerScores(roomCode) {
   var matches = mRes.data
   if (!weights || !matches || !predictions) return
 
+  // Dedupe predictions: keep the most recent row per (player_id, match_id).
+  // Without this, duplicate rows cause nondeterministic scoring (blank/zero points).
+  var predByKey = {}
+  for (var pi = 0; pi < predictions.length; pi++) {
+    var pp = predictions[pi]
+    var key = pp.player_id + '_' + pp.match_id
+    var existing = predByKey[key]
+    if (!existing) { predByKey[key] = pp; continue }
+    // Prefer the row with a non-null score; then the latest submitted_at; then highest id
+    var ppHasScore = pp.home_goals != null
+    var exHasScore = existing.home_goals != null
+    if (ppHasScore && !exHasScore) { predByKey[key] = pp; continue }
+    if (!ppHasScore && exHasScore) continue
+    var ppTime = new Date(pp.submitted_at || 0).getTime()
+    var exTime = new Date(existing.submitted_at || 0).getTime()
+    if (ppTime > exTime || (ppTime === exTime && String(pp.id) > String(existing.id))) predByKey[key] = pp
+  }
+  var dedupedPredictions = Object.keys(predByKey).map(function(k){ return predByKey[k] })
+
   // Score each prediction
   var upserts = []
-  for (var i = 0; i < predictions.length; i++) {
-    var pred = predictions[i]
+  for (var i = 0; i < dedupedPredictions.length; i++) {
+    var pred = dedupedPredictions[i]
     var match = matches.find(function(m) { return String(m.id) === String(pred.match_id) })
     if (!match) continue
     var pts = calcMatchPoints(pred, match, weights, match.phase)
