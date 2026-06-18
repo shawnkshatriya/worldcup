@@ -21,11 +21,32 @@ export default function PlayerFilter({ players, selected, onChange }) {
 
   function selectAll() { onChange([]) }
 
-  function selectBySite(site) {
-    onChange(players.filter(function(p){ return p.site === site }).map(function(p){ return p.id }))
+  // Toggle a whole site/team in or out of the current selection (additive multi-select)
+  function toggleSite(site) {
+    var siteIds = players.filter(function(p){ return p.site === site }).map(function(p){ return p.id })
+    var allIn = siteIds.every(function(id){ return selected.includes(id) }) && siteIds.length > 0
+    if (allIn) {
+      onChange(selected.filter(function(id){ return !siteIds.includes(id) }))
+    } else {
+      onChange([...new Set(selected.concat(siteIds))])
+    }
   }
-  function selectByTeam(team) {
-    onChange(players.filter(function(p){ return p.team === team }).map(function(p){ return p.id }))
+  function toggleTeam(team) {
+    var teamIds = players.filter(function(p){ return p.team === team }).map(function(p){ return p.id })
+    var allIn = teamIds.every(function(id){ return selected.includes(id) }) && teamIds.length > 0
+    if (allIn) {
+      onChange(selected.filter(function(id){ return !teamIds.includes(id) }))
+    } else {
+      onChange([...new Set(selected.concat(teamIds))])
+    }
+  }
+  function siteActive(site) {
+    var siteIds = players.filter(function(p){ return p.site === site }).map(function(p){ return p.id })
+    return siteIds.length > 0 && siteIds.every(function(id){ return selected.includes(id) })
+  }
+  function teamActive(team) {
+    var teamIds = players.filter(function(p){ return p.team === team }).map(function(p){ return p.id })
+    return teamIds.length > 0 && teamIds.every(function(id){ return selected.includes(id) })
   }
 
   const modal = open ? createPortal(
@@ -44,7 +65,7 @@ export default function PlayerFilter({ players, selected, onChange }) {
                 <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--c-hint)',marginBottom:4,fontWeight:700}}>By site</div>
                 <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                   {sites.map(function(s){
-                    return <button key={s} onClick={function(){ selectBySite(s) }} style={{fontSize:12,padding:'4px 10px',borderRadius:14,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-accent)',cursor:'pointer',fontWeight:600}}>{s}</button>
+                    return <button key={s} onClick={function(){ toggleSite(s) }} style={{fontSize:12,padding:'4px 10px',borderRadius:14,border:'1px solid var(--c-border)',background:siteActive(s)?'var(--c-accent)':'var(--c-surface2)',color:siteActive(s)?'#fff':'var(--c-accent)',cursor:'pointer',fontWeight:600}}>{s}</button>
                   })}
                 </div>
               </div>
@@ -54,7 +75,7 @@ export default function PlayerFilter({ players, selected, onChange }) {
                 <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--c-hint)',marginBottom:4,fontWeight:700}}>By team</div>
                 <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                   {teams.map(function(t){
-                    return <button key={t} onClick={function(){ selectByTeam(t) }} style={{fontSize:12,padding:'4px 10px',borderRadius:14,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-accent2)',cursor:'pointer',fontWeight:600}}>{t}</button>
+                    return <button key={t} onClick={function(){ toggleTeam(t) }} style={{fontSize:12,padding:'4px 10px',borderRadius:14,border:'1px solid var(--c-border)',background:teamActive(t)?'var(--c-accent2)':'var(--c-surface2)',color:teamActive(t)?'#fff':'var(--c-accent2)',cursor:'pointer',fontWeight:600}}>{t}</button>
                   })}
                 </div>
               </div>

@@ -47,7 +47,7 @@ export default function Leaderboard() {
   }
   const [loading, setLoading]       = useState(true)
   const [totalFinished, setFinished] = useState(0)
-  const [groupFilter, setGroupFilter] = useState({ type: null, value: null }) // {type:'site'|'team', value}
+  const [groupFilter, setGroupFilter] = useState({ sites: [], teams: [] })
 
   useEffect(() => {
     if (playerLoading) return
@@ -154,8 +154,9 @@ export default function Leaderboard() {
   // Rank by points always (for the # column), but display in chosen sort order
   const rankById = {}
   rows.forEach(function(r, i){ rankById[r.id] = i + 1 })
-  var filteredRows = groupFilter.type
-    ? rows.filter(function(r){ return r[groupFilter.type] === groupFilter.value })
+  var hasGroupFilter = groupFilter.sites.length > 0 || groupFilter.teams.length > 0
+  var filteredRows = hasGroupFilter
+    ? rows.filter(function(r){ return groupFilter.sites.includes(r.site) || groupFilter.teams.includes(r.team) })
     : rows
   const sortedRows = [...filteredRows].sort(function(a, b) {
     var av, bv
@@ -194,9 +195,9 @@ export default function Leaderboard() {
         }
         return (
           <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center',padding:'0 0 14px'}}>
-            {chip('All', !groupFilter.type, function(){ setGroupFilter({type:null,value:null}) })}
-            {sites.map(function(s){ return <span key={'s'+s}>{chip(s, groupFilter.type==='site'&&groupFilter.value===s, function(){ setGroupFilter({type:'site',value:s}) })}</span> })}
-            {teams.map(function(t){ return <span key={'t'+t}>{chip(t, groupFilter.type==='team'&&groupFilter.value===t, function(){ setGroupFilter({type:'team',value:t}) }, 'var(--c-accent2)')}</span> })}
+            {chip('All', !hasGroupFilter, function(){ setGroupFilter({sites:[],teams:[]}) })}
+            {sites.map(function(s){ return <span key={'s'+s}>{chip(s, groupFilter.sites.includes(s), function(){ setGroupFilter(function(g){ return { sites: g.sites.includes(s) ? g.sites.filter(function(x){return x!==s}) : g.sites.concat(s), teams: g.teams } }) })}</span> })}
+            {teams.map(function(t){ return <span key={'t'+t}>{chip(t, groupFilter.teams.includes(t), function(){ setGroupFilter(function(g){ return { sites: g.sites, teams: g.teams.includes(t) ? g.teams.filter(function(x){return x!==t}) : g.teams.concat(t) } }) }, 'var(--c-accent2)')}</span> })}
           </div>
         )
       })()}
@@ -249,11 +250,11 @@ export default function Leaderboard() {
         {!loading && rows.length > 0 && (
           <>
             {/* Podium - top 3 */}
-            {rows.length >= 3 && (
+            {sortedRows.length >= 3 && (
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:'1.5rem',alignItems:'flex-end'}}>
                 {/* 2nd */}
                 {[1,0,2].map(rank => {
-                  const p = rows[rank]
+                  const p = sortedRows[rank]
                   if (!p) return <div key={rank}/>
                   const isFirst = rank===0
                   const medal = MEDALS[rank]

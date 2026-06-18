@@ -99,8 +99,8 @@ export default function Stats() {
   var selectedState = useState([])
   var selectedPlayers = selectedState[0], setSelectedPlayers = selectedState[1]
   var filteredSorted = selectedPlayers.length === 0 ? sorted : sorted.filter(function(p){ return selectedPlayers.includes(p.id) })
-  var maxPts = sorted[0] ? (sorted[0].total||1) : 1
-  var leader = sorted[0]
+  var maxPts = filteredSorted[0] ? (filteredSorted[0].total||1) : 1
+  var leader = filteredSorted[0]
   var topScorer = useMemo(function(){
     var tg={}
     finished.forEach(function(m){ tg[m.home_team]=(tg[m.home_team]||0)+m.home_goals; tg[m.away_team]=(tg[m.away_team]||0)+m.away_goals })
@@ -227,7 +227,7 @@ export default function Stats() {
       {tab==='players' ? <StatsPlayers sorted={filteredSorted} maxPts={maxPts} leader={leader} playerStats={playerStats} poolAccuracy={poolAccuracy} poolExactRate={poolExactRate} players={players} currentPlayer={player} finished={finished} predictions={predictions} scores={scores} matches={matches}/> : null}
       {tab==='insights' ? <StatsInsights players={players} scores={scores} matches={matches} predictions={predictions}/> : null}
       {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} accuracyByPlayer={accuracyByPlayer} selectedPlayers={selectedPlayers}/> : null}
-      {tab==='funfacts' ? <FunFacts sorted={sorted} playerStats={playerStats} leader={leader} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
+      {tab==='funfacts' ? <FunFacts sorted={sorted} playerStats={playerStats} leader={sorted[0]} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
       </div>
     </div>
   )
