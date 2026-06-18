@@ -153,7 +153,12 @@ export default function Admin() {
     patch[field] = value && value.trim() !== '' ? value.trim() : null
     var res = await supabase.from('players').update(patch).eq('id', id).select()
     if (res.error) {
-      alert('Could not save ' + field + ': ' + res.error.message + '\n\nYou likely need to run the migration:\nALTER TABLE players ADD COLUMN IF NOT EXISTS site text;\nALTER TABLE players ADD COLUMN IF NOT EXISTS team text;')
+      alert('Could not save ' + field + ': ' + res.error.message)
+      return
+    }
+    if (!res.data || res.data.length === 0) {
+      // No error but nothing written = RLS policy is blocking the update
+      alert('Save blocked: the database update returned no rows. This is almost certainly a Row Level Security (RLS) policy on the players table preventing updates. The site/team columns exist, but the UPDATE is being denied.')
       return
     }
     setPlayers(ps => ps.map(x => x.id === id ? { ...x, [field]: patch[field] } : x))
