@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase, recalcPlayerScores, recalcAllRooms } from '../lib/supabase'
 import { getAllRooms, createRoom, deleteRoom, updateRoom, regenToken, saveRoomWeights } from '../lib/rooms'
 import { runScoringTests } from '../lib/testRunner'
@@ -526,14 +526,29 @@ export default function Admin() {
 
 function SiteTeamInput({ value, placeholder, onSave }) {
   const [val, setVal] = useState(value || '')
-  const [dirty, setDirty] = useState(false)
-  useEffect(() => { setVal(value || ''); setDirty(false) }, [value])
+  const [focused, setFocused] = useState(false)
+  const lastValueRef = useRef(value || '')
+  // Only sync from prop when the prop actually changes AND we're not actively editing
+  useEffect(() => {
+    if (!focused && value !== lastValueRef.current) {
+      lastValueRef.current = value || ''
+      setVal(value || '')
+    }
+  }, [value, focused])
   return (
     <input
       value={val}
       placeholder={placeholder}
-      onChange={e => { setVal(e.target.value); setDirty(true) }}
-      onBlur={() => { if (dirty) { onSave(val); setDirty(false) } }}
+      onChange={e => setVal(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false)
+        var trimmed = (val || '').trim()
+        if (trimmed !== (value || '')) {
+          lastValueRef.current = trimmed
+          onSave(trimmed)
+        }
+      }}
       onKeyDown={e => { if (e.key === 'Enter') { e.target.blur() } }}
       style={{
         width: 70, fontSize: 12, padding: '3px 6px', borderRadius: 6,
