@@ -153,7 +153,9 @@ export default function StatsPlayers({ sorted, maxPts, leader, playerStats, pool
       </div>
 
       {metrics.map(function(metric) {
-        var metricSorted = [...playerStats].sort(function(a,b){ return b[metric.key] - a[metric.key] })
+        // Respect the player filter: only include players present in `sorted` (the filtered list)
+        var allowedIds = new Set(sorted.map(function(p){ return p.id }))
+        var metricSorted = playerStats.filter(function(p){ return allowedIds.has(p.id) }).sort(function(a,b){ return b[metric.key] - a[metric.key] })
         return (
           <div key={metric.key} className="card" style={{marginBottom:0}}>
             <div className="card-title">{metric.label}</div>

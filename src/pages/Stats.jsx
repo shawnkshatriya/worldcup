@@ -148,6 +148,22 @@ export default function Stats() {
     }})
   },[sorted,finished,scores,selectedPlayers])
 
+  var accuracyByPlayer=useMemo(function(){
+    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
+    return base.map(function(pl){ return {
+      label:pl.name, color:pl.color,
+      points: finished.slice(0,20).map(function(m,i){
+        var upto = finished.slice(0,i+1)
+        var uptoIds = new Set(upto.map(function(x){return x.id}))
+        var rel = scores.filter(function(s){ return s.player_id===pl.id && uptoIds.has(s.match_id) })
+        var corr = rel.filter(function(s){ return s.pts_result>0||s.pts_exact>0 }).length
+        // denominator = matches played so far (fair: blanks count as misses)
+        var pct = upto.length>0 ? Math.round(corr/upto.length*100) : 0
+        return {label:'M'+(i+1),y:pct}
+      })
+    }})
+  },[sorted,finished,scores,selectedPlayers])
+
   var topScorerMetric = null
   if (topScorer) {
     topScorerMetric = (
@@ -188,7 +204,7 @@ export default function Stats() {
             )
           })}
           </div>
-          {(tab === 'players' || tab === 'funfacts' || tab === 'charts') && (
+          {(tab === 'players' || tab === 'charts') && (
             <PlayerFilter players={players} selected={selectedPlayers} onChange={setSelectedPlayers} />
           )}
         </div>
@@ -196,8 +212,8 @@ export default function Stats() {
       {tab==='tournament' ? <StatsTournament finished={finished} totalGoals={totalGoals} avgGoals={avgGoals} topScorer={topScorer} goalsHist={goalsHist} groupGoals={groupGoals} groupCounts={groupCounts} topTeams={topTeams} scoreless={scoreless} highScoring={highScoring} predictions={predictions}/> : null}
       {tab==='players' ? <StatsPlayers sorted={filteredSorted} maxPts={maxPts} leader={leader} playerStats={playerStats} poolAccuracy={poolAccuracy} poolExactRate={poolExactRate} players={players} currentPlayer={player} finished={finished} predictions={predictions} scores={scores} matches={matches}/> : null}
       {tab==='insights' ? <StatsInsights players={players} scores={scores} matches={matches} predictions={predictions}/> : null}
-      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} selectedPlayers={selectedPlayers}/> : null}
-      {tab==='funfacts' ? <FunFacts sorted={filteredSorted} playerStats={playerStats} leader={leader} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
+      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} accuracyByPlayer={accuracyByPlayer} selectedPlayers={selectedPlayers}/> : null}
+      {tab==='funfacts' ? <FunFacts sorted={sorted} playerStats={playerStats} leader={leader} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
       </div>
     </div>
   )

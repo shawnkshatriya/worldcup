@@ -91,17 +91,22 @@ export function LineChart({ series, height=80, showLast=true }) {
   return (
     <div style={{width:'100%',overflowX:'auto',paddingRight:32}}>
       <svg width="100%" viewBox={`0 0 ${W} ${H+20}`} style={{overflow:'visible',display:'block'}}>
-        {/* Y axis labels */}
-        {[0,50,100].map(v=>{
-          const yp = H - pad - (v/100)*(H-pad*2)
-          if (maxV<=100) return (
-            <g key={v}>
-              <line x1={pad} y1={yp} x2={W-pad} y2={yp} stroke="var(--c-border)" strokeWidth="0.5" strokeDasharray="3,3"/>
-              <text x={pad-2} y={yp+3} textAnchor="end" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{v}%</text>
-            </g>
-          )
-          return null
-        })}
+        {/* Y axis gridlines + labels - adapt to data (percent vs raw points) */}
+        {(function(){
+          var isPct = maxV <= 100
+          var ticks = isPct ? [0,25,50,75,100] : [0, 0.25, 0.5, 0.75, 1].map(function(f){ return Math.round((minV + f*range)/5)*5 })
+          // de-dupe and keep ascending
+          ticks = Array.from(new Set(ticks)).sort(function(a,b){return a-b})
+          return ticks.map(function(v){
+            var yp = toY(v)
+            return (
+              <g key={v}>
+                <line x1={pad} y1={yp} x2={W-pad} y2={yp} stroke="var(--c-border)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <text x={pad-2} y={yp+3} textAnchor="end" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{v}{isPct?'%':''}</text>
+              </g>
+            )
+          })
+        })()}
 
         {series.map((s,si)=>{
           const pts = s.points
