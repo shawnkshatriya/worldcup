@@ -41,7 +41,7 @@ function useCountdown(target) {
 }
 
 // Real flag emojis rendered via unicode - crisp on all devices
-function FlagPill({ emoji, label }) {
+function FlagPill({ team, label }) {
   return (
     <div style={{
       display:'flex', alignItems:'center', gap:6,
@@ -50,7 +50,7 @@ function FlagPill({ emoji, label }) {
       borderRadius:20, padding:'5px 12px 5px 8px',
       fontSize:13, fontWeight:500, color:'var(--c-text)',
     }}>
-      <span style={{fontSize:20,lineHeight:1}}>{emoji}</span>
+      <Flag team={team || label} />
       {label && <span>{label}</span>}
     </div>
   )
@@ -234,9 +234,9 @@ export default function Dashboard() {
                 June 11 - July 19 &nbsp;.&nbsp; 48 teams &nbsp;.&nbsp; 104 matches
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <FlagPill emoji="🇨🇦" label="Canada" />
-                <FlagPill emoji="🇲🇽" label="Mexico" />
-                <FlagPill emoji="🇺🇸" label="USA" />
+                <FlagPill team="Canada" label="Canada" />
+                <FlagPill team="Mexico" label="Mexico" />
+                <FlagPill team="United States" label="USA" />
               </div>
             </div>
 

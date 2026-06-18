@@ -213,6 +213,16 @@ export default function Scores() {
     return acc
   }, {})
 
+  // Sort matches within each group by kickoff time (chronological), then match_number
+  Object.keys(grouped).forEach(function(k) {
+    grouped[k].sort(function(a, b) {
+      var ta = a.kickoff ? new Date(a.kickoff).getTime() : 0
+      var tb = b.kickoff ? new Date(b.kickoff).getTime() : 0
+      if (ta !== tb) return ta - tb
+      return (a.match_number || 0) - (b.match_number || 0)
+    })
+  })
+
   const finishedCount = matches.filter(m=>m.status==='FINISHED').length
   const apiKey = !!import.meta.env.VITE_FOOTBALL_API_KEY
 
@@ -284,7 +294,12 @@ export default function Scores() {
           </div>
         )}
 
-        {Object.entries(grouped).map(([phase, ms]) => (
+        {Object.entries(grouped).sort(function(a, b) {
+          // Order groups by their earliest match kickoff (chronological days/phases)
+          var ea = Math.min.apply(null, a[1].map(function(m){ return m.kickoff ? new Date(m.kickoff).getTime() : Infinity }))
+          var eb = Math.min.apply(null, b[1].map(function(m){ return m.kickoff ? new Date(m.kickoff).getTime() : Infinity }))
+          return ea - eb
+        }).map(([phase, ms]) => (
           <div className="card" key={phase} style={{marginBottom:'1rem'}}>
             <div className="card-title">{groupBy === 'group' ? (PHASE_LABELS[phase] || phase) : phase}</div>
             {ms.map(m => {

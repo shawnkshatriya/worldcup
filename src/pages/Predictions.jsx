@@ -64,7 +64,7 @@ function WinnerPickInline({ player, koOpen }) {
         </div>
         {myPick ? (
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:20}}>{team?.flag}</span>
+            {team && <Flag team={team.name} size="lg"/>}
             <span style={{fontWeight:600,fontSize:13}}>{myPick.team}</span>
             {myPick.pts_awarded > 0 && <span style={{fontFamily:'var(--font-display)',fontSize:20,color:'var(--c-gold)'}}>+{myPick.pts_awarded}</span>}
             {!locked && <button className="btn btn-sm" onClick={() => setOpen(o => !o)}>Change</button>}
@@ -87,7 +87,7 @@ function WinnerPickInline({ player, koOpen }) {
                 borderColor:selected===t.name?'var(--c-accent)':'var(--c-border)',
                 color:selected===t.name?'var(--c-accent-text,#fff)':'var(--c-text)',
               }}>
-                <span style={{fontSize:16}}>{t.flag}</span>{t.name}
+                <Flag team={t.name}/> {t.name}
               </button>
             ))}
           </div>
@@ -142,6 +142,7 @@ export default function Predictions() {
   const [preds, setPreds] = useState({})
   const [saving, setSaving] = useState({})
   const [saved, setSaved] = useState({})
+  const [saveError, setSaveError] = useState({})
   const [koOpen, setKoOpen] = useState(false)
   const [progress, setProgress] = useState({ groupPred: 0, groupTotal: 72, koPred: 0, koTotal: 32 })
   const [groupBy, setGroupBy] = useState('day') // 'group' or 'day' - default day shows today
@@ -238,14 +239,45 @@ export default function Predictions() {
                    allMatches.find(function(m){ return String(m.id) === String(matchId) })
     if (theMatch && isLocked(theMatch, koOpen)) return
     setSaving(s => ({ ...s, [matchId]: true }))
-    await supabase.from('predictions').upsert({
+
+    var row = {
       player_id: player.id,
       match_id: matchId,
       home_goals: homeGoals !== '' ? parseInt(homeGoals) : null,
       away_goals: awayGoals !== '' ? parseInt(awayGoals) : null,
       submitted_at: new Date().toISOString()
-    }, { onConflict: 'player_id,match_id' })
+    }
+
+    var result = await supabase.from('predictions')
+      .upsert(row, { onConflict: 'player_id,match_id' })
+      .select()
+
+    // If the upsert failed or wrote nothing, retry once via explicit update/insert
+    if (result.error || !result.data || result.data.length === 0) {
+      // Try update first (row may already exist)
+      var upd = await supabase.from('predictions')
+        .update({ home_goals: row.home_goals, away_goals: row.away_goals, submitted_at: row.submitted_at })
+        .eq('player_id', player.id).eq('match_id', matchId).select()
+      if (!upd.data || upd.data.length === 0) {
+        // No existing row - insert
+        var ins = await supabase.from('predictions').insert(row).select()
+        result = ins
+      } else {
+        result = upd
+      }
+    }
+
     setSaving(s => ({ ...s, [matchId]: false }))
+
+    if (result.error || !result.data || result.data.length === 0) {
+      // Real failure - tell the user, don't show a false "Saved"
+      setSaveError(s => ({ ...s, [matchId]: true }))
+      setTimeout(() => setSaveError(s => ({ ...s, [matchId]: false })), 4000)
+      return
+    }
+
+    // Confirmed saved - update local state from the persisted row
+    setPreds(p => ({ ...p, [String(matchId)]: result.data[0] }))
     setSaved(s => ({ ...s, [matchId]: true }))
     setTimeout(() => setSaved(s => ({ ...s, [matchId]: false })), 1500)
   }
@@ -460,7 +492,8 @@ export default function Predictions() {
                       {m.away_team || '?'}
                       {!locked && isSaving && <span style={{fontSize:12,color:'var(--c-muted)'}}>Saving...</span>}
                       {!locked && isSaved && <span className="badge badge-green" style={{fontSize:11,padding:'2px 8px'}}>Saved</span>}
-                      {!locked && !isSaving && !isSaved && hasBothGoals && (
+                      {!locked && saveError[m.id] && <span className="badge" style={{fontSize:11,padding:'2px 8px',background:'var(--c-danger)',color:'#fff'}}>⚠ Failed - retry</span>}
+                      {!locked && !isSaving && !isSaved && !saveError[m.id] && hasBothGoals && (
                         <span className="badge badge-blue" style={{fontSize:11,padding:'2px 8px'}}>Predicted</span>
                       )}
                     </div>

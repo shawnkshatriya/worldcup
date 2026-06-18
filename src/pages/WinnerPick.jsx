@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Flag from '../components/Flag'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 
@@ -160,7 +161,7 @@ export default function WinnerPick() {
                 const team = TEAMS.find(t => t.name === top?.[0])
                 return top && !locked ? null : top && (
                   <div style={{fontSize:13,color:'var(--c-muted)'}}>
-                    Pool favourite: <strong style={{color:'var(--c-text)'}}>{team?.flag} {top[0]}</strong> ({top[1]} pick{top[1]!==1?'s':''})
+                    Pool favourite: <strong style={{color:'var(--c-text)'}}>{top[0]}</strong> ({top[1]} pick{top[1]!==1?'s':''})
                   </div>
                 )
               })()}
@@ -171,7 +172,7 @@ export default function WinnerPick() {
         {/* My current pick */}
         {myPick && (
           <div className="alert alert-info" style={{marginBottom:'1.25rem',display:'flex',alignItems:'center',gap:12}}>
-            <span style={{fontSize:24}}>{TEAMS.find(t=>t.name===myPick.team)?.flag}</span>
+            <Flag team={myPick.team} size="lg"/>
             <div>
               <strong>Your pick: {myPick.team}</strong>
               {locked
@@ -199,7 +200,7 @@ export default function WinnerPick() {
             <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
               <select value={actualWinner} onChange={e=>setActualWinner(e.target.value)} style={{flex:1,minWidth:180}}>
                 <option value="">Select actual winner...</option>
-                {TEAMS.map(t=><option key={t.name} value={t.name}>{t.flag} {t.name}</option>)}
+                {TEAMS.map(t=><option key={t.name} value={t.name}>{t.name}</option>)}
               </select>
               <button className="btn btn-accent" onClick={awardWinner} disabled={!actualWinner||awarding}>
                 {awarding ? 'Awarding...' : 'Award points'}
@@ -231,7 +232,7 @@ export default function WinnerPick() {
                     borderColor: isSelected ? 'var(--c-accent)' : 'var(--c-border)',
                     color: isSelected ? '#fff' : 'var(--c-text)',
                   }}>
-                    <span style={{fontSize:20,flexShrink:0}}>{t.flag}</span>
+                    <Flag team={t.name}/>
                     <span style={{fontSize:12,fontWeight:isSelected?700:400,lineHeight:1.3}}>{t.name}</span>
                   </button>
                 )
