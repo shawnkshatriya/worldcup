@@ -7,6 +7,10 @@ export default function PlayerFilter({ players, selected, onChange }) {
 
   const allSelected = selected.length === 0 || selected.length === players.length
 
+  // Distinct sites and teams from player assignments
+  const sites = [...new Set(players.map(function(p){ return p.site }).filter(Boolean))].sort()
+  const teams = [...new Set(players.map(function(p){ return p.team }).filter(Boolean))].sort()
+
   function toggle(id) {
     if (selected.includes(id)) {
       onChange(selected.filter(function(s){ return s !== id }))
@@ -17,6 +21,13 @@ export default function PlayerFilter({ players, selected, onChange }) {
 
   function selectAll() { onChange([]) }
 
+  function selectBySite(site) {
+    onChange(players.filter(function(p){ return p.site === site }).map(function(p){ return p.id }))
+  }
+  function selectByTeam(team) {
+    onChange(players.filter(function(p){ return p.team === team }).map(function(p){ return p.id }))
+  }
+
   const modal = open ? createPortal(
     <>
       <div onClick={function(){ setOpen(false) }} style={{position:'fixed',inset:0,zIndex:9998,background:'rgba(0,0,0,0.5)'}} />
@@ -25,6 +36,33 @@ export default function PlayerFilter({ players, selected, onChange }) {
           <span style={{fontSize:14,fontWeight:700,color:'var(--c-text)'}}>Filter players</span>
           <button onClick={function(){ setOpen(false) }} style={{background:'none',border:'none',color:'var(--c-muted)',fontSize:22,cursor:'pointer',lineHeight:1,padding:0}}>×</button>
         </div>
+
+        {(sites.length > 0 || teams.length > 0) && (
+          <div style={{marginBottom:10}}>
+            {sites.length > 0 && (
+              <div style={{marginBottom:8}}>
+                <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--c-hint)',marginBottom:4,fontWeight:700}}>By site</div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {sites.map(function(s){
+                    return <button key={s} onClick={function(){ selectBySite(s) }} style={{fontSize:12,padding:'4px 10px',borderRadius:14,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-accent)',cursor:'pointer',fontWeight:600}}>{s}</button>
+                  })}
+                </div>
+              </div>
+            )}
+            {teams.length > 0 && (
+              <div>
+                <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.05em',color:'var(--c-hint)',marginBottom:4,fontWeight:700}}>By team</div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {teams.map(function(t){
+                    return <button key={t} onClick={function(){ selectByTeam(t) }} style={{fontSize:12,padding:'4px 10px',borderRadius:14,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-accent2)',cursor:'pointer',fontWeight:600}}>{t}</button>
+                  })}
+                </div>
+              </div>
+            )}
+            <div style={{height:1,background:'var(--c-border)',margin:'10px 0'}}/>
+          </div>
+        )}
+
         <button
           onClick={selectAll}
           style={{display:'block',width:'100%',textAlign:'left',padding:'10px 12px',fontSize:13,fontWeight:600,background:allSelected?'var(--c-accent)':'var(--c-surface2)',color:allSelected?'#fff':'var(--c-text)',border:'none',borderRadius:6,cursor:'pointer',marginBottom:4}}
@@ -42,7 +80,8 @@ export default function PlayerFilter({ players, selected, onChange }) {
               <span style={{width:18,height:18,borderRadius:4,border:'1px solid var(--c-border)',background:isSel?'var(--c-accent)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'#fff',flexShrink:0}}>
                 {isSel ? '✓' : ''}
               </span>
-              {p.name}
+              <span style={{flex:1}}>{p.name}</span>
+              {(p.site || p.team) && <span style={{fontSize:10,color:'var(--c-hint)'}}>{[p.site,p.team].filter(Boolean).join(' · ')}</span>}
             </button>
           )
         })}

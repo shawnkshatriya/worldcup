@@ -148,6 +148,13 @@ export default function Admin() {
     }
   }
 
+  async function saveSiteTeam(id, field, value) {
+    var patch = {}
+    patch[field] = value && value.trim() !== '' ? value.trim() : null
+    await supabase.from('players').update(patch).eq('id', id)
+    setPlayers(ps => ps.map(x => x.id === id ? { ...x, [field]: patch[field] } : x))
+  }
+
   async function toggleRoomAdmin(id) {
     const p = players.find(x => x.id === id)
     const newVal = !p.is_room_admin
@@ -456,7 +463,7 @@ export default function Admin() {
               </div>
             )}
             <table>
-              <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Predictions</th><th></th></tr></thead>
+              <thead><tr><th>Name</th><th>Email</th><th>Site</th><th>Team</th><th>Joined</th><th>Predictions</th><th></th></tr></thead>
               <tbody>
                 {players.map(p=>{
                   const isDupe = nameCounts[p.name.toLowerCase()]>1
@@ -474,6 +481,8 @@ export default function Admin() {
                         </div>
                       </td>
                       <td style={{fontSize:12,color:'var(--c-muted)'}}>{p.email||'-'}</td>
+                      <td><SiteTeamInput value={p.site} placeholder="Site" onSave={function(v){ saveSiteTeam(p.id,'site',v) }}/></td>
+                      <td><SiteTeamInput value={p.team} placeholder="Team" onSave={function(v){ saveSiteTeam(p.id,'team',v) }}/></td>
                       <td style={{fontSize:12,color:'var(--c-muted)'}}>
                         {new Date(p.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'})}
                         {' '}{new Date(p.created_at).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
@@ -508,6 +517,26 @@ export default function Admin() {
         {tab==='dev' && <DevPanel onRefresh={loadRoomData} roomCode={adminRoom} roomName={currentRoom?.name}/>}
       </div>
     </div>
+  )
+}
+
+function SiteTeamInput({ value, placeholder, onSave }) {
+  const [val, setVal] = useState(value || '')
+  const [dirty, setDirty] = useState(false)
+  useEffect(() => { setVal(value || ''); setDirty(false) }, [value])
+  return (
+    <input
+      value={val}
+      placeholder={placeholder}
+      onChange={e => { setVal(e.target.value); setDirty(true) }}
+      onBlur={() => { if (dirty) { onSave(val); setDirty(false) } }}
+      onKeyDown={e => { if (e.key === 'Enter') { e.target.blur() } }}
+      style={{
+        width: 70, fontSize: 12, padding: '3px 6px', borderRadius: 6,
+        border: '1px solid var(--c-border)', background: 'var(--c-surface2)',
+        color: 'var(--c-text)',
+      }}
+    />
   )
 }
 

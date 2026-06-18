@@ -54,7 +54,11 @@ export default function Stats() {
 
   async function loadAll() {
     setLoading(true)
-    var playersRes = await supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at')
+    var playersRes = await supabase.from('players').select('id,name,site,team').eq('room_code', roomCode).order('created_at')
+    if (playersRes.error) {
+      // site/team columns may not exist yet - fall back
+      playersRes = await supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at')
+    }
     var roomPlayers = playersRes.data || []
     var playerIds = roomPlayers.map(function(p){ return p.id })
 
