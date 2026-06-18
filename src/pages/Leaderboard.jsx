@@ -47,6 +47,7 @@ export default function Leaderboard() {
   }
   const [loading, setLoading]       = useState(true)
   const [totalFinished, setFinished] = useState(0)
+  const [groupFilter, setGroupFilter] = useState({ type: null, value: null }) // {type:'site'|'team', value}
 
   useEffect(() => {
     if (playerLoading) return
@@ -77,14 +78,16 @@ export default function Leaderboard() {
 
   async function load() {
     setLoading(true)
-    const [{ data:players }, scores, predictions, { count:finished }, { data:winnerPicks }, { data:finishedMatchRows }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500),
+    var playersQ = await supabase.from('players').select('id,name,site,team').eq('room_code', roomCode).limit(500)
+    if (playersQ.error) playersQ = await supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500)
+    const [scores, predictions, { count:finished }, { data:winnerPicks }, { data:finishedMatchRows }] = await Promise.all([
       fetchAll('scores', '*'),
       fetchAll('predictions', 'player_id,match_id,home_goals,away_goals'),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
       supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode),
       supabase.from('matches').select('id').eq('status','FINISHED'),
     ])
+    var players = playersQ.data
     setFinished(finished||0)
     if (!players) { setLoading(false); return }
 
@@ -145,7 +148,10 @@ export default function Leaderboard() {
   // Rank by points always (for the # column), but display in chosen sort order
   const rankById = {}
   rows.forEach(function(r, i){ rankById[r.id] = i + 1 })
-  const sortedRows = [...rows].sort(function(a, b) {
+  var filteredRows = groupFilter.type
+    ? rows.filter(function(r){ return r[groupFilter.type] === groupFilter.value })
+    : rows
+  const sortedRows = [...filteredRows].sort(function(a, b) {
     var av, bv
     if (sortKey === 'name') { av = (a.name||'').toLowerCase(); bv = (b.name||'').toLowerCase() }
     else { av = a[sortKey] || 0; bv = b[sortKey] || 0 }
@@ -172,6 +178,22 @@ export default function Leaderboard() {
           <p>{totalFinished} of 104 matches played</p>
         </div>
       </div>
+
+      {(function(){
+        var sites = [...new Set(rows.map(function(r){ return r.site }).filter(Boolean))].sort()
+        var teams = [...new Set(rows.map(function(r){ return r.team }).filter(Boolean))].sort()
+        if (sites.length === 0 && teams.length === 0) return null
+        function chip(label, active, onClick, color){
+          return <button onClick={onClick} style={{fontSize:12,padding:'5px 12px',borderRadius:16,border:'1px solid var(--c-border)',cursor:'pointer',fontWeight:600,background:active?(color||'var(--c-accent)'):'var(--c-surface2)',color:active?'#fff':'var(--c-text)'}}>{label}</button>
+        }
+        return (
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center',padding:'0 0 14px'}}>
+            {chip('All', !groupFilter.type, function(){ setGroupFilter({type:null,value:null}) })}
+            {sites.map(function(s){ return <span key={'s'+s}>{chip(s, groupFilter.type==='site'&&groupFilter.value===s, function(){ setGroupFilter({type:'site',value:s}) })}</span> })}
+            {teams.map(function(t){ return <span key={'t'+t}>{chip(t, groupFilter.type==='team'&&groupFilter.value===t, function(){ setGroupFilter({type:'team',value:t}) }, 'var(--c-accent2)')}</span> })}
+          </div>
+        )
+      })()}
       <div className="page-body">
         {loading && <p style={{color:'var(--c-muted)'}}>Loading...</p>}
 

@@ -151,7 +151,11 @@ export default function Admin() {
   async function saveSiteTeam(id, field, value) {
     var patch = {}
     patch[field] = value && value.trim() !== '' ? value.trim() : null
-    await supabase.from('players').update(patch).eq('id', id)
+    var res = await supabase.from('players').update(patch).eq('id', id).select()
+    if (res.error) {
+      alert('Could not save ' + field + ': ' + res.error.message + '\n\nYou likely need to run the migration:\nALTER TABLE players ADD COLUMN IF NOT EXISTS site text;\nALTER TABLE players ADD COLUMN IF NOT EXISTS team text;')
+      return
+    }
     setPlayers(ps => ps.map(x => x.id === id ? { ...x, [field]: patch[field] } : x))
   }
 
