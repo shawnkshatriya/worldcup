@@ -81,7 +81,7 @@ export default function Scores() {
         var dFrom = 0
         while (true) {
           var dPage = await supabase.from('predictions').select('match_id,home_goals,away_goals,player_id')
-            .in('match_id', finishedIds).in('player_id', rpIds).not('home_goals','is',null).range(dFrom, dFrom + 999)
+            .in('match_id', finishedIds).in('player_id', rpIds).not('home_goals','is',null).order('id',{ascending:true}).range(dFrom, dFrom + 999)
           if (!dPage.data || dPage.data.length === 0) break
           preds = preds.concat(dPage.data)
           if (dPage.data.length < 1000) break

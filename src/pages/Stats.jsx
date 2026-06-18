@@ -76,7 +76,9 @@ export default function Stats() {
   var finished = useMemo(function(){ return matches.filter(function(m){ return m.home_goals!=null }) },[matches])
 
   var playerStats = useMemo(function(){ var totalFinished = finished.length; return players.map(function(p,idx){
-    var ps=scores.filter(function(s){return s.player_id===p.id})
+    var psAll=scores.filter(function(s){return s.player_id===p.id})
+    var psMap={}; psAll.forEach(function(s){ psMap[String(s.match_id)]=s })
+    var ps=Object.keys(psMap).map(function(k){return psMap[k]})
     var pp=predictions.filter(function(pr){return pr.player_id===p.id&&pr.home_goals!=null})
     var scored=ps.length
     var total=ps.reduce(function(a,s){return a+(s.pts_total||0)},0)

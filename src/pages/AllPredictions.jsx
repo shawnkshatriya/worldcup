@@ -64,6 +64,7 @@ export default function AllPredictions() {
       var { data: page } = await supabase.from('predictions')
         .select('match_id,player_id,home_goals,away_goals')
         .in('player_id', playerIds)
+        .order('id',{ascending:true})
         .range(from, from + pageSize - 1)
       if (!page || page.length === 0) break
       allPreds = allPreds.concat(page)
@@ -86,6 +87,7 @@ export default function AllPredictions() {
       var { data: sPage } = await supabase.from('scores')
         .select('match_id,player_id,pts_total')
         .in('player_id', playerIds)
+        .order('id',{ascending:true})
         .range(from, from + pageSize - 1)
       if (!sPage || sPage.length === 0) break
       allScores = allScores.concat(sPage)
@@ -103,7 +105,13 @@ export default function AllPredictions() {
     // Sort players by total points, leader first
     var totals = {}
     ;(playerData || []).forEach(function(p){ totals[p.id] = 0 })
-    allScores.forEach(function(s){ totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0) })
+    var seenAS = {}
+    allScores.forEach(function(s){
+      var k = s.player_id + '_' + s.match_id
+      if (seenAS[k]) return
+      seenAS[k] = true
+      totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0)
+    })
     var sortedPlayers = [...(playerData || [])].sort(function(a,b){ return (totals[b.id]||0) - (totals[a.id]||0) })
     setPlayers(sortedPlayers)
   }

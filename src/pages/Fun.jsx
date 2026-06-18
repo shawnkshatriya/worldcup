@@ -93,7 +93,7 @@ export default function Fun() {
     var all = []
     var from = 0
     while (true) {
-      var page = await supabase.from(table).select('*').in('player_id', playerIds).range(from, from + 999)
+      var page = await supabase.from(table).select('*').order('id',{ascending:true}).in('player_id', playerIds).range(from, from + 999)
       if (!page.data || page.data.length === 0) break
       all = all.concat(page.data)
       if (page.data.length < 1000) break
@@ -123,7 +123,9 @@ export default function Fun() {
     // Matches that can actually be predicted (both teams assigned)
     const predictableCount = matches.filter(m => m.home_team && m.away_team).length
     return players.map((p,idx) => {
-    const ps = scores.filter(s=>s.player_id===p.id)
+    const psAll = scores.filter(s=>s.player_id===p.id)
+    const psM = {}; psAll.forEach(s=>{ psM[String(s.match_id)]=s })
+    const ps = Object.keys(psM).map(k=>psM[k])
     const ppRaw = predictions.filter(pr=>pr.player_id===p.id&&pr.home_goals!=null)
     // Dedupe: one prediction per match
     const ppMap = {}

@@ -129,7 +129,7 @@ export default function Dashboard() {
     if (roomPlayerIds.length) {
       var sFrom = 0
       while (true) {
-        var sPage = await supabase.from('scores').select('player_id,pts_total').in('player_id', roomPlayerIds).range(sFrom, sFrom + 999)
+        var sPage = await supabase.from('scores').select('player_id,pts_total,match_id').order('id',{ascending:true}).in('player_id', roomPlayerIds).range(sFrom, sFrom + 999)
         if (!sPage.data || sPage.data.length === 0) break
         scores = scores.concat(sPage.data)
         if (sPage.data.length < 1000) break
@@ -137,10 +137,12 @@ export default function Dashboard() {
       }
     }
 
-    const totals = players.map((p,i) => ({
-      ...p, color:AVATAR_COLORS[i%AVATAR_COLORS.length],
-      pts: scores?.filter(s=>s.player_id===p.id).reduce((a,s)=>a+(s.pts_total||0),0)||0
-    })).sort((a,b)=>b.pts-a.pts)
+    const totals = players.map((p,i) => {
+      var ps = scores?.filter(s=>s.player_id===p.id)||[]
+      var seen = {}, sum = 0
+      ps.forEach(function(s){ var k = String(s.match_id); if (seen[k]) return; seen[k]=true; sum += (s.pts_total||0) })
+      return { ...p, color:AVATAR_COLORS[i%AVATAR_COLORS.length], pts: sum }
+    }).sort((a,b)=>b.pts-a.pts)
 
     setLeaders(totals.slice(0,10))
 
@@ -154,7 +156,7 @@ export default function Dashboard() {
         var tFrom = 0
         while (true) {
           var tPage = await supabase.from('scores').select('player_id,match_id,pts_total,pts_exact')
-            .in('player_id', roomPlayerIds).in('match_id', fIds).gt('pts_total', 0).range(tFrom, tFrom + 999)
+            .in('player_id', roomPlayerIds).in('match_id', fIds).gt('pts_total', 0).order('id',{ascending:true}).range(tFrom, tFrom + 999)
           if (!tPage.data || tPage.data.length === 0) break
           topScores = topScores.concat(tPage.data)
           if (tPage.data.length < 1000) break

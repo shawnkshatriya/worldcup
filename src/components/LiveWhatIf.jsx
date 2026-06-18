@@ -39,7 +39,7 @@ export default function LiveWhatIf({ match, player, roomCode }) {
       var scores = []
       var from = 0
       while (true) {
-        var page = await supabase.from('scores').select('player_id,pts_total').in('player_id', ids).range(from, from+999)
+        var page = await supabase.from('scores').select('player_id,pts_total,match_id').order('id',{ascending:true}).in('player_id', ids).range(from, from+999)
         if (!page.data || page.data.length === 0) break
         scores = scores.concat(page.data)
         if (page.data.length < 1000) break
@@ -47,7 +47,13 @@ export default function LiveWhatIf({ match, player, roomCode }) {
       }
       var totals = {}
       players.forEach(function(p){ totals[p.id] = 0 })
-      scores.forEach(function(s){ totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0) })
+      var seenSc = {}
+      scores.forEach(function(s){
+        var k = s.player_id + '_' + s.match_id
+        if (seenSc[k]) return
+        seenSc[k] = true
+        totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0)
+      })
 
       // 3. Everyone's prediction for THIS match only
       var { data: preds } = await supabase.from('predictions')
