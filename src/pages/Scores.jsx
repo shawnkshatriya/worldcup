@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase, syncAndRecalc, mapTeamName } from '../lib/supabase'
 import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import { usePlayer } from '../hooks/usePlayer'
@@ -144,10 +144,15 @@ export default function Scores() {
   }
 
   // Auto-sync from API every 90 seconds
+  const autoSyncing = useRef(false)
   useEffect(function() {
     var id = setInterval(function() {
-      if (!demoMode && !syncing) {
-        syncAndRecalc().then(function() { loadMatches() }).catch(function(){})
+      if (!demoMode && !syncing && !autoSyncing.current) {
+        autoSyncing.current = true
+        syncAndRecalc()
+          .then(function() { loadMatches() })
+          .catch(function(){})
+          .finally(function(){ autoSyncing.current = false })
       }
     }, 90000)
     return function() { clearInterval(id) }

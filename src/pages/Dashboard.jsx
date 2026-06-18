@@ -384,7 +384,7 @@ export default function Dashboard() {
                       {m.pred && m.pred.home_goals != null ? (
                         <div style={{textAlign:'right'}}>
                           <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{m.pred.home_goals} - {m.pred.away_goals}</span>
-                          <div style={{fontSize:9,color:'var(--c-muted)'}}>up to +{m.phase && m.phase.startsWith('GROUP') ? 9 : 12} pts</div>
+                          <div style={{fontSize:9,color:'var(--c-muted)'}}>up to +{m.phase && m.phase.startsWith('GROUP') ? 9 : 10} pts</div>
                         </div>
                       ) : (
                         <Link to="/predictions" style={{fontSize:11,color:'var(--c-warn)',fontWeight:600}}>Not predicted</Link>

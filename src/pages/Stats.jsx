@@ -145,13 +145,21 @@ export default function Stats() {
 
   var ptsOverTime=useMemo(function(){
     var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
-    return base.map(function(pl){ return {
-      label:pl.name, color:pl.color,
-      points: finished.slice(0,20).map(function(m,i){
-        var cumPts=scores.filter(function(s){return s.player_id===pl.id&&finished.slice(0,i+1).some(function(x){return x.id===s.match_id})}).reduce(function(a,s){return a+(s.pts_total||0)},0)
-        return {label:'M'+(i+1),y:cumPts}
-      })
-    }})
+    return base.map(function(pl){
+      // Deduped score-per-match for this player
+      var byMatch = {}
+      scores.forEach(function(s){ if (s.player_id===pl.id) byMatch[String(s.match_id)] = s })
+      return {
+        label:pl.name, color:pl.color,
+        points: finished.slice(0,20).map(function(m,i){
+          var cumPts = finished.slice(0,i+1).reduce(function(a,fm){
+            var s = byMatch[String(fm.id)]
+            return a + (s ? (s.pts_total||0) : 0)
+          }, 0)
+          return {label:'M'+(i+1),y:cumPts}
+        })
+      }
+    })
   },[sorted,finished,scores,selectedPlayers])
 
   var accuracyByPlayer=useMemo(function(){

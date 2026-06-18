@@ -62,8 +62,7 @@ export function calcMatchPoints(prediction, result, weights, phase) {
     }
   }
 
-  // KO team bonus is tracked separately, not in per-match scoring
-  var pts_ko_team = 0
+  // KO team bonus is handled separately via winner_picks, not in per-match scoring
 
   return {
     pts_result: pts_result,
