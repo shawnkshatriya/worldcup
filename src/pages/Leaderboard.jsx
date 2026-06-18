@@ -67,8 +67,10 @@ export default function Leaderboard() {
     var from = 0
     var pageSize = 1000
     while (true) {
-      var page = await supabase.from(table).select(cols).range(from, from + pageSize - 1)
-      if (!page.data || page.data.length === 0) break
+      // Stable order is REQUIRED for correct pagination - without it Postgres can
+      // repeat or skip rows across ranges, double-counting points.
+      var page = await supabase.from(table).select(cols).order('id', { ascending: true }).range(from, from + pageSize - 1)
+      if (page.error || !page.data || page.data.length === 0) break
       all = all.concat(page.data)
       if (page.data.length < pageSize) break
       from += pageSize
@@ -94,7 +96,11 @@ export default function Leaderboard() {
     var finishedIds = new Set((finishedMatchRows||[]).map(function(m){ return String(m.id) }))
 
     const built = players.map((p,idx) => {
-      const ps = scores?.filter(s=>s.player_id===p.id)||[]
+      const psRaw = scores?.filter(s=>s.player_id===p.id)||[]
+      // Dedupe by match_id (defensive against duplicate score rows inflating totals)
+      const psMap = {}
+      psRaw.forEach(function(s){ psMap[String(s.match_id)] = s })
+      const ps = Object.keys(psMap).map(function(k){ return psMap[k] })
       const pp = predictions?.filter(pr=>pr.player_id===p.id&&pr.home_goals!=null)||[]
       // Predictions made for matches that have actually finished
       const predsForFinished = pp.filter(function(pr){ return finishedIds.has(String(pr.match_id)) }).length

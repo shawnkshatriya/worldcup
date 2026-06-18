@@ -87,8 +87,8 @@ export async function recalcPlayerScores(roomCode) {
   var pageSize = 1000
   while (true) {
     var pPage = await supabase.from('predictions').select('*, players!inner(room_code)')
-      .eq('players.room_code', roomCode).range(from, from + pageSize - 1)
-    if (!pPage.data || pPage.data.length === 0) break
+      .eq('players.room_code', roomCode).order('id', { ascending: true }).range(from, from + pageSize - 1)
+    if (pPage.error || !pPage.data || pPage.data.length === 0) break
     predictions = predictions.concat(pPage.data)
     if (pPage.data.length < pageSize) break
     from += pageSize

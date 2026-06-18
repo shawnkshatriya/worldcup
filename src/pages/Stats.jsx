@@ -41,10 +41,10 @@ export default function Stats() {
     var all = []
     var from = 0
     while (true) {
-      var q = supabase.from(table).select(cols)
+      var q = supabase.from(table).select(cols).order('id', { ascending: true })
       if (playerIds) q = q.in('player_id', playerIds)
       var page = await q.range(from, from + 999)
-      if (!page.data || page.data.length === 0) break
+      if (page.error || !page.data || page.data.length === 0) break
       all = all.concat(page.data)
       if (page.data.length < 1000) break
       from += 1000
