@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 
 export default function PlayerFilter({ players, selected, onChange }) {
   const [open, setOpen] = useState(false)
+  const [pickedSites, setPickedSites] = useState([])
+  const [pickedTeams, setPickedTeams] = useState([])
   if (!players || players.length <= 2) return null
 
   const allSelected = selected.length === 0 || selected.length === players.length
@@ -12,6 +14,8 @@ export default function PlayerFilter({ players, selected, onChange }) {
   const teams = [...new Set(players.map(function(p){ return p.team }).filter(Boolean))].sort()
 
   function toggle(id) {
+    // Manual individual toggle clears group picks to avoid confusion
+    setPickedSites([]); setPickedTeams([])
     if (selected.includes(id)) {
       onChange(selected.filter(function(s){ return s !== id }))
     } else {
@@ -19,35 +23,29 @@ export default function PlayerFilter({ players, selected, onChange }) {
     }
   }
 
-  function selectAll() { onChange([]) }
+  function selectAll() { setPickedSites([]); setPickedTeams([]); onChange([]) }
 
-  // Toggle a whole site/team in or out of the current selection (additive multi-select)
+  // Recompute selected IDs from site/team picks. Within a category = OR, across categories = AND.
+  function applyGroupPicks(nextSites, nextTeams) {
+    setPickedSites(nextSites)
+    setPickedTeams(nextTeams)
+    if (nextSites.length === 0 && nextTeams.length === 0) { onChange([]); return }
+    var ids = players.filter(function(p){
+      var siteOk = nextSites.length === 0 || nextSites.includes(p.site)
+      var teamOk = nextTeams.length === 0 || nextTeams.includes(p.team)
+      return siteOk && teamOk
+    }).map(function(p){ return p.id })
+    onChange(ids)
+  }
+
   function toggleSite(site) {
-    var siteIds = players.filter(function(p){ return p.site === site }).map(function(p){ return p.id })
-    var allIn = siteIds.every(function(id){ return selected.includes(id) }) && siteIds.length > 0
-    if (allIn) {
-      onChange(selected.filter(function(id){ return !siteIds.includes(id) }))
-    } else {
-      onChange([...new Set(selected.concat(siteIds))])
-    }
+    applyGroupPicks(pickedSites.includes(site) ? pickedSites.filter(function(s){return s!==site}) : pickedSites.concat(site), pickedTeams)
   }
   function toggleTeam(team) {
-    var teamIds = players.filter(function(p){ return p.team === team }).map(function(p){ return p.id })
-    var allIn = teamIds.every(function(id){ return selected.includes(id) }) && teamIds.length > 0
-    if (allIn) {
-      onChange(selected.filter(function(id){ return !teamIds.includes(id) }))
-    } else {
-      onChange([...new Set(selected.concat(teamIds))])
-    }
+    applyGroupPicks(pickedSites, pickedTeams.includes(team) ? pickedTeams.filter(function(t){return t!==team}) : pickedTeams.concat(team))
   }
-  function siteActive(site) {
-    var siteIds = players.filter(function(p){ return p.site === site }).map(function(p){ return p.id })
-    return siteIds.length > 0 && siteIds.every(function(id){ return selected.includes(id) })
-  }
-  function teamActive(team) {
-    var teamIds = players.filter(function(p){ return p.team === team }).map(function(p){ return p.id })
-    return teamIds.length > 0 && teamIds.every(function(id){ return selected.includes(id) })
-  }
+  function siteActive(site) { return pickedSites.includes(site) }
+  function teamActive(team) { return pickedTeams.includes(team) }
 
   const modal = open ? createPortal(
     <>

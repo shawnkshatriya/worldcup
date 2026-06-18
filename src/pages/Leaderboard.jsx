@@ -156,7 +156,12 @@ export default function Leaderboard() {
   rows.forEach(function(r, i){ rankById[r.id] = i + 1 })
   var hasGroupFilter = groupFilter.sites.length > 0 || groupFilter.teams.length > 0
   var filteredRows = hasGroupFilter
-    ? rows.filter(function(r){ return groupFilter.sites.includes(r.site) || groupFilter.teams.includes(r.team) })
+    ? rows.filter(function(r){
+        // Within a category = OR (NJ or TX). Across categories = AND (must match site AND team).
+        var siteOk = groupFilter.sites.length === 0 || groupFilter.sites.includes(r.site)
+        var teamOk = groupFilter.teams.length === 0 || groupFilter.teams.includes(r.team)
+        return siteOk && teamOk
+      })
     : rows
   const sortedRows = [...filteredRows].sort(function(a, b) {
     var av, bv
