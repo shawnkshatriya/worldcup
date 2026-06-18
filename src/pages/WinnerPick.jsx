@@ -89,18 +89,19 @@ export default function WinnerPick() {
     const bonus = weights?.winner_bonus || 20
     const winners = allPicks.filter(p => p.team === actualWinner)
 
-    // Award points to correct pickers
+    // Award points to correct pickers.
+    // NOTE: the bonus is stored ONLY in winner_picks.pts_awarded. The leaderboard,
+    // dashboard, and stats read it from there and add it on top of match scores.
+    // We must NOT also write a scores row (it would double-count, and match_id 104
+    // is the real Final - writing there would clobber the player's actual Final prediction).
     for (const pick of winners) {
       await supabase.from('winner_picks').update({ pts_awarded: bonus }).eq('id', pick.id)
-      // Also add to scores table as a special score entry - match_id null
-      await supabase.from('scores').upsert({
-        player_id: pick.player_id,
-        match_id: 104, // Final match
-        pts_ko_team: bonus,
-        pts_result: 0, pts_diff: 0, pts_exact: 0, pts_approx: 0,
-        pts_total: bonus,
-        calculated_at: new Date().toISOString()
-      }, { onConflict: 'player_id,match_id' })
+    }
+    // Reset any non-winners' awarded points to 0 (in case the winner was changed)
+    const winnerIds = winners.map(function(w){ return w.id })
+    const losers = allPicks.filter(function(p){ return !winnerIds.includes(p.id) && p.pts_awarded > 0 })
+    for (const pick of losers) {
+      await supabase.from('winner_picks').update({ pts_awarded: 0 }).eq('id', pick.id)
     }
     alert(`Awarded ${bonus} pts to ${winners.length} player${winners.length !== 1 ? 's' : ''} who picked ${actualWinner}!`)
     setAwarding(false)

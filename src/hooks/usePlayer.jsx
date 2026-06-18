@@ -128,7 +128,7 @@ export function PlayerProvider({ children }) {
     var { data: nameTaken } = await supabase.from('players').select('id').eq('room_code', room.code).ilike('name', trimName)
     if (nameTaken?.length > 0) throw new Error('NAME_TAKEN')
     // Check if already signed up with this email in this room
-    var { data: existing } = await supabase.from('players').select('*').ilike('email', trimEmail).eq('room_code', room.code).single()
+    var { data: existing } = await supabase.from('players').select('*').ilike('email', trimEmail).eq('room_code', room.code).maybeSingle()
     if (existing) {
       // Already exists - just sign them in
       var { error: signInErr } = await supabase.auth.signInWithPassword({ email: trimEmail, password: 'wc2026_' + trimEmail })

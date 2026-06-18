@@ -37,7 +37,7 @@ function WinnerPickInline({ player, koOpen }) {
 
   useEffect(() => {
     if (!player) return
-    supabase.from('winner_picks').select('*').eq('player_id', player.id).eq('room_code', player.room_code).single()
+    supabase.from('winner_picks').select('*').eq('player_id', player.id).eq('room_code', player.room_code).maybeSingle()
       .then(({ data }) => { if (data) { setMyPick(data); setSelected(data.team) } })
   }, [player])
 
