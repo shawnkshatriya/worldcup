@@ -129,7 +129,7 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
               <path d={pathD} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
               {pts.map((p,i)=><circle key={i} cx={toX(i)} cy={toY(p.y)} r="2.5" fill={s.color}/>)}
               {showLast && (
-                <text x={lx+4} y={ly+4} style={{fontSize:9,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{lastPt.y}{maxV<=100?'%':''}</text>
+                <text x={lx+4} y={ly+4} style={{fontSize:9,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{invertY?'#'+lastPt.y:lastPt.y}{isPercent?'%':''}</text>
               )}
             </g>
           )
