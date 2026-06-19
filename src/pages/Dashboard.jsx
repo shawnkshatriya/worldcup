@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
+import { useEspnLive, effectiveScore } from '../hooks/useEspnLive'
 import { Link } from 'react-router-dom'
 
 const WEIGHT_LABELS = {
@@ -66,6 +67,7 @@ export default function Dashboard() {
   const [myPts, setMyPts]     = useState(null)
   const [weights, setWeights] = useState(null)
   const [nextMatch, setNextMatch] = useState([])
+  const espnLive = useEspnLive(nextMatch)
   const [recentResults, setRecentResults] = useState([])
   const [poolStats, setPoolStats] = useState(null)
   const [myUpcoming, setMyUpcoming] = useState([])
@@ -351,12 +353,20 @@ export default function Dashboard() {
               <div className="card" style={{marginBottom:0}}>
                 <div className="card-title">Upcoming matches</div>
                 {nextMatch.map(function(nm, idx) {
+                  var eff = effectiveScore(nm, espnLive)
                   return (
                     <div key={nm.id} style={{padding:'10px 0',borderBottom:idx < nextMatch.length-1 ? '1px solid var(--c-border)' : 'none',textAlign:'center'}}>
                       <div style={{fontFamily:'var(--font-display)',fontSize:18,letterSpacing:'0.04em',marginBottom:2,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                        <Flag team={nm.home_team}/>{nm.home_team || 'TBD'} <span style={{color:'var(--c-muted)',fontSize:14}}>vs</span> {nm.away_team || 'TBD'}<Flag team={nm.away_team}/>
+                        <Flag team={nm.home_team}/>{nm.home_team || 'TBD'}
+                        {eff.isLive
+                          ? <span style={{color:'var(--c-danger)',fontWeight:700}}>{eff.home}-{eff.away}</span>
+                          : <span style={{color:'var(--c-muted)',fontSize:14}}>vs</span>}
+                        {nm.away_team || 'TBD'}<Flag team={nm.away_team}/>
                       </div>
-                      {nm.kickoff && (
+                      {eff.isLive && (
+                        <div style={{fontSize:11,color:'var(--c-danger)',fontWeight:700,marginBottom:2}}>● LIVE {eff.clock||''}</div>
+                      )}
+                      {!eff.isLive && nm.kickoff && (
                         <div style={{fontSize:12,color:'var(--c-muted)'}}>
                           {new Date(nm.kickoff).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
                           {' at '}

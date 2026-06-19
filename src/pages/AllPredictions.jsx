@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, mapTeamName } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
 
@@ -41,6 +41,7 @@ export default function AllPredictions() {
   const [groupBy, setGroupBy] = useState('day')
   const [allMatches, setAllMatches] = useState([])
   const [activeDay, setActiveDay] = useState(null)
+  const [espnLive, setEspnLive] = useState({})
 
   useEffect(() => {
     if (playerLoading) return
@@ -48,6 +49,41 @@ export default function AllPredictions() {
     loadPoolData()
   }, [player, playerLoading])
   useEffect(() => { loadMatchData() }, [phase, groupBy, activeDay])
+
+  // ESPN live-score overlay so people can compare live scores (incl 0-0) to predictions
+  const anyLiveAP = matches.some(function(m){
+    if (m.status==='IN_PLAY' || m.status==='PAUSED') return true
+    if (m.status==='SCHEDULED' && m.kickoff) {
+      var ko = new Date(m.kickoff), now = new Date()
+      if (now >= ko && now - ko < 2.5*60*60*1000) return true
+    }
+    return false
+  })
+  useEffect(function() {
+    if (!anyLiveAP) { setEspnLive({}); return }
+    function norm(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
+    function pull() {
+      var today = new Date()
+      var dateStr = '' + today.getFullYear() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0')
+      fetch('/api/live-scores?date=' + dateStr)
+        .then(function(r){ return r.json() })
+        .then(function(d){
+          if (!d.ok || !d.matches) return
+          var map = {}
+          d.matches.forEach(function(em){
+            if (em.state === 'in') {
+              var h = mapTeamName(em.home), a = mapTeamName(em.away)
+              map[norm(h)+'|'+norm(a)] = { home: em.homeScore, away: em.awayScore, clock: em.clock }
+            }
+          })
+          setEspnLive(map)
+        })
+        .catch(function(){})
+    }
+    pull()
+    var id = setInterval(pull, 25000)
+    return function() { clearInterval(id) }
+  }, [anyLiveAP])
 
   async function loadPoolData() {
     const { data: playerData } = await supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500)
@@ -286,9 +322,22 @@ export default function AllPredictions() {
                         return <div style={{fontSize:9,color:'var(--c-accent2)',marginTop:2}}>Most picked: {top[0]} ({top[1]})</div>
                       })()}
                     </td>
+                    {(function(){
+                      var nrm = function(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
+                      var live = espnLive[nrm(m.home_team)+'|'+nrm(m.away_team)]
+                      var started = m.status==='IN_PLAY' || m.status==='PAUSED' || (m.kickoff && new Date() >= new Date(m.kickoff))
+                      return (
                     <td style={{textAlign:'center',fontFamily:'var(--font-display)',fontSize:18,fontWeight:700,color:'var(--c-text)'}}>
-                      {m.home_goals != null ? `${m.home_goals}-${m.away_goals}` : <span style={{color:'var(--c-hint)',fontSize:12}}>TBD</span>}
+                      {m.home_goals != null
+                        ? `${m.home_goals}-${m.away_goals}`
+                        : live
+                          ? <div><div>{live.home}-{live.away}</div>{live.clock && <div style={{fontSize:9,color:'var(--c-danger)',fontWeight:700}}>{live.clock}</div>}</div>
+                          : started
+                            ? <span style={{color:'var(--c-danger)',fontSize:12,fontWeight:700}}>LIVE</span>
+                            : <span style={{color:'var(--c-hint)',fontSize:12}}>TBD</span>}
                     </td>
+                      )
+                    })()}
                     {players.map(p => {
                       const revealed = isAdmin || isMatchRevealed(m)
                       const pred = predictions[String(m.id)]?.[String(p.id)]

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import Flag from '../components/Flag'
 import MatchPreview from '../components/MatchPreview'
+import { useEspnLive } from '../hooks/useEspnLive'
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
   {name:'Austria',flag:'🇦🇹'},{name:'Belgium',flag:'🇧🇪'},{name:'Bosnia and Herzegovina',flag:'🇧🇦'},
@@ -139,6 +140,7 @@ export default function Predictions() {
   const { player } = usePlayer()
   const [activePhase, setActivePhase] = useState('GROUP_A')
   const [matches, setMatches] = useState([])
+  const espnLiveP = useEspnLive(matches)
   const [preds, setPreds] = useState({})
   const [saving, setSaving] = useState({})
   const [saved, setSaved] = useState({})
@@ -449,9 +451,14 @@ export default function Predictions() {
                     {m.status === 'FINISHED' && m.home_goals != null && (
                       <span style={{color:'var(--c-success)',marginLeft:6,fontWeight:700}}>· FT {m.home_goals}-{m.away_goals}</span>
                     )}
-                    {(m.status === 'IN_PLAY' || m.status === 'PAUSED') && m.home_goals != null && (
-                      <span style={{color:'var(--c-danger)',marginLeft:6,fontWeight:700}}>· {m.status === 'PAUSED' ? 'HT' : 'LIVE'} {m.home_goals}-{m.away_goals}</span>
-                    )}
+                    {(m.status === 'IN_PLAY' || m.status === 'PAUSED' || (function(){ var n=function(s){return (s||'').toLowerCase().replace(/[^a-z]/g,'')}; return !!espnLiveP[n(m.home_team)+'|'+n(m.away_team)] })()) && (function(){
+                      var n=function(s){return (s||'').toLowerCase().replace(/[^a-z]/g,'')}
+                      var live = espnLiveP[n(m.home_team)+'|'+n(m.away_team)]
+                      var hh = live ? live.home : m.home_goals
+                      var aa = live ? live.away : m.away_goals
+                      if (hh == null) return null
+                      return <span style={{color:'var(--c-danger)',marginLeft:6,fontWeight:700}}>· {m.status === 'PAUSED' ? 'HT' : 'LIVE'} {hh}-{aa}{live && live.clock ? ' '+live.clock : ''}</span>
+                    })()}
                   </div>
                 )}
                 {(getVenueByMatchup(m.home_team, m.away_team) || getKnockoutVenue(m.match_number) || (m.match_number && getVenue(m.match_number))) && (
