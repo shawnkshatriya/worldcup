@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { supabase, recalcPlayerScores, recalcAllRooms } from '../lib/supabase'
+import { supabase, recalcPlayerScores, recalcAllRooms, backfillBestRanks } from '../lib/supabase'
 import { getAllRooms, createRoom, deleteRoom, updateRoom, regenToken, saveRoomWeights } from '../lib/rooms'
 import { runScoringTests } from '../lib/testRunner'
 import { seedDemoData, clearDemoData } from '../lib/demoData'
@@ -33,6 +33,7 @@ export default function Admin() {
   const [matches, setMatches] = useState([])
   const [resultPhase, setResultPhase] = useState('GROUP_A')
   const [recalcing, setRecalcing] = useState(false)
+  const [backfilling, setBackfilling] = useState(false)
   const [recalcMsg, setRecalcMsg] = useState('')
   const [newRoomName, setNewRoomName] = useState('')
   const [creating, setCreating] = useState(false)
@@ -104,6 +105,14 @@ export default function Admin() {
     await recalcPlayerScores(adminRoom)
     setRecalcing(false); setRecalcMsg('Scores recalculated!')
     setTimeout(() => setRecalcMsg(''), 3000)
+  }
+
+  async function handleBackfillRanks() {
+    setBackfilling(true); setRecalcMsg('')
+    var r = await backfillBestRanks(adminRoom)
+    setBackfilling(false)
+    setRecalcMsg(r.ok ? ('Best ranks backfilled for ' + r.updated + ' players!') : ('Backfill failed: ' + r.error))
+    setTimeout(() => setRecalcMsg(''), 4000)
   }
 
   async function saveResult(m) {
@@ -358,6 +367,9 @@ export default function Admin() {
               <button className="btn btn-accent" onClick={saveWeights}>Save weights</button>
               <button className="btn" onClick={handleRecalc} disabled={recalcing}>
                 {recalcing ? 'Recalculating...' : 'Recalculate all scores'}
+              </button>
+              <button className="btn" onClick={handleBackfillRanks} disabled={backfilling}>
+                {backfilling ? 'Backfilling...' : 'Backfill best ranks'}
               </button>
               {weightsSaved && <span className="badge badge-green">Saved!</span>}
               {recalcMsg && <span className="badge badge-green">{recalcMsg}</span>}

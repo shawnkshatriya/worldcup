@@ -203,6 +203,61 @@ export async function recalcPlayerScores(roomCode) {
   } catch (e) { /* best_rank column may not exist yet - ignore */ }
 }
 
+// One-time historical backfill: replay every finished match in chronological order,
+// compute standings after each, and record each player's BEST (lowest) rank ever held.
+// This captures podium moments that the live recalc (current-rank-only) would miss.
+export async function backfillBestRanks(roomCode) {
+  try {
+    var playersRes = await supabase.from('players').select('id').eq('room_code', roomCode)
+    var playerIds = (playersRes.data || []).map(function(p){ return p.id })
+    if (playerIds.length === 0) return { ok: true, updated: 0 }
+
+    // Finished matches in chronological (kickoff) order
+    var mRes = await supabase.from('matches').select('id,kickoff,home_goals').eq('status','FINISHED')
+    var matches = (mRes.data || []).filter(function(m){ return m.home_goals != null })
+      .sort(function(a,b){ return new Date(a.kickoff||0) - new Date(b.kickoff||0) })
+
+    // All scores for these players
+    var scores = []
+    var from = 0
+    while (true) {
+      var page = await supabase.from('scores').select('player_id,match_id,pts_total').in('player_id', playerIds).order('id',{ascending:true}).range(from, from+999)
+      if (!page.data || page.data.length === 0) break
+      scores = scores.concat(page.data)
+      if (page.data.length < 1000) break
+      from += 1000
+    }
+    var scoreByPM = {}
+    scores.forEach(function(s){ scoreByPM[s.player_id + '_' + s.match_id] = (s.pts_total||0) })
+
+    var cum = {}, best = {}
+    playerIds.forEach(function(id){ cum[id] = 0; best[id] = playerIds.length })
+
+    matches.forEach(function(m){
+      playerIds.forEach(function(id){
+        var pts = scoreByPM[id + '_' + m.id]
+        if (pts) cum[id] += pts
+      })
+      var standings = playerIds.slice().sort(function(a,b){ return cum[b]-cum[a] })
+      standings.forEach(function(id, idx){
+        var rank = idx + 1
+        if (rank < best[id]) best[id] = rank
+      })
+    })
+
+    // Write each player's best ever rank
+    var updated = 0
+    for (var i = 0; i < playerIds.length; i++) {
+      var id = playerIds[i]
+      var r = await supabase.from('players').update({ best_rank: best[id] }).eq('id', id).select()
+      if (!r.error) updated++
+    }
+    return { ok: true, updated: updated }
+  } catch (e) {
+    return { ok: false, error: String(e) }
+  }
+}
+
 export async function recalcAllRooms() {
   var res = await supabase.from('rooms').select('code')
   var rooms = res.data || []
