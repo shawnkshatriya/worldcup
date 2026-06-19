@@ -229,9 +229,9 @@ export default function Fun() {
         {/* ACHIEVEMENTS */}
         {tab==='achievements' && (
           <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
-            {sortedFiltered.map((p,rank) => {
-              // best_rank persisted in DB (cross-device). Falls back to current if unset.
-              var currentRank = rank + 1
+            {sortedFiltered.map((p) => {
+              // True overall rank (unfiltered position), not the filtered index
+              var currentRank = sorted.findIndex(function(sp){ return sp.id === p.id }) + 1
               var bestRank = (p.best_rank != null) ? Math.min(p.best_rank, currentRank) : currentRank
               const unlocked = computeAchievements(p, bestRank, null)
               const locked   = ACHIEVEMENTS.filter(a=>!unlocked.find(u=>u.id===a.id))
