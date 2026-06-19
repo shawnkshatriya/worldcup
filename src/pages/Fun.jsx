@@ -140,7 +140,7 @@ export default function Fun() {
       return m?.home_goals===0&&m?.away_goals===0&&pred.home_goals===0&&pred.away_goals===0
     }).length
     return {
-      id:p.id, name:p.name, color:AVATAR_COLORS[idx%AVATAR_COLORS.length],
+      id:p.id, name:p.name, best_rank:p.best_rank, color:AVATAR_COLORS[idx%AVATAR_COLORS.length],
       total:ps.reduce((a,s)=>a+(s.pts_total||0),0),
       correct:ps.filter(s=>s.pts_result>0||s.pts_exact>0).length,
       diff:ps.filter(s=>s.pts_diff>0).length,
