@@ -76,7 +76,7 @@ export function ColChart({ data, color='var(--c-accent)', height=100 }) {
 }
 
 // Line chart with value labels on last point
-export function LineChart({ series, height=80, showLast=true }) {
+export function LineChart({ series, height=80, showLast=true, isPercent=false }) {
   // series: [{label, color, points:[{x,y,label}]}]
   if (!series?.length || !series[0]?.points?.length) return <p style={{color:'var(--c-muted)',fontSize:12}}>Not enough data</p>
   const W=300, H=height, pad=8
@@ -93,7 +93,7 @@ export function LineChart({ series, height=80, showLast=true }) {
       <svg width="100%" viewBox={`0 0 ${W} ${H+20}`} style={{overflow:'visible',display:'block'}}>
         {/* Y axis gridlines + labels - adapt to data (percent vs raw points) */}
         {(function(){
-          var isPct = maxV <= 100
+          var isPct = isPercent
           var ticks = isPct ? [0,25,50,75,100] : [0, 0.25, 0.5, 0.75, 1].map(function(f){ return Math.round((minV + f*range)/5)*5 })
           // de-dupe and keep ascending
           ticks = Array.from(new Set(ticks)).sort(function(a,b){return a-b})

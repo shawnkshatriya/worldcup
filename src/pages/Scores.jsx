@@ -37,7 +37,7 @@ export default function Scores() {
   const [lastSyncClean, setLastSyncClean] = useState(null)
   const [syncing, setSyncing]   = useState(false)
   const [demoMode, setDemoMode] = useState(false)
-  const [groupBy, setGroupBy]   = useState('group')
+  const [groupBy, setGroupBy]   = useState('day')
   const [predDist, setPredDist] = useState({}) // 'group' or 'day'
   const [myPicks, setMyPicks] = useState({})
   const [whatIfMatch, setWhatIfMatch] = useState(null)
@@ -196,7 +196,17 @@ export default function Scores() {
     return function() { clearInterval(id) }
   }, [anyLive])
 
-  // Group matches by phase or by day
+  // When in day view, scroll to today's matches (or the next upcoming day) on load
+  useEffect(function() {
+    if (groupBy !== 'day' || loading || matches.length === 0) return
+    var todayLabel = new Date().toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' })
+    var id = 'daygroup-' + todayLabel.replace(/[^a-zA-Z0-9]/g,'')
+    var t = setTimeout(function(){
+      var el = document.getElementById(id)
+      if (el) el.scrollIntoView({ behavior:'smooth', block:'start' })
+    }, 300)
+    return function(){ clearTimeout(t) }
+  }, [groupBy, loading, matches.length])
   var nrmTeam = function(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
   var displayMatches = matches
   if (filter === 'live') {
@@ -237,7 +247,7 @@ export default function Scores() {
         <div className="page-header-inner">
           <h1>Live Scores</h1>
           <p>
-            {demoMode ? `Demo mode — ${finishedCount} simulated matches` : 'Powered by football-data.org'}
+            {demoMode ? `Demo mode — ${finishedCount} simulated matches` : 'Live scores via ESPN & football-data'}
             {(isAdmin ? lastSync : lastSyncClean) && <span style={{color:'var(--c-muted)',marginLeft:8}}>· Synced {isAdmin ? lastSync : lastSyncClean}</span>}
           </p>
         </div>
@@ -305,7 +315,7 @@ export default function Scores() {
           var eb = Math.min.apply(null, b[1].map(function(m){ return m.kickoff ? new Date(m.kickoff).getTime() : Infinity }))
           return ea - eb
         }).map(([phase, ms]) => (
-          <div className="card" key={phase} style={{marginBottom:'1rem'}}>
+          <div className="card" key={phase} id={groupBy==='day' ? ('daygroup-'+phase.replace(/[^a-zA-Z0-9]/g,'')) : undefined} style={{marginBottom:'1rem'}}>
             <div className="card-title">{groupBy === 'group' ? (PHASE_LABELS[phase] || phase) : phase}</div>
             {ms.map(m => {
               var nrm = function(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,'') }
