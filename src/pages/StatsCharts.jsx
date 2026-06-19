@@ -76,7 +76,7 @@ export function ColChart({ data, color='var(--c-accent)', height=100 }) {
 }
 
 // Line chart with value labels on last point
-export function LineChart({ series, height=80, showLast=true, isPercent=false }) {
+export function LineChart({ series, height=80, showLast=true, isPercent=false, invertY=false }) {
   // series: [{label, color, points:[{x,y,label}]}]
   if (!series?.length || !series[0]?.points?.length) return <p style={{color:'var(--c-muted)',fontSize:12}}>Not enough data</p>
   const W=300, H=height, pad=8
@@ -86,7 +86,11 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false })
   const nPts = series[0].points.length
 
   function toX(i) { return pad + (i/(nPts-1))*(W-pad*2) }
-  function toY(v) { return H - pad - ((v-minV)/range)*(H-pad*2) }
+  function toY(v) {
+    var frac = (v-minV)/range
+    if (invertY) frac = 1 - frac // rank 1 at top
+    return H - pad - frac*(H-pad*2)
+  }
 
   return (
     <div style={{width:'100%',overflowX:'auto',paddingRight:32}}>
@@ -94,7 +98,14 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false })
         {/* Y axis gridlines + labels - adapt to data (percent vs raw points) */}
         {(function(){
           var isPct = isPercent
-          var ticks = isPct ? [0,25,50,75,100] : [0, 0.25, 0.5, 0.75, 1].map(function(f){ return Math.round((minV + f*range)/5)*5 })
+          var ticks
+          if (invertY) {
+            // Rank axis: show integer ranks (1 at top). Pick a few evenly.
+            var lo = Math.max(1, Math.floor(minV)), hi = Math.ceil(maxV)
+            ticks = [lo, Math.round((lo+hi)/2), hi]
+          } else {
+            ticks = isPct ? [0,25,50,75,100] : [0, 0.25, 0.5, 0.75, 1].map(function(f){ return Math.round((minV + f*range)/5)*5 })
+          }
           // de-dupe and keep ascending
           ticks = Array.from(new Set(ticks)).sort(function(a,b){return a-b})
           return ticks.map(function(v){
@@ -102,7 +113,7 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false })
             return (
               <g key={v}>
                 <line x1={pad} y1={yp} x2={W-pad} y2={yp} stroke="var(--c-border)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <text x={pad-2} y={yp+3} textAnchor="end" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{v}{isPct?'%':''}</text>
+                <text x={pad-2} y={yp+3} textAnchor="end" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{invertY?'#'+v:v}{isPct?'%':''}</text>
               </g>
             )
           })

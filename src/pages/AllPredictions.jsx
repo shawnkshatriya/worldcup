@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, mapTeamName } from '../lib/supabase'
+import { localTime, localDateLong } from '../lib/timeFormat'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
 
@@ -309,7 +310,7 @@ export default function AllPredictions() {
                         <div style={{fontSize:10,color:'var(--c-muted)',marginTop:2}}>
                           {new Date(m.kickoff).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
                           {' '}
-                          {new Date(m.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
+                          {localTime(m.kickoff)}
                         </div>
                       )}
                       {isMatchRevealed(m) && predictions[String(m.id)] && (function() {

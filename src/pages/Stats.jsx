@@ -162,6 +162,35 @@ export default function Stats() {
     })
   },[sorted,finished,scores,selectedPlayers])
 
+  // Rank over time: replay standings match-by-match for ALL players, extract selected players' rank.
+  var rankOverTime=useMemo(function(){
+    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
+    if (base.length === 0 || finished.length === 0) return []
+    var scoreByPM = {}
+    scores.forEach(function(s){ scoreByPM[s.player_id + '_' + s.match_id] = s })
+    var allPlayerIds = sorted.map(function(p){ return p.id })
+    var fin = finished.slice(0,20)
+    var cum = {}
+    allPlayerIds.forEach(function(id){ cum[id] = 0 })
+    var rankSeriesByPlayer = {}
+    base.forEach(function(p){ rankSeriesByPlayer[p.id] = [] })
+    fin.forEach(function(m, i){
+      allPlayerIds.forEach(function(id){
+        var s = scoreByPM[id + '_' + m.id]
+        if (s) cum[id] += (s.pts_total||0)
+      })
+      var standings = allPlayerIds.slice().sort(function(a,b){ return cum[b]-cum[a] })
+      var rankOf = {}
+      standings.forEach(function(id, idx){ rankOf[id] = idx+1 })
+      base.forEach(function(p){
+        rankSeriesByPlayer[p.id].push({ label:'M'+(i+1), y: rankOf[p.id] })
+      })
+    })
+    return base.map(function(pl){
+      return { label:pl.name, color:pl.color, points: rankSeriesByPlayer[pl.id] }
+    })
+  },[sorted,finished,scores,selectedPlayers])
+
   var accuracyByPlayer=useMemo(function(){
     var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
     return base.map(function(pl){ return {
@@ -226,7 +255,7 @@ export default function Stats() {
       {tab==='tournament' ? <StatsTournament finished={finished} totalGoals={totalGoals} avgGoals={avgGoals} topScorer={topScorer} goalsHist={goalsHist} groupGoals={groupGoals} groupCounts={groupCounts} topTeams={topTeams} scoreless={scoreless} highScoring={highScoring} predictions={predictions}/> : null}
       {tab==='players' ? <StatsPlayers sorted={filteredSorted} maxPts={maxPts} leader={leader} playerStats={playerStats} poolAccuracy={poolAccuracy} poolExactRate={poolExactRate} players={players} currentPlayer={player} finished={finished} predictions={predictions} scores={scores} matches={matches}/> : null}
       {tab==='insights' ? <StatsInsights players={players} scores={scores} matches={matches} predictions={predictions}/> : null}
-      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} accuracyByPlayer={accuracyByPlayer} selectedPlayers={selectedPlayers}/> : null}
+      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} accuracyByPlayer={accuracyByPlayer} rankOverTime={rankOverTime} selectedPlayers={selectedPlayers}/> : null}
       {tab==='funfacts' ? <FunFacts sorted={sorted} playerStats={playerStats} leader={sorted[0]} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
       </div>
     </div>

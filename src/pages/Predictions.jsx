@@ -6,6 +6,7 @@ import { getVenue, getVenueByMatchup, getKnockoutVenue } from '../lib/venues'
 import Flag from '../components/Flag'
 import MatchPreview from '../components/MatchPreview'
 import { useEspnLive } from '../hooks/useEspnLive'
+import { localTime } from '../lib/timeFormat'
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
   {name:'Austria',flag:'🇦🇹'},{name:'Belgium',flag:'🇧🇪'},{name:'Bosnia and Herzegovina',flag:'🇧🇦'},
@@ -439,10 +440,10 @@ export default function Predictions() {
                   <div style={{textAlign:'center',fontSize:13,color:'var(--c-muted)',marginBottom:6}}>
                     {new Date(m.kickoff).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
                     {' · '}
-                    {new Date(m.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
+                    {localTime(m.kickoff)}
                     {!locked && (
                       <span style={{color:'var(--c-warn)',marginLeft:6}}>
-                        {'· Locks ' + new Date(new Date(m.kickoff).getTime() - LOCK_BUFFER_MS).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})}
+                        {'· Locks ' + localTime(new Date(new Date(m.kickoff).getTime() - LOCK_BUFFER_MS))}
                       </span>
                     )}
                     {locked && m.status !== 'FINISHED' && (

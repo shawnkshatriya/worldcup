@@ -104,10 +104,10 @@ export default function Fun() {
 
   async function loadAll() {
     setLoading(true)
-    const [{ data:pl },{ data:ma }] = await Promise.all([
-      supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500),
-      supabase.from('matches').select('*').order('match_number').limit(200),
-    ])
+    var plRes = await supabase.from('players').select('id,name,best_rank').eq('room_code', roomCode).order('created_at').limit(500)
+    if (plRes.error) plRes = await supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500)
+    var ma = (await supabase.from('matches').select('*').order('match_number').limit(200)).data
+    var pl = plRes.data
     var ids = (pl||[]).map(function(p){ return p.id })
     var sc = ids.length ? await fetchRows('scores', ids) : []
     var pr = ids.length ? await fetchRows('predictions', ids) : []
@@ -230,7 +230,10 @@ export default function Fun() {
         {tab==='achievements' && (
           <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
             {sortedFiltered.map((p,rank) => {
-              const unlocked = computeAchievements(p, rank+1, null)
+              // best_rank persisted in DB (cross-device). Falls back to current if unset.
+              var currentRank = rank + 1
+              var bestRank = (p.best_rank != null) ? Math.min(p.best_rank, currentRank) : currentRank
+              const unlocked = computeAchievements(p, bestRank, null)
               const locked   = ACHIEVEMENTS.filter(a=>!unlocked.find(u=>u.id===a.id))
               return (
                 <div key={p.id} className="card" style={{marginBottom:0}}>

@@ -177,9 +177,31 @@ export async function recalcPlayerScores(roomCode) {
       }
     }
   }
-}
 
-// --- Recalculate ALL rooms at once -------------------------------------------
+  // Update best_rank for each player based on current standings.
+  // This also backfills historical bests since recalc replays all scored matches.
+  try {
+    var totalsByPlayer = {}
+    upserts.forEach(function(u){ totalsByPlayer[u.player_id] = (totalsByPlayer[u.player_id]||0) + (u.pts_total||0) })
+    // Include winner bonus
+    var wpRes = await supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode)
+    ;(wpRes.data||[]).forEach(function(w){ totalsByPlayer[w.player_id] = (totalsByPlayer[w.player_id]||0) + (w.pts_awarded||0) })
+    // All room players (so people with 0 points still rank)
+    var allPRes = await supabase.from('players').select('id,best_rank').eq('room_code', roomCode)
+    var allP = allPRes.data || []
+    allP.forEach(function(p){ if (totalsByPlayer[p.id] == null) totalsByPlayer[p.id] = 0 })
+    var ranked = allP.map(function(p){ return p.id }).sort(function(a,b){ return totalsByPlayer[b]-totalsByPlayer[a] })
+    for (var ri = 0; ri < ranked.length; ri++) {
+      var pid = ranked[ri]
+      var curRank = ri + 1
+      var existing = allP.find(function(p){ return p.id === pid })
+      var prevBest = existing && existing.best_rank
+      if (prevBest == null || curRank < prevBest) {
+        await supabase.from('players').update({ best_rank: curRank }).eq('id', pid).then(function(){}, function(){})
+      }
+    }
+  } catch (e) { /* best_rank column may not exist yet - ignore */ }
+}
 
 export async function recalcAllRooms() {
   var res = await supabase.from('rooms').select('code')

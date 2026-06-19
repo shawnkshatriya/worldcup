@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
 import { useEspnLive, effectiveScore } from '../hooks/useEspnLive'
+import { localTime, localDateLong } from '../lib/timeFormat'
 import { Link } from 'react-router-dom'
 
 const WEIGHT_LABELS = {
@@ -368,9 +369,7 @@ export default function Dashboard() {
                       )}
                       {!eff.isLive && nm.kickoff && (
                         <div style={{fontSize:12,color:'var(--c-muted)'}}>
-                          {new Date(nm.kickoff).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
-                          {' at '}
-                          {new Date(nm.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
+                          {localDateLong(nm.kickoff)} at {localTime(nm.kickoff)}
                         </div>
                       )}
                     </div>

@@ -5,6 +5,7 @@ import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
 import LiveWhatIf from '../components/LiveWhatIf'
 import MatchDetail from '../components/MatchDetail'
+import { localTime, localDateShort } from '../lib/timeFormat'
 
 const PHASE_LABELS = {
   GROUP_A:'Group A', GROUP_B:'Group B', GROUP_C:'Group C', GROUP_D:'Group D',
@@ -39,6 +40,7 @@ export default function Scores() {
   const [demoMode, setDemoMode] = useState(false)
   const [groupBy, setGroupBy]   = useState('day')
   const [predDist, setPredDist] = useState({}) // 'group' or 'day'
+  const [expandedDist, setExpandedDist] = useState(null)
   const [myPicks, setMyPicks] = useState({})
   const [whatIfMatch, setWhatIfMatch] = useState(null)
   const [detailMatch, setDetailMatch] = useState(null)
@@ -74,8 +76,10 @@ export default function Scores() {
     // Show distribution for any started/finished match (predictions are locked by then)
     var finishedIds = (data || []).filter(function(m){return m.status==='FINISHED'||m.status==='IN_PLAY'||m.status==='PAUSED'}).map(function(m){return m.id})
     if (finishedIds.length > 0 && player) {
-      var roomPlayersRes = await supabase.from('players').select('id').eq('room_code', player.room_code).limit(500)
+      var roomPlayersRes = await supabase.from('players').select('id,name').eq('room_code', player.room_code).limit(500)
       var rpIds = (roomPlayersRes.data || []).map(function(p){ return p.id })
+      var nameById = {}
+      ;(roomPlayersRes.data || []).forEach(function(p){ nameById[p.id] = p.name })
       var preds = []
       if (rpIds.length) {
         var dFrom = 0
@@ -89,13 +93,18 @@ export default function Scores() {
         }
       }
       var dist = {}
+      var seenPM = {}
       preds.forEach(function(p) {
-        if (!dist[p.match_id]) dist[p.match_id] = { home: 0, draw: 0, away: 0, total: 0 }
+        var pmKey = p.player_id + '_' + p.match_id
+        if (seenPM[pmKey]) return // dedupe
+        seenPM[pmKey] = true
+        if (!dist[p.match_id]) dist[p.match_id] = { home: 0, draw: 0, away: 0, total: 0, picks: { home: [], draw: [], away: [] } }
         var d = dist[p.match_id]
         d.total++
-        if (p.home_goals > p.away_goals) d.home++
-        else if (p.home_goals < p.away_goals) d.away++
-        else d.draw++
+        var entry = { name: nameById[p.player_id] || 'Unknown', h: p.home_goals, a: p.away_goals }
+        if (p.home_goals > p.away_goals) { d.home++; d.picks.home.push(entry) }
+        else if (p.home_goals < p.away_goals) { d.away++; d.picks.away.push(entry) }
+        else { d.draw++; d.picks.draw.push(entry) }
       })
       setPredDist(dist)
     }
@@ -359,9 +368,7 @@ export default function Scores() {
                   )}
                   {m.kickoff && (
                     <div style={{fontSize:10,color:'var(--c-muted)',marginTop:2}}>
-                      {new Date(m.kickoff).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
-                      {' '}
-                      {new Date(m.kickoff).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/New_York'})} ET
+                      {localDateShort(m.kickoff)} {localTime(m.kickoff)}
                     </div>
                   )}
                   <div style={{marginTop:3}}>
@@ -379,10 +386,32 @@ export default function Scores() {
                 </div>
               </div>
               {predDist[m.id] && (
-                <div style={{display:'flex',justifyContent:'center',gap:12,fontSize:10,color:'var(--c-muted)',paddingBottom:6}}>
-                  <span>{predDist[m.id].home} picked {m.home_team}</span>
-                  <span>{predDist[m.id].draw} drew</span>
-                  <span>{predDist[m.id].away} picked {m.away_team}</span>
+                <div style={{paddingBottom:6}}>
+                  <div
+                    onClick={function(){ setExpandedDist(expandedDist===m.id ? null : m.id) }}
+                    style={{display:'flex',justifyContent:'center',gap:12,fontSize:10,color:'var(--c-accent)',cursor:'pointer',textDecoration:'underline',textDecorationStyle:'dotted'}}
+                  >
+                    <span>{predDist[m.id].home} picked {m.home_team}</span>
+                    <span>{predDist[m.id].draw} drew</span>
+                    <span>{predDist[m.id].away} picked {m.away_team}</span>
+                  </div>
+                  {expandedDist === m.id && (
+                    <div style={{marginTop:8,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,fontSize:11}}>
+                      {[['home',m.home_team],['draw','Draw'],['away',m.away_team]].map(function(col){
+                        var key=col[0], label=col[1], list=predDist[m.id].picks[key]
+                        return (
+                          <div key={key} style={{background:'var(--c-surface2)',borderRadius:8,padding:8}}>
+                            <div style={{fontWeight:700,marginBottom:4,color:'var(--c-text)',fontSize:10,textAlign:'center'}}>{label} ({list.length})</div>
+                            {list.length===0 ? <div style={{color:'var(--c-hint)',textAlign:'center',fontSize:10}}>—</div> :
+                              list.sort(function(a,b){return a.name.localeCompare(b.name)}).map(function(e,ei){
+                                return <div key={ei} style={{display:'flex',justifyContent:'space-between',color:'var(--c-muted)',padding:'1px 0'}}><span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',marginRight:4}}>{e.name}</span><span style={{fontWeight:600,color:'var(--c-text)',flexShrink:0}}>{e.h}-{e.a}</span></div>
+                              })
+                            }
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
               {myPicks[String(m.id)] && (isLiveEff || isFinishedEff) && (espnL ? espnL.home != null : m.home_goals != null) && (function() {

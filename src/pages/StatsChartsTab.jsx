@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Donut, LineChart } from './StatsCharts'
 
-export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, accuracyByPlayer, selectedPlayers }) {
-  var [raceType, setRaceType] = useState('points') // 'points' | 'accuracy'
+export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, accuracyByPlayer, rankOverTime, selectedPlayers }) {
+  var [raceType, setRaceType] = useState('points') // 'points' | 'rank' | 'accuracy'
 
   var hasScores = scores.length > 0
   var ptsResult = scores.reduce(function(a,s){ return a + (s.pts_result||0) }, 0)
@@ -16,8 +16,10 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
     {label:'Approx bonus',  value:ptsApprox,color:'var(--c-success)'},
   ].filter(function(s){ return s.value > 0 })
 
-  var raceSeries = raceType === 'points' ? ptsOverTime : (accuracyByPlayer || [])
+  var raceSeries = raceType === 'points' ? ptsOverTime : raceType === 'rank' ? (rankOverTime || []) : (accuracyByPlayer || [])
   var hasRace = raceSeries.length > 0 && raceSeries.some(function(s){ return s.points && s.points.length > 0 })
+  var raceTitle = raceType === 'points' ? '\uD83C\uDFC1 Points race' : raceType === 'rank' ? '\uD83D\uDCCA Rank over time' : '\uD83C\uDFAF Accuracy race'
+  var raceDesc = raceType === 'points' ? 'Cumulative points per match' : raceType === 'rank' ? 'Standings position per match (1 = top; lower line is better)' : 'Running accuracy % per match'
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
@@ -26,22 +28,21 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
       <div className="card" style={{marginBottom:0,overflow:'visible'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8,marginBottom:4}}>
           <div className="card-title" style={{marginBottom:0}}>
-            {raceType === 'points' ? '🏁 Points race' : '🎯 Accuracy race'}
+            {raceTitle}
           </div>
           <div style={{display:'flex',gap:4,background:'var(--c-surface2)',borderRadius:8,padding:3}}>
-            <button onClick={function(){setRaceType('points')}} style={{fontSize:12,padding:'4px 12px',borderRadius:6,border:'none',cursor:'pointer',fontWeight:600,background:raceType==='points'?'var(--c-accent)':'transparent',color:raceType==='points'?'#fff':'var(--c-muted)'}}>Points</button>
-            <button onClick={function(){setRaceType('accuracy')}} style={{fontSize:12,padding:'4px 12px',borderRadius:6,border:'none',cursor:'pointer',fontWeight:600,background:raceType==='accuracy'?'var(--c-accent)':'transparent',color:raceType==='accuracy'?'#fff':'var(--c-muted)'}}>Accuracy %</button>
+            <button onClick={function(){setRaceType('points')}} style={{fontSize:12,padding:'4px 10px',borderRadius:6,border:'none',cursor:'pointer',fontWeight:600,background:raceType==='points'?'var(--c-accent)':'transparent',color:raceType==='points'?'#fff':'var(--c-muted)'}}>Points</button>
+            <button onClick={function(){setRaceType('rank')}} style={{fontSize:12,padding:'4px 10px',borderRadius:6,border:'none',cursor:'pointer',fontWeight:600,background:raceType==='rank'?'var(--c-accent)':'transparent',color:raceType==='rank'?'#fff':'var(--c-muted)'}}>Rank</button>
+            <button onClick={function(){setRaceType('accuracy')}} style={{fontSize:12,padding:'4px 10px',borderRadius:6,border:'none',cursor:'pointer',fontWeight:600,background:raceType==='accuracy'?'var(--c-accent)':'transparent',color:raceType==='accuracy'?'#fff':'var(--c-muted)'}}>Accuracy</button>
           </div>
         </div>
         <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:16}}>
-          {selectedPlayers.length === 0
-            ? (raceType==='points' ? 'Cumulative points per match for the top players \u2014 filter above to compare specific people' : 'Running accuracy % per match for the top players \u2014 filter above to compare')
-            : (raceType==='points' ? 'Cumulative points per match for the selected players' : 'Running accuracy % per match for the selected players')}
+          {raceDesc}{selectedPlayers.length === 0 ? ' \u2014 filter above to compare specific people' : ''}
         </p>
         {hasRace ? (
           <>
             <div style={{maxWidth:560,margin:'0 auto'}}>
-              <LineChart series={raceSeries} height={200} showLast={true} isPercent={raceType==='accuracy'}/>
+              <LineChart series={raceSeries} height={200} showLast={true} isPercent={raceType==='accuracy'} invertY={raceType==='rank'}/>
             </div>
             <div style={{display:'flex',gap:16,marginTop:14,flexWrap:'wrap',justifyContent:'center'}}>
               {raceSeries.map(function(s) {
