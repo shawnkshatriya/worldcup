@@ -40,8 +40,10 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
         </p>
         {hasRace ? (
           <>
-            <LineChart series={raceSeries} height={260} showLast={true}/>
-            <div style={{display:'flex',gap:16,marginTop:14,flexWrap:'wrap'}}>
+            <div style={{maxWidth:560,margin:'0 auto'}}>
+              <LineChart series={raceSeries} height={200} showLast={true}/>
+            </div>
+            <div style={{display:'flex',gap:16,marginTop:14,flexWrap:'wrap',justifyContent:'center'}}>
               {raceSeries.map(function(s) {
                 return (
                   <div key={s.label} style={{display:'flex',alignItems:'center',gap:6,fontSize:13}}>
@@ -59,7 +61,9 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
       <div className="card" style={{marginBottom:0,overflow:'visible'}}>
         <div className="card-title">Pool accuracy over time</div>
         <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:16}}>% of all predictions that were correct, match by match (whole pool)</p>
-        <LineChart series={[{label:'Accuracy',color:'var(--c-success)',points:accuracyOverTime}]} height={180} showLast={true}/>
+        <div style={{maxWidth:560,margin:'0 auto'}}>
+          <LineChart series={[{label:'Accuracy',color:'var(--c-success)',points:accuracyOverTime}]} height={150} showLast={true}/>
+        </div>
       </div>
 
       {/* Points breakdown donut */}
