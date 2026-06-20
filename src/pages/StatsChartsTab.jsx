@@ -42,7 +42,7 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
         {hasRace ? (
           <>
             <div style={{maxWidth:760,margin:'0 auto'}}>
-              <LineChart series={raceSeries} height={200} showLast={true} isPercent={raceType==='accuracy'} invertY={raceType==='rank'}/>
+              <LineChart series={raceSeries} height={260} showLast={true} isPercent={raceType==='accuracy'} invertY={raceType==='rank'}/>
             </div>
             <div style={{display:'flex',gap:16,marginTop:14,flexWrap:'wrap',justifyContent:'center'}}>
               {raceSeries.map(function(s) {
@@ -63,14 +63,14 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
         <div className="card-title">Pool accuracy over time</div>
         <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:16}}>% of all predictions that were correct, match by match (whole pool)</p>
         <div style={{maxWidth:760,margin:'0 auto'}}>
-          <LineChart series={[{label:'Accuracy',color:'var(--c-success)',points:accuracyOverTime}]} height={150} showLast={true} isPercent={true}/>
+          <LineChart series={[{label:'Accuracy',color:'var(--c-success)',points:accuracyOverTime}]} height={210} showLast={true} isPercent={true}/>
         </div>
       </div>
 
       {/* Points breakdown donut */}
       <div className="card" style={{marginBottom:0}}>
         <div className="card-title">Points breakdown (pool total)</div>
-        {hasScores ? <Donut slices={slices} size={160}/> : <p style={{color:'var(--c-muted)',fontSize:13}}>No scores yet</p>}
+        {hasScores ? <Donut slices={slices} size={200}/> : <p style={{color:'var(--c-muted)',fontSize:13}}>No scores yet</p>}
         <p style={{fontSize:11,color:'var(--c-muted)',marginTop:10}}>Correct results outnumber exact scores \u2014 every exact score also counts as a correct result, so this shows where points actually came from.</p>
       </div>
 

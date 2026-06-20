@@ -30,19 +30,19 @@ export function Donut({ slices, size=130 }) {
     return {...s, d, pct:Math.round(s.value/total*100)}
   })
   return (
-    <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <div style={{display:'flex',alignItems:'center',gap:32,flexWrap:'wrap',justifyContent:'center'}}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{flexShrink:0}}>
         {paths.map((p,i)=><path key={i} d={p.d} fill={p.color} opacity={0.9}/>)}
         <circle cx={cx} cy={cy} r={inner-2} fill="var(--c-surface)"/>
-        <text x={cx} y={cy-4} textAnchor="middle" style={{fontSize:10,fill:'var(--c-muted)',fontFamily:'var(--font-body)'}}>{total}</text>
-        <text x={cx} y={cy+10} textAnchor="middle" style={{fontSize:9,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>total</text>
+        <text x={cx} y={cy-2} textAnchor="middle" style={{fontSize:size*0.13,fill:'var(--c-text)',fontFamily:'var(--font-body)',fontWeight:700}}>{total}</text>
+        <text x={cx} y={cy+size*0.11} textAnchor="middle" style={{fontSize:size*0.07,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>total</text>
       </svg>
-      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+      <div style={{display:'flex',flexDirection:'column',gap:9,minWidth:160}}>
         {paths.map((p,i)=>(
-          <div key={i} style={{display:'flex',alignItems:'center',gap:7,fontSize:12}}>
-            <div style={{width:10,height:10,borderRadius:2,background:p.color,flexShrink:0}}/>
+          <div key={i} style={{display:'flex',alignItems:'center',gap:9,fontSize:13}}>
+            <div style={{width:12,height:12,borderRadius:3,background:p.color,flexShrink:0}}/>
             <span style={{color:'var(--c-muted)',flex:1}}>{p.label}</span>
-            <span style={{fontWeight:700,paddingLeft:8}}>{p.pct}%</span>
+            <span style={{fontWeight:700,paddingLeft:8,color:'var(--c-text)'}}>{p.pct}%</span>
           </div>
         ))}
       </div>
@@ -80,7 +80,7 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
   // series: [{label, color, points:[{x,y,label}]}]
   if (!series?.length || !series[0]?.points?.length) return <p style={{color:'var(--c-muted)',fontSize:12}}>Not enough data</p>
   const W=520, H=height
-  const padL=34, padR=40, padT=10, padB=10 // room for axis labels (left) and end values (right)
+  const padL=34, padR=48, padT=12, padB=12 // room for axis labels (left) and end values (right)
   const allVals = series.flatMap(s=>s.points.map(p=>p.y))
   const minV=Math.min(...allVals,0), maxV=Math.max(...allVals,1)
   const range=maxV-minV||1
@@ -136,7 +136,7 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
               <path d={pathD} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
               {pts.map((p,i)=><circle key={i} cx={toX(i)} cy={toY(p.y)} r="2" fill={s.color}/>)}
               {showLast && (
-                <text x={Math.min(lx+5, W-3)} y={ly+4} textAnchor={lx+5 > W-padR ? 'end' : 'start'} style={{fontSize:12,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{invertY?'#'+lastPt.y:lastPt.y}{isPercent?'%':''}</text>
+                <text x={lx+7} y={ly+3.5} textAnchor="start" style={{fontSize:11,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{invertY?'#'+lastPt.y:lastPt.y}{isPercent?'%':''}</text>
               )}
             </g>
           )
