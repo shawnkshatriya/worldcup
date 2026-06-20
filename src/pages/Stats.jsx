@@ -8,7 +8,7 @@ import StatsChartsTab from './StatsChartsTab'
 import StatsInsights from './StatsInsights'
 import PlayerFilter from '../components/PlayerFilter'
 
-var AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6']
+var AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#14b8a6','#eab308','#8b5cf6','#ef4444','#0ea5e9']
 var GROUP_NAMES = { GROUP_A:'A',GROUP_B:'B',GROUP_C:'C',GROUP_D:'D',GROUP_E:'E',GROUP_F:'F', GROUP_G:'G',GROUP_H:'H',GROUP_I:'I',GROUP_J:'J',GROUP_K:'K',GROUP_L:'L' }
 
 var TAB_LABELS = {tournament:'Tournament',players:'Participants',insights:'Insights',charts:'Pool Trends',funfacts:'Fun Facts'}
@@ -144,7 +144,7 @@ export default function Stats() {
   },[finished,scores])
 
   var ptsOverTime=useMemo(function(){
-    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
+    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,12)
     // All finished matches in chronological order
     var fin = finished.slice().sort(function(a,b){ return new Date(a.kickoff||0) - new Date(b.kickoff||0) })
     var total = fin.length
@@ -167,7 +167,7 @@ export default function Stats() {
 
   // Rank over time: replay standings match-by-match for ALL players, extract selected players' rank.
   var rankOverTime=useMemo(function(){
-    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
+    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,12)
     if (base.length === 0 || finished.length === 0) return []
     var scoreByPM = {}
     scores.forEach(function(s){ scoreByPM[s.player_id + '_' + s.match_id] = s })
@@ -206,7 +206,7 @@ export default function Stats() {
   },[sorted,finished,scores,selectedPlayers])
 
   var accuracyByPlayer=useMemo(function(){
-    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
+    var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,12)
     return base.map(function(pl){ return {
       label:pl.name, color:pl.color,
       points: finished.slice(0,20).map(function(m,i){
