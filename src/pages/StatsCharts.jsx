@@ -79,8 +79,8 @@ export function ColChart({ data, color='var(--c-accent)', height=100 }) {
 export function LineChart({ series, height=80, showLast=true, isPercent=false, invertY=false }) {
   // series: [{label, color, points:[{x,y,label}]}]
   if (!series?.length || !series[0]?.points?.length) return <p style={{color:'var(--c-muted)',fontSize:12}}>Not enough data</p>
-  const W=300, H=height
-  const padL=26, padR=30, padT=8, padB=8 // room for axis labels (left) and end values (right)
+  const W=520, H=height
+  const padL=34, padR=40, padT=10, padB=10 // room for axis labels (left) and end values (right)
   const allVals = series.flatMap(s=>s.points.map(p=>p.y))
   const minV=Math.min(...allVals,0), maxV=Math.max(...allVals,1)
   const range=maxV-minV||1
@@ -120,7 +120,7 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
             return (
               <g key={v}>
                 <line x1={padL} y1={yp} x2={W-padR} y2={yp} stroke="var(--c-border)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <text x={padL-4} y={yp+3} textAnchor="end" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{invertY?'#'+v:v}{isPct?'%':''}</text>
+                <text x={padL-5} y={yp+4} textAnchor="end" style={{fontSize:11,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{invertY?'#'+v:v}{isPct?'%':''}</text>
               </g>
             )
           })
@@ -134,9 +134,9 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
           return (
             <g key={si}>
               <path d={pathD} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
-              {pts.map((p,i)=><circle key={i} cx={toX(i)} cy={toY(p.y)} r="2.5" fill={s.color}/>)}
+              {pts.map((p,i)=><circle key={i} cx={toX(i)} cy={toY(p.y)} r="2" fill={s.color}/>)}
               {showLast && (
-                <text x={Math.min(lx+4, W-2)} y={ly+4} textAnchor={lx+4 > W-padR ? 'end' : 'start'} style={{fontSize:9,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{invertY?'#'+lastPt.y:lastPt.y}{isPercent?'%':''}</text>
+                <text x={Math.min(lx+5, W-3)} y={ly+4} textAnchor={lx+5 > W-padR ? 'end' : 'start'} style={{fontSize:12,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{invertY?'#'+lastPt.y:lastPt.y}{isPercent?'%':''}</text>
               )}
             </g>
           )
@@ -145,7 +145,7 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
         {/* X axis labels */}
         {series[0].points.map((p,i)=>{
           if (i===0||i===nPts-1||i===Math.floor(nPts/2)) return (
-            <text key={i} x={toX(i)} y={H+16} textAnchor="middle" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{p.label}</text>
+            <text key={i} x={toX(i)} y={H+16} textAnchor="middle" style={{fontSize:11,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{p.label}</text>
           )
           return null
         })}

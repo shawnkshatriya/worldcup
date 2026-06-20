@@ -41,7 +41,7 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
         </p>
         {hasRace ? (
           <>
-            <div style={{maxWidth:560,margin:'0 auto'}}>
+            <div style={{maxWidth:760,margin:'0 auto'}}>
               <LineChart series={raceSeries} height={200} showLast={true} isPercent={raceType==='accuracy'} invertY={raceType==='rank'}/>
             </div>
             <div style={{display:'flex',gap:16,marginTop:14,flexWrap:'wrap',justifyContent:'center'}}>
@@ -62,7 +62,7 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
       <div className="card" style={{marginBottom:0,overflow:'visible'}}>
         <div className="card-title">Pool accuracy over time</div>
         <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:16}}>% of all predictions that were correct, match by match (whole pool)</p>
-        <div style={{maxWidth:560,margin:'0 auto'}}>
+        <div style={{maxWidth:760,margin:'0 auto'}}>
           <LineChart series={[{label:'Accuracy',color:'var(--c-success)',points:accuracyOverTime}]} height={150} showLast={true} isPercent={true}/>
         </div>
       </div>
