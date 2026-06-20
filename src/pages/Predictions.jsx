@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { Link } from 'react-router-dom'
@@ -145,6 +145,16 @@ export default function Predictions() {
   const [preds, setPreds] = useState({})
   const [saving, setSaving] = useState({})
   const [saved, setSaved] = useState({})
+  const saveTimers = useRef({})
+
+  // Flush any pending debounced saves when leaving the page (don't lose edits)
+  useEffect(function() {
+    return function() {
+      Object.keys(saveTimers.current).forEach(function(mid){
+        if (saveTimers.current[mid]) clearTimeout(saveTimers.current[mid])
+      })
+    }
+  }, [])
   const [saveError, setSaveError] = useState({})
   const [koOpen, setKoOpen] = useState(false)
   const [progress, setProgress] = useState({ groupPred: 0, groupTotal: 72, koPred: 0, koTotal: 32 })
@@ -288,10 +298,23 @@ export default function Predictions() {
   function updatePred(matchId, field, val) {
     var n = val === '' ? null : Math.max(0, Math.min(20, Math.floor(Number(val))))
     if (val !== '' && isNaN(n)) return
-    setPreds(p => ({
-      ...p,
-      [String(matchId)]: { ...(p[String(matchId)]||{}), [field]: val === '' ? null : n }
-    }))
+    var newVal = val === '' ? null : n
+    setPreds(p => {
+      var next = {
+        ...p,
+        [String(matchId)]: { ...(p[String(matchId)]||{}), [field]: newVal }
+      }
+      // Debounced auto-save: if both goals are present after this change, save ~800ms
+      // after typing stops - so users don't have to click away (onBlur) to persist.
+      var cur = next[String(matchId)]
+      if (cur && cur.home_goals != null && cur.away_goals != null) {
+        if (saveTimers.current[matchId]) clearTimeout(saveTimers.current[matchId])
+        saveTimers.current[matchId] = setTimeout(function(){
+          savePred(matchId, cur.home_goals, cur.away_goals)
+        }, 800)
+      }
+      return next
+    })
   }
 
   const groupPhases = PHASES.filter(p => p.startsWith('GROUP'))
@@ -477,7 +500,11 @@ export default function Predictions() {
                     disabled={locked}
                     placeholder={locked ? (m.home_goals ?? '?') : '-'}
                     onChange={e => updatePred(m.id, 'home_goals', e.target.value)}
-                    onBlur={() => hasBothGoals && savePred(m.id, pred.home_goals, pred.away_goals)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.target.blur() } }}
+                    onBlur={() => {
+                      if (saveTimers.current[m.id]) { clearTimeout(saveTimers.current[m.id]); saveTimers.current[m.id]=null }
+                      if (hasBothGoals) savePred(m.id, pred.home_goals, pred.away_goals)
+                    }}
                   />
 
                   <span className="score-sep">
@@ -491,7 +518,11 @@ export default function Predictions() {
                     disabled={locked}
                     placeholder={locked ? (m.away_goals ?? '?') : '-'}
                     onChange={e => updatePred(m.id, 'away_goals', e.target.value)}
-                    onBlur={() => hasBothGoals && savePred(m.id, pred.home_goals, pred.away_goals)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.target.blur() } }}
+                    onBlur={() => {
+                      if (saveTimers.current[m.id]) { clearTimeout(saveTimers.current[m.id]); saveTimers.current[m.id]=null }
+                      if (hasBothGoals) savePred(m.id, pred.home_goals, pred.away_goals)
+                    }}
                   />
 
                   <div className="team-away">
