@@ -145,19 +145,22 @@ export default function Stats() {
 
   var ptsOverTime=useMemo(function(){
     var base = selectedPlayers.length === 0 ? sorted.slice(0,3) : sorted.filter(function(p){ return selectedPlayers.includes(p.id) }).slice(0,6)
+    // All finished matches in chronological order
+    var fin = finished.slice().sort(function(a,b){ return new Date(a.kickoff||0) - new Date(b.kickoff||0) })
+    var total = fin.length
+    // Downsample indices to ~20, always including the last
+    var maxPts = 20, idxs = []
+    if (total <= maxPts) { for (var i=0;i<total;i++) idxs.push(i) }
+    else { var step=(total-1)/(maxPts-1); for (var k=0;k<maxPts;k++) idxs.push(Math.round(k*step)); idxs[idxs.length-1]=total-1 }
     return base.map(function(pl){
-      // Deduped score-per-match for this player
       var byMatch = {}
       scores.forEach(function(s){ if (s.player_id===pl.id) byMatch[String(s.match_id)] = s })
+      // Precompute cumulative through each match index
+      var cum = 0, cumAt = []
+      fin.forEach(function(fm){ var s=byMatch[String(fm.id)]; cum += (s?(s.pts_total||0):0); cumAt.push(cum) })
       return {
         label:pl.name, color:pl.color,
-        points: finished.slice(0,20).map(function(m,i){
-          var cumPts = finished.slice(0,i+1).reduce(function(a,fm){
-            var s = byMatch[String(fm.id)]
-            return a + (s ? (s.pts_total||0) : 0)
-          }, 0)
-          return {label:'M'+(i+1),y:cumPts}
-        })
+        points: idxs.map(function(ix){ return { label:'M'+(ix+1), y: cumAt[ix] } })
       }
     })
   },[sorted,finished,scores,selectedPlayers])
@@ -169,12 +172,14 @@ export default function Stats() {
     var scoreByPM = {}
     scores.forEach(function(s){ scoreByPM[s.player_id + '_' + s.match_id] = s })
     var allPlayerIds = sorted.map(function(p){ return p.id })
-    var fin = finished.slice(0,20)
+    // Replay ALL finished matches in chronological (kickoff) order - not just first 20
+    var fin = finished.slice().sort(function(a,b){ return new Date(a.kickoff||0) - new Date(b.kickoff||0) })
     var cum = {}
     allPlayerIds.forEach(function(id){ cum[id] = 0 })
-    var rankSeriesByPlayer = {}
-    base.forEach(function(p){ rankSeriesByPlayer[p.id] = [] })
-    fin.forEach(function(m, i){
+    // Compute rank at every match step
+    var fullSeries = {}
+    base.forEach(function(p){ fullSeries[p.id] = [] })
+    fin.forEach(function(m){
       allPlayerIds.forEach(function(id){
         var s = scoreByPM[id + '_' + m.id]
         if (s) cum[id] += (s.pts_total||0)
@@ -182,12 +187,21 @@ export default function Stats() {
       var standings = allPlayerIds.slice().sort(function(a,b){ return cum[b]-cum[a] })
       var rankOf = {}
       standings.forEach(function(id, idx){ rankOf[id] = idx+1 })
-      base.forEach(function(p){
-        rankSeriesByPlayer[p.id].push({ label:'M'+(i+1), y: rankOf[p.id] })
-      })
+      base.forEach(function(p){ fullSeries[p.id].push(rankOf[p.id]) })
     })
+    // Downsample to ~20 points for display, ALWAYS including the last (current) point
+    var total = fin.length
+    var maxPts = 20
+    var idxs = []
+    if (total <= maxPts) {
+      for (var i=0;i<total;i++) idxs.push(i)
+    } else {
+      var step = (total-1)/(maxPts-1)
+      for (var k=0;k<maxPts;k++) idxs.push(Math.round(k*step))
+      idxs[idxs.length-1] = total-1 // ensure last match included
+    }
     return base.map(function(pl){
-      return { label:pl.name, color:pl.color, points: rankSeriesByPlayer[pl.id] }
+      return { label:pl.name, color:pl.color, points: idxs.map(function(ix,n){ return { label:'M'+(ix+1), y: fullSeries[pl.id][ix] } }) }
     })
   },[sorted,finished,scores,selectedPlayers])
 
