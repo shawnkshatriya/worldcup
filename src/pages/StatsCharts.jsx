@@ -79,32 +79,39 @@ export function ColChart({ data, color='var(--c-accent)', height=100 }) {
 export function LineChart({ series, height=80, showLast=true, isPercent=false, invertY=false }) {
   // series: [{label, color, points:[{x,y,label}]}]
   if (!series?.length || !series[0]?.points?.length) return <p style={{color:'var(--c-muted)',fontSize:12}}>Not enough data</p>
-  const W=300, H=height, pad=8
+  const W=300, H=height
+  const padL=26, padR=30, padT=8, padB=8 // room for axis labels (left) and end values (right)
   const allVals = series.flatMap(s=>s.points.map(p=>p.y))
   const minV=Math.min(...allVals,0), maxV=Math.max(...allVals,1)
   const range=maxV-minV||1
   const nPts = series[0].points.length
 
-  function toX(i) { return pad + (i/(nPts-1))*(W-pad*2) }
+  function toX(i) { return padL + (nPts<=1 ? 0 : (i/(nPts-1))*(W-padL-padR)) }
   function toY(v) {
     var frac = (v-minV)/range
     if (invertY) frac = 1 - frac // rank 1 at top
-    return H - pad - frac*(H-pad*2)
+    return H - padB - frac*(H-padT-padB)
   }
 
   return (
-    <div style={{width:'100%',overflowX:'auto',paddingRight:32}}>
+    <div style={{width:'100%',overflowX:'auto'}}>
       <svg width="100%" viewBox={`0 0 ${W} ${H+20}`} style={{overflow:'visible',display:'block'}}>
         {/* Y axis gridlines + labels - adapt to data (percent vs raw points) */}
         {(function(){
           var isPct = isPercent
           var ticks
           if (invertY) {
-            // Rank axis: show integer ranks (1 at top). Pick a few evenly.
+            // Rank axis: integer ranks (1 at top)
             var lo = Math.max(1, Math.floor(minV)), hi = Math.ceil(maxV)
-            ticks = [lo, Math.round((lo+hi)/2), hi]
+            var mid = Math.round((lo+hi)/2)
+            ticks = [lo, mid, hi]
+          } else if (isPct) {
+            ticks = [0,25,50,75,100]
           } else {
-            ticks = isPct ? [0,25,50,75,100] : [0, 0.25, 0.5, 0.75, 1].map(function(f){ return Math.round((minV + f*range)/5)*5 })
+            // Points axis: evenly spaced ticks across the ACTUAL data range (no rounding drift)
+            var steps = 4
+            ticks = []
+            for (var t=0; t<=steps; t++) ticks.push(Math.round(minV + (range*t/steps)))
           }
           // de-dupe and keep ascending
           ticks = Array.from(new Set(ticks)).sort(function(a,b){return a-b})
@@ -112,8 +119,8 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
             var yp = toY(v)
             return (
               <g key={v}>
-                <line x1={pad} y1={yp} x2={W-pad} y2={yp} stroke="var(--c-border)" strokeWidth="0.5" strokeDasharray="3,3"/>
-                <text x={pad-2} y={yp+3} textAnchor="end" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{invertY?'#'+v:v}{isPct?'%':''}</text>
+                <line x1={padL} y1={yp} x2={W-padR} y2={yp} stroke="var(--c-border)" strokeWidth="0.5" strokeDasharray="3,3"/>
+                <text x={padL-4} y={yp+3} textAnchor="end" style={{fontSize:8,fill:'var(--c-hint)',fontFamily:'var(--font-body)'}}>{invertY?'#'+v:v}{isPct?'%':''}</text>
               </g>
             )
           })
@@ -129,7 +136,7 @@ export function LineChart({ series, height=80, showLast=true, isPercent=false, i
               <path d={pathD} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
               {pts.map((p,i)=><circle key={i} cx={toX(i)} cy={toY(p.y)} r="2.5" fill={s.color}/>)}
               {showLast && (
-                <text x={lx+4} y={ly+4} style={{fontSize:9,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{invertY?'#'+lastPt.y:lastPt.y}{isPercent?'%':''}</text>
+                <text x={Math.min(lx+4, W-2)} y={ly+4} textAnchor={lx+4 > W-padR ? 'end' : 'start'} style={{fontSize:9,fill:s.color,fontFamily:'var(--font-body)',fontWeight:'bold'}}>{invertY?'#'+lastPt.y:lastPt.y}{isPercent?'%':''}</text>
               )}
             </g>
           )
