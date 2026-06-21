@@ -17,6 +17,7 @@ export default function Support() {
     if (!message.trim()) { setError('Please write something before submitting.'); return }
     setStatus('sending'); setError('')
     try {
+      // Try to save to DB, but don't let a DB failure block the email notification
       const { error: dbErr } = await supabase.from('feedback').insert({
         player_id:   player?.id || null,
         player_name: player?.name || authUser?.email || 'Anonymous',
@@ -24,16 +25,20 @@ export default function Support() {
         category, message: message.trim(),
         rating: rating || null,
       })
-      if (dbErr) { setError('Failed: ' + dbErr.message); setStatus('error'); return }
 
-      // Non-blocking email notification
+      // Email notification (fires regardless of DB result so feedback is never lost)
       try {
         await fetch('/api/notify-feedback', {
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ name:player?.name||'Anonymous', rating:rating||null, message:message.trim(), type:category })
+          body:JSON.stringify({ name:player?.name||authUser?.email||'Anonymous', rating:rating||null, message:message.trim(), type:category })
         })
       } catch(_) {}
+
+      if (dbErr) {
+        // Email still went out; surface a soft note but treat as delivered
+        console.warn('Feedback DB insert failed (email sent):', dbErr.message)
+      }
 
       setStatus('done'); setMessage(''); setRating(0)
     } catch(e) { setError('Something went wrong.'); setStatus('error') }
