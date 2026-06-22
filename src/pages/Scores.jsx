@@ -48,6 +48,26 @@ export default function Scores() {
 
   useEffect(() => { loadMatches() }, [filter])
 
+  // On first load, if any match is currently live, default the tab to "Live"
+  const didInitialTab = useRef(false)
+  useEffect(function() {
+    if (didInitialTab.current || demoMode) return
+    didInitialTab.current = true
+    ;(async function(){
+      var now = new Date()
+      // Primary signal: DB status IN_PLAY/PAUSED. Plus a SMALL buffer (15 min) to catch
+      // a match that just kicked off before football-data syncs its status.
+      var bufStart = new Date(now.getTime() - 15*60*1000).toISOString()
+      var res = await supabase.from('matches')
+        .select('id,status,kickoff')
+        .or('status.in.(IN_PLAY,PAUSED),and(status.eq.SCHEDULED,kickoff.gte.' + bufStart + ',kickoff.lte.' + now.toISOString() + ')')
+        .limit(1)
+      if (res.data && res.data.length > 0) {
+        setFilter('live')
+      }
+    })()
+  }, [demoMode])
+
   async function loadMatches() {
     setLoading(true)
     let query = supabase.from('matches').select('*').order('match_number')
