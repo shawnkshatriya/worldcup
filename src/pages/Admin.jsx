@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase, recalcPlayerScores, recalcAllRooms, backfillBestRanks } from '../lib/supabase'
+import { recalcKoBracket } from '../lib/koBracket'
 import { getAllRooms, createRoom, deleteRoom, updateRoom, regenToken, saveRoomWeights } from '../lib/rooms'
 import { runScoringTests } from '../lib/testRunner'
 import { seedDemoData, clearDemoData } from '../lib/demoData'
@@ -34,6 +35,7 @@ export default function Admin() {
   const [resultPhase, setResultPhase] = useState('GROUP_A')
   const [recalcing, setRecalcing] = useState(false)
   const [backfilling, setBackfilling] = useState(false)
+  const [koRecalcing, setKoRecalcing] = useState(false)
   const [recalcMsg, setRecalcMsg] = useState('')
   const [newRoomName, setNewRoomName] = useState('')
   const [creating, setCreating] = useState(false)
@@ -115,20 +117,34 @@ export default function Admin() {
     setTimeout(() => setRecalcMsg(''), 4000)
   }
 
+  async function handleKoRecalc() {
+    setKoRecalcing(true); setRecalcMsg('')
+    var r = await recalcKoBracket(adminRoom)
+    setKoRecalcing(false)
+    setRecalcMsg(r.ok ? ('KO bracket scores calculated for ' + r.updated + ' entries!') : ('KO recalc failed: ' + (r.error||'')))
+    setTimeout(() => setRecalcMsg(''), 4000)
+  }
+
   async function saveResult(m) {
+    var isKO = m.phase && !m.phase.startsWith('GROUP')
     var updateData = {
       home_goals: m.home_goals, away_goals: m.away_goals,
       home_goals_et: m.home_goals_et, away_goals_et: m.away_goals_et,
       home_goals_pen: m.home_goals_pen, away_goals_pen: m.away_goals_pen,
-      status: 'FINISHED', result_source: 'admin', updated_at: new Date().toISOString()
+      status: m.home_goals != null ? 'FINISHED' : m.status,
+      result_source: 'admin', updated_at: new Date().toISOString()
+    }
+    // For KO matches: also save team names (admin backup for sync)
+    if (isKO) {
+      if (m.home_team) updateData.home_team = m.home_team
+      if (m.away_team) updateData.away_team = m.away_team
     }
     var saveRes = await supabase.from('matches').update(updateData).eq('id', m.id)
     if (saveRes.error) {
-      // result_source column may not exist yet - retry without it
       delete updateData.result_source
       await supabase.from('matches').update(updateData).eq('id', m.id)
     }
-    setMatches(ms => ms.map(x => x.id === m.id ? { ...x, ...m, status: 'FINISHED' } : x))
+    setMatches(ms => ms.map(x => x.id === m.id ? { ...x, ...m, status: updateData.status } : x))
     // Auto-recalc all rooms so the leaderboard updates immediately
     setRecalcing(true); setRecalcMsg('Recalculating...')
     try {
@@ -370,6 +386,9 @@ export default function Admin() {
               </button>
               <button className="btn" onClick={handleBackfillRanks} disabled={backfilling}>
                 {backfilling ? 'Backfilling...' : 'Backfill best ranks'}
+              </button>
+              <button className="btn" onClick={handleKoRecalc} disabled={koRecalcing}>
+                {koRecalcing ? 'Calculating...' : 'Recalc KO bracket'}
               </button>
               {weightsSaved && <span className="badge badge-green">Saved!</span>}
               {recalcMsg && <span className="badge badge-green">{recalcMsg}</span>}
@@ -688,14 +707,30 @@ function MatchResultRow({ match: initialMatch, onSave }) {
   const [m, setM] = useState(initialMatch)
   const [saved, setSaved] = useState(false)
   function set(field, val) { setM(x=>({...x,[field]:val===''?null:parseInt(val)})) }
+  function setStr(field, val) { setM(x=>({...x,[field]:val||null})) }
+  var isKO = m.phase && !m.phase.startsWith('GROUP')
   async function handleSave() { await onSave(m); setSaved(true); setTimeout(()=>setSaved(false),1500) }
   return (
-    <div className="match-row">
-      <div className="team-home" style={{fontSize:13}}>{m.home_team}</div>
-      <input type="number" min="0" className="score-input" value={m.home_goals??''} placeholder="?" onChange={e=>set('home_goals',e.target.value)}/>
-      <span className="score-sep">-</span>
-      <input type="number" min="0" className="score-input" value={m.away_goals??''} placeholder="?" onChange={e=>set('away_goals',e.target.value)}/>
-      <div className="team-away" style={{fontSize:13}}>{m.away_team}</div>
+    <div className="match-row" style={{flexWrap:'wrap',gap:6}}>
+      {isKO ? (
+        // KO matches: editable team names + scores
+        <>
+          <input type="text" value={m.home_team||''} placeholder="Home team" onChange={e=>setStr('home_team',e.target.value)} style={{width:120,fontSize:12,padding:'3px 6px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}}/>
+          <input type="number" min="0" className="score-input" value={m.home_goals??''} placeholder="?" onChange={e=>set('home_goals',e.target.value)}/>
+          <span className="score-sep">-</span>
+          <input type="number" min="0" className="score-input" value={m.away_goals??''} placeholder="?" onChange={e=>set('away_goals',e.target.value)}/>
+          <input type="text" value={m.away_team||''} placeholder="Away team" onChange={e=>setStr('away_team',e.target.value)} style={{width:120,fontSize:12,padding:'3px 6px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}}/>
+        </>
+      ) : (
+        // Group matches: names fixed, just scores
+        <>
+          <div className="team-home" style={{fontSize:13}}>{m.home_team}</div>
+          <input type="number" min="0" className="score-input" value={m.home_goals??''} placeholder="?" onChange={e=>set('home_goals',e.target.value)}/>
+          <span className="score-sep">-</span>
+          <input type="number" min="0" className="score-input" value={m.away_goals??''} placeholder="?" onChange={e=>set('away_goals',e.target.value)}/>
+          <div className="team-away" style={{fontSize:13}}>{m.away_team}</div>
+        </>
+      )}
       <div style={{display:'flex',alignItems:'center',gap:6}}>
         <button className="btn btn-accent btn-sm" onClick={handleSave}>Save</button>
         {saved&&<span className="badge badge-green">Saved</span>}

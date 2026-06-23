@@ -1,0 +1,174 @@
+// KO bracket scoring engine
+// Advancement picks locked at first KO kickoff.
+// Score predictions (per match) locked 15 min before each match.
+
+import { supabase } from './supabase'
+
+const PHASE_ADV_KEY = {
+  'ROUND_OF_32':  'ko_r32_adv',
+  'ROUND_OF_16':  'ko_r16_adv',
+  'QUARTER_FINALS': 'ko_qf_adv',
+  'SEMI_FINALS':  'ko_sf_adv',
+  'FINAL':        'ko_final_adv',
+  'THIRD_PLACE':  'ko_third_adv',
+}
+
+// Is the bracket locked? (First KO match has kicked off)
+export async function isKoBracketLocked() {
+  var now = new Date().toISOString()
+  var res = await supabase.from('matches')
+    .select('kickoff')
+    .in('phase', ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'])
+    .order('kickoff', { ascending: true })
+    .limit(1)
+  if (!res.data || res.data.length === 0) return false
+  return new Date(res.data[0].kickoff) <= new Date()
+}
+
+// Get or load KO weights for a room
+async function getKoWeights(roomCode) {
+  var res = await supabase.from('scoring_weights').select('*').eq('room_code', roomCode).maybeSingle()
+  if (!res.data) return getDefaultKoWeights()
+  return res.data
+}
+
+export function getDefaultKoWeights() {
+  return {
+    ko_r32_adv: 3, ko_r16_adv: 5, ko_qf_adv: 7, ko_sf_adv: 9,
+    ko_final_adv: 15, ko_third_adv: 7,
+    ko_score_exact: 4, ko_score_diff: 2, ko_score_result: 1,
+    ko_penalty_bonus: 2, ko_consolation: 1,
+  }
+}
+
+// Score a single KO match for a player.
+// match: { id, phase, home_team, away_team, home_goals, away_goals, home_goals_pen, away_goals_pen }
+// prediction: { home_goals, away_goals } (scoreline prediction, 90-min)
+// bracketPick: picked_team (which team they predicted to win this match)
+// weights: from scoring_weights
+export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
+  var w = weights || getDefaultKoWeights()
+
+  var result = {
+    pts_adv: 0,       // advancement points
+    pts_score: 0,     // score bonus (only when right team)
+    pts_penalty: 0,   // penalty bonus
+    pts_consolation: 0, // consolation for right score, wrong team
+    pts_total: 0,
+    correct_team: false,
+    correct_score: false,
+  }
+
+  if (!match || match.home_goals == null) return result // match not played yet
+
+  // Determine actual winner (incl. penalties)
+  var actualWinner = null
+  if (match.home_goals > match.away_goals) actualWinner = match.home_team
+  else if (match.away_goals > match.home_goals) actualWinner = match.away_team
+  else if (match.home_goals_pen != null && match.away_goals_pen != null) {
+    // Went to penalties
+    actualWinner = match.home_goals_pen > match.away_goals_pen ? match.home_team : match.away_team
+  }
+
+  var wentToPens = match.home_goals === match.away_goals && match.home_goals_pen != null
+  var advKey = PHASE_ADV_KEY[match.phase]
+  var advPts = advKey ? (w[advKey] || 0) : 0
+
+  // Did they pick the right team?
+  var pickedCorrectTeam = bracketPick && actualWinner && bracketPick === actualWinner
+  result.correct_team = !!pickedCorrectTeam
+
+  if (pickedCorrectTeam) {
+    result.pts_adv = advPts
+  }
+
+  // Score prediction (judged on 90-min result only)
+  if (prediction && prediction.home_goals != null && prediction.away_goals != null) {
+    var predH = prediction.home_goals, predA = prediction.away_goals
+    var actH = match.home_goals, actA = match.away_goals
+    var exactScore = predH === actH && predA === actA
+    var correctDiff = !exactScore && (predH - predA) === (actH - actA) && predH - predA !== 0
+    var correctResult = !exactScore && Math.sign(predH - predA) === Math.sign(actH - actA)
+
+    // Penalty bonus: predicted a draw AND match went to pens
+    var predictedDraw = predH === predA
+    if (predictedDraw && wentToPens) {
+      result.pts_penalty = w.ko_penalty_bonus || 2
+    }
+
+    if (pickedCorrectTeam) {
+      // Score bonus only when right team
+      if (exactScore) { result.pts_score = w.ko_score_exact || 4; result.correct_score = true }
+      else if (correctDiff) result.pts_score = w.ko_score_diff || 2
+      else if (correctResult) result.pts_score = w.ko_score_result || 1
+    } else {
+      // Wrong team but exact 90-min score = consolation
+      if (exactScore) result.pts_consolation = w.ko_consolation || 1
+    }
+  }
+
+  result.pts_total = result.pts_adv + result.pts_score + result.pts_penalty + result.pts_consolation
+  return result
+}
+
+// Recalculate KO bracket scores for all players in a room.
+// Writes results to a ko_scores table (separate from the main scores table).
+export async function recalcKoBracket(roomCode) {
+  var weights = await getKoWeights(roomCode)
+
+  // Get all KO matches
+  var matchRes = await supabase.from('matches').select('*')
+    .in('phase', ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'])
+  var koMatches = matchRes.data || []
+  var finishedKO = koMatches.filter(function(m){ return m.home_goals != null })
+  if (finishedKO.length === 0) return { ok: true, updated: 0 }
+
+  // Get all players in room
+  var playerRes = await supabase.from('players').select('id').eq('room_code', roomCode)
+  var playerIds = (playerRes.data || []).map(function(p){ return p.id })
+  if (playerIds.length === 0) return { ok: true, updated: 0 }
+
+  // Get all bracket picks for room
+  var picksRes = await supabase.from('ko_bracket_picks').select('*').eq('room_code', roomCode)
+  var picks = picksRes.data || []
+  var picksByPM = {}
+  picks.forEach(function(p){ picksByPM[p.player_id + '_' + p.match_id] = p })
+
+  // Get all score predictions for KO matches
+  var matchIds = finishedKO.map(function(m){ return m.id })
+  var predRes = await supabase.from('predictions').select('*')
+    .in('player_id', playerIds).in('match_id', matchIds)
+  var preds = predRes.data || []
+  var predsByPM = {}
+  preds.forEach(function(p){ predsByPM[p.player_id + '_' + p.match_id] = p })
+
+  // Score each player × match
+  var upserts = []
+  playerIds.forEach(function(playerId) {
+    finishedKO.forEach(function(match) {
+      var pick = picksByPM[playerId + '_' + match.id]
+      var pred = predsByPM[playerId + '_' + match.id]
+      var scored = calcKoMatchPoints(match, pred, pick ? pick.picked_team : null, weights)
+      upserts.push({
+        player_id: playerId,
+        match_id: match.id,
+        room_code: roomCode,
+        pts_adv: scored.pts_adv,
+        pts_score: scored.pts_score,
+        pts_penalty: scored.pts_penalty,
+        pts_consolation: scored.pts_consolation,
+        pts_total: scored.pts_total,
+        correct_team: scored.correct_team,
+        correct_score: scored.correct_score,
+        calculated_at: new Date().toISOString(),
+      })
+    })
+  })
+
+  if (upserts.length > 0) {
+    var { error } = await supabase.from('ko_scores').upsert(upserts, { onConflict: 'player_id,match_id' })
+    if (error) return { ok: false, error: error.message }
+  }
+
+  return { ok: true, updated: upserts.length }
+}

@@ -13,6 +13,7 @@ import Fun from './pages/Fun'
 import Support from './pages/Support'
 import Install from './pages/Install'
 import WinnerPick from './pages/WinnerPick'
+import KOBracket from './pages/KOBracket'
 import RoomAdmin from './pages/RoomAdmin'
 import Guide from './pages/Guide'
 import Admin from './pages/Admin'
@@ -37,6 +38,7 @@ function AppShell() {
           <Route path="/support" element={<Support />} />
           <Route path="/install" element={<Install />} />
           <Route path="/winner" element={<WinnerPick />} />
+          <Route path="/bracket" element={<KOBracket />} />
           <Route path="/room-admin" element={<RoomAdmin />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/admin"       element={<Admin />} />
