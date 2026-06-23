@@ -497,6 +497,48 @@ export async function syncMatchResults() {
     var out = { ok: true, updated: updated, total: matches.length }
     if (unmatched.length > 0) out.unmatched = unmatched
     if (conflicts.length > 0) out.conflicts = conflicts
+
+    // --- KO TEAM FILL ---
+    // football-data returns upcoming KO matches with teams once FIFA sets them.
+    // If a DB KO slot has no home_team but the API has teams for a match at the
+    // same kickoff time, fill the names in automatically.
+    try {
+      var koPhases = ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']
+      var emptyKoSlots = dbMatches.filter(function(dm){
+        return koPhases.includes(dm.phase) && (!dm.home_team || !dm.away_team)
+      })
+      if (emptyKoSlots.length > 0) {
+        var teamsAdded = 0
+        for (var ki = 0; ki < matches.length; ki++) {
+          var km = matches[ki]
+          if (!km.homeTeam || !km.awayTeam) continue
+          var kHome = mapTeamName(km.homeTeam.name || km.homeTeam.shortName || '')
+          var kAway = mapTeamName(km.awayTeam.name || km.awayTeam.shortName || '')
+          if (!kHome || !kAway) continue
+          // Match by kickoff date (within same day) since we can't match by name (slot is empty)
+          var apiKickoff = km.utcDate ? new Date(km.utcDate) : null
+          if (!apiKickoff) continue
+          var slot = emptyKoSlots.find(function(s){
+            if (!s.kickoff) return false
+            var slotKo = new Date(s.kickoff)
+            return Math.abs(slotKo - apiKickoff) < 60 * 60 * 1000 // within 1 hour
+          })
+          if (!slot) continue
+          // Only fill if admin hasn't set teams manually
+          if (slot.result_source === 'admin' && slot.home_team) continue
+          var fillRes = await supabase.from('matches').update({
+            home_team: kHome, away_team: kAway, updated_at: new Date().toISOString()
+          }).eq('id', slot.id)
+          if (!fillRes.error) {
+            // Remove from emptyKoSlots so we don't double-fill
+            emptyKoSlots = emptyKoSlots.filter(function(s){ return s.id !== slot.id })
+            teamsAdded++
+          }
+        }
+        if (teamsAdded > 0) out.teamsAdded = teamsAdded
+      }
+    } catch (e) { /* team fill failed - non-fatal */ }
+
     return out
   } catch (err) {
     return { ok: false, error: String(err) }
