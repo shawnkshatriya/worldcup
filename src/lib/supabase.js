@@ -498,7 +498,7 @@ export async function syncMatchResults() {
     if (unmatched.length > 0) out.unmatched = unmatched
     if (conflicts.length > 0) out.conflicts = conflicts
 
-    // --- KO TEAM FILL ---
+    // --- KO TEAM FILL (SOURCE 1: football-data) ---
     // football-data returns upcoming KO matches with teams once FIFA sets them.
     // If a DB KO slot has no home_team but the API has teams for a match at the
     // same kickoff time, fill the names in automatically.
@@ -540,6 +540,46 @@ export async function syncMatchResults() {
         if (teamsAdded > 0) out.teamsAdded = teamsAdded
       }
     } catch (e) { /* team fill failed - non-fatal */ }
+
+    // --- KO TEAM FILL (SOURCE 2: ESPN) ---
+    // ESPN often has confirmed team names faster than football-data.
+    // Re-fetch empty slots after the football-data pass.
+    try {
+      var koPhases2 = ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']
+      // Reload DB matches to catch any updates from Source 1
+      var dbMatchesRefresh = await fetchMatchesForSync('match_number')
+      var emptyKoSlots2 = dbMatchesRefresh.filter(function(dm){
+        return koPhases2.includes(dm.phase) && (!dm.home_team || !dm.away_team)
+      })
+      if (emptyKoSlots2.length > 0) {
+        var espnKoRes = await fetch('/api/ko-teams').then(function(r){ return r.json() }).catch(function(){ return { ok:false } })
+        if (espnKoRes.ok && espnKoRes.matches && espnKoRes.matches.length > 0) {
+          var espnTeamsAdded = 0
+          for (var ei = 0; ei < espnKoRes.matches.length; ei++) {
+            var em2 = espnKoRes.matches[ei]
+            var eHome = mapTeamName(em2.homeTeam)
+            var eAway = mapTeamName(em2.awayTeam)
+            var isPlaceholder2 = function(n){ return !n || n.length < 2 || /winner|loser|runner|group [a-z]|tbd|place|best/i.test(n) }
+            if (isPlaceholder2(eHome) || isPlaceholder2(eAway)) continue
+            var apiKo = new Date(em2.date)
+            var slot2 = emptyKoSlots2.find(function(s){
+              if (!s.kickoff) return false
+              return Math.abs(new Date(s.kickoff) - apiKo) < 60 * 60 * 1000
+            })
+            if (!slot2) continue
+            if (slot2.result_source === 'admin' && slot2.home_team) continue
+            var fillRes2 = await supabase.from('matches').update({
+              home_team: eHome, away_team: eAway, updated_at: new Date().toISOString()
+            }).eq('id', slot2.id)
+            if (!fillRes2.error) {
+              emptyKoSlots2 = emptyKoSlots2.filter(function(s){ return s.id !== slot2.id })
+              espnTeamsAdded++
+            }
+          }
+          if (espnTeamsAdded > 0) out.espnTeamsAdded = espnTeamsAdded
+        }
+      }
+    } catch (e) { /* ESPN team fill failed - non-fatal */ }
 
     return out
   } catch (err) {
