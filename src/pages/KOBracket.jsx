@@ -68,6 +68,15 @@ export default function KOBracket() {
 
   async function pickTeam(matchId, team) {
     if (bracketLocked || !player) return
+    var current = bracketPicks[matchId]
+    if (current === team) {
+      // Tapping the already-selected team unselects it
+      setBracketPicks(function(p){ var n = { ...p }; delete n[matchId]; return n })
+      await supabase.from('ko_bracket_picks').delete().eq('player_id', player.id).eq('match_id', matchId)
+      setSaved(function(s){ return { ...s, [matchId + '_pick']: true } })
+      setTimeout(function(){ setSaved(function(s){ return { ...s, [matchId + '_pick']: false } }) }, 1000)
+      return
+    }
     setBracketPicks(function(p){ return { ...p, [matchId]: team } })
     await supabase.from('ko_bracket_picks').upsert({
       player_id: player.id, match_id: matchId, picked_team: team,
