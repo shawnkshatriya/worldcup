@@ -514,7 +514,9 @@ export async function syncMatchResults() {
           if (!km.homeTeam || !km.awayTeam) continue
           var kHome = mapTeamName(km.homeTeam.name || km.homeTeam.shortName || '')
           var kAway = mapTeamName(km.awayTeam.name || km.awayTeam.shortName || '')
-          if (!kHome || !kAway) continue
+          // Skip if team names look like placeholders (football-data uses these for TBD KO slots)
+          var isPlaceholder = function(n){ return !n || n.length < 2 || /winner|loser|runner|group [a-z]|tbd|place|best/i.test(n) }
+          if (isPlaceholder(kHome) || isPlaceholder(kAway)) continue
           // Match by kickoff date (within same day) since we can't match by name (slot is empty)
           var apiKickoff = km.utcDate ? new Date(km.utcDate) : null
           if (!apiKickoff) continue
