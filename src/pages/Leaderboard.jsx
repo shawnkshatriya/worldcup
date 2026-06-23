@@ -82,11 +82,11 @@ export default function Leaderboard() {
     setLoading(true)
     var playersQ = await supabase.from('players').select('id,name,site,team').eq('room_code', roomCode).limit(500)
     if (playersQ.error) playersQ = await supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500)
-    const [scores, predictions, { count:finished }, { data:winnerPicks }, { data:finishedMatchRows }] = await Promise.all([
+    const [scores, predictions, { count:finished }, { data:koScores }, { data:finishedMatchRows }] = await Promise.all([
       fetchAll('scores', '*'),
       fetchAll('predictions', 'player_id,match_id,home_goals,away_goals'),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
-      supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode),
+      supabase.from('ko_scores').select('player_id,pts_total').eq('room_code', roomCode).then(function(r){ return r.data || [] }).catch(function(){ return [] }),
       supabase.from('matches').select('id').eq('status','FINISHED'),
     ])
     var players = playersQ.data
@@ -104,19 +104,19 @@ export default function Leaderboard() {
       const pp = predictions?.filter(pr=>pr.player_id===p.id&&pr.home_goals!=null)||[]
       // Predictions made for matches that have actually finished
       const predsForFinished = pp.filter(function(pr){ return finishedIds.has(String(pr.match_id)) }).length
-      const wp = winnerPicks?.find(w=>w.player_id===p.id)
+      const wp = null // winner_picks retired - advancement now via ko_scores
       const scored = ps.length
       const correct= ps.filter(s=>s.pts_result>0||s.pts_exact>0).length
       const diff   = ps.filter(s=>s.pts_diff>0).length
       const exact  = ps.filter(s=>s.pts_exact>0).length
       const approx = ps.reduce((a,s)=>a+(s.pts_approx||0),0)
       const ko     = ps.reduce((a,s)=>a+(s.pts_ko_team||0),0)
-      const winnerBonus = wp?.pts_awarded || 0
-      const played = finished || 0  // total finished matches - the fair denominator
+      const koAdv  = (koScores||[]).filter(function(k){ return k.player_id===p.id }).reduce(function(a,k){ return a+(k.pts_total||0) }, 0)
+      const played = finished || 0
       return {
         ...p, color:AVATAR_COLORS[idx%AVATAR_COLORS.length],
-        pts:    ps.reduce((a,s)=>a+(s.pts_total||0),0) + winnerBonus,
-        correct, diff, exact, approx, ko, winnerBonus,
+        pts:    ps.reduce((a,s)=>a+(s.pts_total||0),0) + koAdv,
+        correct, diff, exact, approx, ko, koAdv,
         preds:  predsForFinished, scored,
         pctWL:  played>0?Math.round(correct/played*100):0,
         pctDiff:played>0?Math.round(diff/played*100):0,
@@ -310,7 +310,7 @@ export default function Leaderboard() {
                       <SortTh field="pctExact" label="% Exact" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="exact" label="Exact count" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                       <SortTh field="approx" label="Approx Bonus" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
-                      <SortTh field="winnerBonus" label="Winner Pick" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
+                      <SortTh field="koAdv" label="KO Pts" sortKey={sortKey} sortDir={sortDir} onSort={handleSort}/>
                     </tr>
                   </thead>
                   <tbody>
@@ -360,7 +360,7 @@ export default function Leaderboard() {
                           <td style={{textAlign:'right'}}><PctBadge val={p.pctExact}/></td>
                           <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.exact}</td>
                           <td style={{textAlign:'right',color:'var(--c-muted)',fontSize:13}}>{p.approx}</td>
-                          <td style={{textAlign:'right',color:p.winnerBonus > 0 ? 'var(--c-accent2)' : 'var(--c-muted)',fontSize:13,fontWeight:p.winnerBonus > 0 ? 700 : 400}}>{p.winnerBonus || '-'}</td>
+                          <td style={{textAlign:'right',color:p.koAdv > 0 ? 'var(--c-accent2)' : 'var(--c-muted)',fontSize:13,fontWeight:p.koAdv > 0 ? 700 : 400}}>{p.koAdv || '-'}</td>
                         </tr>
                       )
                     })}

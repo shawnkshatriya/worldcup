@@ -69,10 +69,19 @@ export default function Dashboard() {
   const [weights, setWeights] = useState(null)
   const [nextMatch, setNextMatch] = useState([])
   const espnLive = useEspnLive(nextMatch)
+  const [koStart, setKoStart] = useState(null)
   const [recentResults, setRecentResults] = useState([])
   const [poolStats, setPoolStats] = useState(null)
   const [myUpcoming, setMyUpcoming] = useState([])
-  const countdown = useCountdown('2026-06-11T19:00:00Z')
+  const countdown = useCountdown(koStart?.toISOString() || '2099-01-01T00:00:00Z')
+
+  useEffect(() => {
+    // Load first KO kickoff for countdown
+    supabase.from('matches').select('kickoff')
+      .in('phase', ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'])
+      .order('kickoff', { ascending: true }).limit(1)
+      .then(function(r) { if (r.data && r.data[0]) setKoStart(new Date(r.data[0].kickoff)) })
+  }, [])
 
   useEffect(() => {
     loadData()
@@ -213,6 +222,21 @@ export default function Dashboard() {
           <p>Tournament prediction pool</p>
         </div>
       </div>
+
+      {countdown && koStart && (
+        <div style={{background:'linear-gradient(135deg,var(--c-accent) 0%,var(--c-accent2) 100%)',borderRadius:14,padding:'16px 20px',marginBottom:16,textAlign:'center',color:'#fff'}}>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',opacity:0.85,marginBottom:8}}>⚡ Knockout Stage Begins In</div>
+          <div style={{display:'flex',gap:16,justifyContent:'center',alignItems:'flex-end'}}>
+            {countdown.days > 0 && (
+              <div><div style={{fontFamily:'var(--font-display)',fontSize:36,fontWeight:700,lineHeight:1}}>{countdown.days}</div><div style={{fontSize:10,opacity:0.75,marginTop:2}}>DAYS</div></div>
+            )}
+            <div><div style={{fontFamily:'var(--font-display)',fontSize:36,fontWeight:700,lineHeight:1}}>{String(countdown.hours).padStart(2,'0')}</div><div style={{fontSize:10,opacity:0.75,marginTop:2}}>HRS</div></div>
+            <div><div style={{fontFamily:'var(--font-display)',fontSize:36,fontWeight:700,lineHeight:1}}>{String(countdown.mins).padStart(2,'0')}</div><div style={{fontSize:10,opacity:0.75,marginTop:2}}>MIN</div></div>
+            <div><div style={{fontFamily:'var(--font-display)',fontSize:36,fontWeight:700,lineHeight:1}}>{String(countdown.secs).padStart(2,'0')}</div><div style={{fontSize:10,opacity:0.75,marginTop:2}}>SEC</div></div>
+          </div>
+          <div style={{fontSize:11,opacity:0.75,marginTop:10}}>Fill your bracket before it locks 🔒</div>
+        </div>
+      )}
       <div className="page-body">
 
         {/* -- Hero Banner -- */}
@@ -249,7 +273,7 @@ export default function Dashboard() {
             {countdown ? (
               <div>
                 <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--c-muted)',marginBottom:10,textAlign:'right'}}>
-                  Kickoff in
+                  Knockout in
                 </div>
                 <div style={{display:'flex',alignItems:'flex-start',gap:2}}>
                   {[{n:countdown.days,l:'days'},{n:countdown.hours,l:'hrs'},{n:countdown.mins,l:'min'},{n:countdown.secs,l:'sec'}].map(({n,l},i)=>(
