@@ -514,6 +514,15 @@ export async function syncAndRecalc() {
   var anyOk = syncResult.ok || (espnResult && espnResult.ok)
   if (anyOk) {
     var roomCount = await recalcAllRooms()
+    // Also auto-recalc KO bracket scores for all rooms
+    try {
+      var { recalcKoBracket } = await import('./koBracket')
+      var roomsRes = await supabase.from('rooms').select('code')
+      var rooms = roomsRes.data || []
+      for (var i = 0; i < rooms.length; i++) {
+        await recalcKoBracket(rooms[i].code)
+      }
+    } catch (e) { /* koBracket not available yet - ignore */ }
     return { sync: syncResult, espn: espnResult, recalcedRooms: roomCount }
   }
   return { sync: syncResult, espn: espnResult, recalcedRooms: 0 }
