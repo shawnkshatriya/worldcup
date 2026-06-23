@@ -514,9 +514,11 @@ export async function syncMatchResults() {
           if (!km.homeTeam || !km.awayTeam) continue
           var kHome = mapTeamName(km.homeTeam.name || km.homeTeam.shortName || '')
           var kAway = mapTeamName(km.awayTeam.name || km.awayTeam.shortName || '')
-          // Skip if team names look like placeholders (football-data uses these for TBD KO slots)
           var isPlaceholder = function(n){ return !n || n.length < 2 || /winner|loser|runner|group [a-z]|tbd|place|best/i.test(n) }
-          if (isPlaceholder(kHome) || isPlaceholder(kAway)) continue
+          // Need at least one real team name to fill
+          if (isPlaceholder(kHome) && isPlaceholder(kAway)) continue
+          var fillHome = !isPlaceholder(kHome) ? kHome : null
+          var fillAway = !isPlaceholder(kAway) ? kAway : null
           // Match by kickoff date (within same day) since we can't match by name (slot is empty)
           var apiKickoff = km.utcDate ? new Date(km.utcDate) : null
           if (!apiKickoff) continue
@@ -527,10 +529,14 @@ export async function syncMatchResults() {
           })
           if (!slot) continue
           // Only fill if admin hasn't set teams manually
-          if (slot.result_source === 'admin' && slot.home_team) continue
-          var fillRes = await supabase.from('matches').update({
-            home_team: kHome, away_team: kAway, updated_at: new Date().toISOString()
-          }).eq('id', slot.id)
+          if (slot.result_source === 'admin' && slot.home_team && slot.away_team) continue
+          // Only fill teams that are real - don't overwrite an existing real name with null
+          var updateTeams = {}
+          if (fillHome && !slot.home_team) updateTeams.home_team = fillHome
+          if (fillAway && !slot.away_team) updateTeams.away_team = fillAway
+          if (Object.keys(updateTeams).length === 0) continue
+          updateTeams.updated_at = new Date().toISOString()
+          var fillRes = await supabase.from('matches').update(updateTeams).eq('id', slot.id)
           if (!fillRes.error) {
             // Remove from emptyKoSlots so we don't double-fill
             emptyKoSlots = emptyKoSlots.filter(function(s){ return s.id !== slot.id })
@@ -560,17 +566,22 @@ export async function syncMatchResults() {
             var eHome = mapTeamName(em2.homeTeam)
             var eAway = mapTeamName(em2.awayTeam)
             var isPlaceholder2 = function(n){ return !n || n.length < 2 || /winner|loser|runner|group [a-z]|tbd|place|best/i.test(n) }
-            if (isPlaceholder2(eHome) || isPlaceholder2(eAway)) continue
+            var eFillHome = !isPlaceholder2(eHome) ? eHome : null
+            var eFillAway = !isPlaceholder2(eAway) ? eAway : null
+            if (!eFillHome && !eFillAway) continue
             var apiKo = new Date(em2.date)
             var slot2 = emptyKoSlots2.find(function(s){
               if (!s.kickoff) return false
               return Math.abs(new Date(s.kickoff) - apiKo) < 60 * 60 * 1000
             })
             if (!slot2) continue
-            if (slot2.result_source === 'admin' && slot2.home_team) continue
-            var fillRes2 = await supabase.from('matches').update({
-              home_team: eHome, away_team: eAway, updated_at: new Date().toISOString()
-            }).eq('id', slot2.id)
+            if (slot2.result_source === 'admin' && slot2.home_team && slot2.away_team) continue
+            var updateTeams2 = {}
+            if (eFillHome && !slot2.home_team) updateTeams2.home_team = eFillHome
+            if (eFillAway && !slot2.away_team) updateTeams2.away_team = eFillAway
+            if (Object.keys(updateTeams2).length === 0) continue
+            updateTeams2.updated_at = new Date().toISOString()
+            var fillRes2 = await supabase.from('matches').update(updateTeams2).eq('id', slot2.id)
             if (!fillRes2.error) {
               emptyKoSlots2 = emptyKoSlots2.filter(function(s){ return s.id !== slot2.id })
               espnTeamsAdded++
