@@ -532,8 +532,8 @@ export async function syncMatchResults() {
           if (slot.result_source === 'admin' && slot.home_team && slot.away_team) continue
           // Only fill teams that are real - don't overwrite an existing real name with null
           var updateTeams = {}
-          if (fillHome && !slot.home_team) updateTeams.home_team = fillHome
-          if (fillAway && !slot.away_team) updateTeams.away_team = fillAway
+          if (fillHome && !slot.home_team && fillHome !== slot.away_team) updateTeams.home_team = fillHome
+          if (fillAway && !slot.away_team && fillAway !== slot.home_team && fillAway !== updateTeams.home_team) updateTeams.away_team = fillAway
           if (Object.keys(updateTeams).length === 0) continue
           updateTeams.updated_at = new Date().toISOString()
           var fillRes = await supabase.from('matches').update(updateTeams).eq('id', slot.id)
