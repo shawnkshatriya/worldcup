@@ -169,15 +169,15 @@ function MatchCard({ match, bracketPick, prediction, saved, bracketLocked, playe
           onClick={function(){ if (!bracketLocked && match.home_team && !finished) pickTeam(match.id, match.home_team) }}
           style={{
             display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,cursor:!bracketLocked&&match.home_team&&!finished?'pointer':'default',
-            background: pick===match.home_team ? 'var(--c-accent)' : homeWon ? 'rgba(34,197,94,0.1)' : 'var(--c-surface2)',
-            border: pick===match.home_team ? '1.5px solid var(--c-accent)' : homeWon ? '1.5px solid #22c55e' : '1.5px solid transparent',
+            background: (pick && pick===match.home_team) ? 'var(--c-accent)' : homeWon ? 'rgba(34,197,94,0.1)' : 'var(--c-surface2)',
+            border: (pick && pick===match.home_team) ? '1.5px solid var(--c-accent)' : homeWon ? '1.5px solid #22c55e' : '1.5px solid transparent',
             opacity: homeTBD ? 0.4 : 1,
           }}
         >
           {match.home_team && <Flag team={match.home_team} size="sm"/>}
-          <span style={{flex:1,fontWeight:600,fontSize:14,color:pick===match.home_team?'#fff':'var(--c-text)'}}>{match.home_team || 'TBD'}</span>
-          {match.home_goals != null && <span style={{fontWeight:700,fontFamily:'var(--font-display)',fontSize:16,color:pick===match.home_team?'#fff':'var(--c-text)'}}>{match.home_goals}</span>}
-          {pick===match.home_team && !finished && <span style={{fontSize:10,color:'rgba(255,255,255,0.8)'}}>✓ your pick</span>}
+          <span style={{flex:1,fontWeight:600,fontSize:14,color:(pick&&pick===match.home_team)?'#fff':'var(--c-text)'}}>{match.home_team || 'TBD'}</span>
+          {match.home_goals != null && <span style={{fontWeight:700,fontFamily:'var(--font-display)',fontSize:16,color:(pick&&pick===match.home_team)?'#fff':'var(--c-text)'}}>{match.home_goals}</span>}
+          {(pick&&pick===match.home_team) && !finished && <span style={{fontSize:10,color:'rgba(255,255,255,0.8)'}}>✓ your pick</span>}
         </div>
 
         {/* Away team */}
@@ -185,15 +185,15 @@ function MatchCard({ match, bracketPick, prediction, saved, bracketLocked, playe
           onClick={function(){ if (!bracketLocked && match.away_team && !finished) pickTeam(match.id, match.away_team) }}
           style={{
             display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,cursor:!bracketLocked&&match.away_team&&!finished?'pointer':'default',
-            background: pick===match.away_team ? 'var(--c-accent)' : awayWon ? 'rgba(34,197,94,0.1)' : 'var(--c-surface2)',
-            border: pick===match.away_team ? '1.5px solid var(--c-accent)' : awayWon ? '1.5px solid #22c55e' : '1.5px solid transparent',
+            background: (pick && pick===match.away_team) ? 'var(--c-accent)' : awayWon ? 'rgba(34,197,94,0.1)' : 'var(--c-surface2)',
+            border: (pick && pick===match.away_team) ? '1.5px solid var(--c-accent)' : awayWon ? '1.5px solid #22c55e' : '1.5px solid transparent',
             opacity: awayTBD ? 0.4 : 1,
           }}
         >
           {match.away_team && <Flag team={match.away_team} size="sm"/>}
-          <span style={{flex:1,fontWeight:600,fontSize:14,color:pick===match.away_team?'#fff':'var(--c-text)'}}>{match.away_team || 'TBD'}</span>
-          {match.away_goals != null && <span style={{fontWeight:700,fontFamily:'var(--font-display)',fontSize:16,color:pick===match.away_team?'#fff':'var(--c-text)'}}>{match.away_goals}</span>}
-          {pick===match.away_team && !finished && <span style={{fontSize:10,color:'rgba(255,255,255,0.8)'}}>✓ your pick</span>}
+          <span style={{flex:1,fontWeight:600,fontSize:14,color:(pick&&pick===match.away_team)?'#fff':'var(--c-text)'}}>{match.away_team || 'TBD'}</span>
+          {match.away_goals != null && <span style={{fontWeight:700,fontFamily:'var(--font-display)',fontSize:16,color:(pick&&pick===match.away_team)?'#fff':'var(--c-text)'}}>{match.away_goals}</span>}
+          {(pick&&pick===match.away_team) && !finished && <span style={{fontSize:10,color:'rgba(255,255,255,0.8)'}}>✓ your pick</span>}
         </div>
       </div>
 
