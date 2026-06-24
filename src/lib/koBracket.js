@@ -70,7 +70,8 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
     actualWinner = match.home_goals_pen > match.away_goals_pen ? match.home_team : match.away_team
   }
 
-  var wentToPens = match.home_goals === match.away_goals && match.home_goals_pen != null
+  // A match went to penalties iff penalty scores are recorded.
+  var wentToPens = match.home_goals_pen != null && match.away_goals_pen != null
   var advKey = PHASE_ADV_KEY[match.phase]
   var advPts = advKey ? (w[advKey] || 0) : 0
 
@@ -82,10 +83,14 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
     result.pts_adv = advPts
   }
 
-  // Score prediction (judged on 90-min result only)
+  // Score prediction (judged on 90-min / regulation result).
+  // home_goals/away_goals include extra time; home_goals_reg is the 90-min score.
+  // Fall back to full-time score when regulation isn't recorded (match ended in 90,
+  // or admin-entered result without a separate regulation score).
   if (prediction && prediction.home_goals != null && prediction.away_goals != null) {
     var predH = prediction.home_goals, predA = prediction.away_goals
-    var actH = match.home_goals, actA = match.away_goals
+    var actH = match.home_goals_reg != null ? match.home_goals_reg : match.home_goals
+    var actA = match.away_goals_reg != null ? match.away_goals_reg : match.away_goals
     var exactScore = predH === actH && predA === actA
     var correctDiff = !exactScore && (predH - predA) === (actH - actA) && predH - predA !== 0
     var correctResult = !exactScore && Math.sign(predH - predA) === Math.sign(actH - actA)
@@ -125,7 +130,7 @@ export async function recalcKoBracket(roomCode) {
   var matchRes = await supabase.from('matches').select('*')
     .in('phase', ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'])
   var koMatches = matchRes.data || []
-  var finishedKO = koMatches.filter(function(m){ return m.home_goals != null })
+  var finishedKO = koMatches.filter(function(m){ return m.status === 'FINISHED' && m.home_goals != null })
   if (finishedKO.length === 0) return { ok: true, updated: 0 }
 
   // Get all players in room

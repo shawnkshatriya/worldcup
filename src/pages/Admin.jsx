@@ -712,13 +712,21 @@ function MatchResultRow({ match: initialMatch, onSave }) {
   return (
     <div className="match-row" style={{flexWrap:'wrap',gap:6}}>
       {isKO ? (
-        // KO matches: editable team names + scores
+        // KO matches: editable team names + scores + penalties (when drawn)
         <>
           <input type="text" value={m.home_team||''} placeholder="Home team" onChange={e=>setStr('home_team',e.target.value)} style={{width:120,fontSize:12,padding:'3px 6px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}}/>
           <input type="number" min="0" className="score-input" value={m.home_goals??''} placeholder="?" onChange={e=>set('home_goals',e.target.value)}/>
           <span className="score-sep">-</span>
           <input type="number" min="0" className="score-input" value={m.away_goals??''} placeholder="?" onChange={e=>set('away_goals',e.target.value)}/>
           <input type="text" value={m.away_team||''} placeholder="Away team" onChange={e=>setStr('away_team',e.target.value)} style={{width:120,fontSize:12,padding:'3px 6px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}}/>
+          {m.home_goals != null && m.home_goals === m.away_goals && (
+            <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:11,color:'var(--c-muted)'}}>
+              PENS
+              <input type="number" min="0" style={{width:36,textAlign:'center',fontSize:12,padding:'2px',borderRadius:5,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}} value={m.home_goals_pen??''} placeholder="?" onChange={e=>set('home_goals_pen',e.target.value)}/>
+              -
+              <input type="number" min="0" style={{width:36,textAlign:'center',fontSize:12,padding:'2px',borderRadius:5,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)'}} value={m.away_goals_pen??''} placeholder="?" onChange={e=>set('away_goals_pen',e.target.value)}/>
+            </span>
+          )}
         </>
       ) : (
         // Group matches: names fixed, just scores

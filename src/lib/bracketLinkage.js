@@ -115,5 +115,27 @@ export function computePredictedTeams(matches, linkage, bracketPicks) {
       }
     }
   }
+
+  // 3rd place match (match_number 103) = the LOSERS of the two semifinals.
+  // For each SF, the predicted loser is the predicted matchup team the player did NOT pick.
+  var sfMatches = matches.filter(function(m){ return m.phase === 'SEMI_FINALS' })
+    .sort(function(a,b){ return (a.match_number||a.id)-(b.match_number||b.id) })
+  var thirdMatch = matches.find(function(m){ return m.phase === 'THIRD_PLACE' })
+  if (thirdMatch && sfMatches.length === 2) {
+    var losers = sfMatches.map(function(sf){
+      var slot = predicted[sf.id]
+      var pick = bracketPicks[sf.id]
+      if (!slot || !pick) return null
+      // The loser is whichever predicted team isn't the pick
+      if (slot.predHome && slot.predHome !== pick) return slot.predHome
+      if (slot.predAway && slot.predAway !== pick) return slot.predAway
+      return null
+    })
+    predicted[thirdMatch.id] = {
+      predHome: losers[0] || thirdMatch.home_team || null,
+      predAway: losers[1] || thirdMatch.away_team || null,
+    }
+  }
+
   return predicted
 }

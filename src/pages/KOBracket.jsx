@@ -261,7 +261,8 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
   if (!match) return null
   var pred = prediction || {}
   var hasBoth = pred.home_goals != null && pred.away_goals != null
-  var finished = match.status === 'FINISHED' || match.home_goals != null
+  var finished = match.status === 'FINISHED'
+  var inPlay = (match.status === 'IN_PLAY' || match.status === 'PAUSED')
   var scoreLocked = isScoreLocked(match)
 
   var predHome = predicted ? predicted.predHome : match.home_team
@@ -269,8 +270,8 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
   var actualHome = match.home_team
   var actualAway = match.away_team
 
-  var homeWon = match.home_goals != null && match.home_goals > match.away_goals
-  var awayWon = match.home_goals != null && match.away_goals > match.home_goals
+  var homeWon = finished && match.home_goals != null && match.home_goals > match.away_goals
+  var awayWon = finished && match.home_goals != null && match.away_goals > match.home_goals
 
   var canPick = !bracketLocked && !finished && player
   var scored = (finished && player) ? calcKoMatchPoints(match, pred, bracketPick, weights) : null

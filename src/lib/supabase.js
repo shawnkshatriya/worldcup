@@ -122,6 +122,9 @@ export async function recalcPlayerScores(roomCode) {
     var pred = dedupedPredictions[i]
     var match = matches.find(function(m) { return String(m.id) === String(pred.match_id) })
     if (!match) continue
+    // Skip knockout matches - they're scored by the bracket engine (ko_scores),
+    // not the group-stage scorer, to avoid double-counting on the leaderboard.
+    if (match.phase && !match.phase.startsWith('GROUP')) continue
     var pts = calcMatchPoints(pred, match, weights, match.phase)
     if (!pts) continue
     upserts.push({
@@ -145,47 +148,16 @@ export async function recalcPlayerScores(roomCode) {
     }
   }
 
-  // --- Winner pick bonus ---
-  // Find the FINAL match
-  var finalMatch = matches.find(function(m) { return m.phase === 'FINAL' })
-  if (finalMatch && finalMatch.home_goals != null) {
-    // Determine the champion
-    var champion = null
-    var finalist = null
-    if (finalMatch.home_goals_pen != null) {
-      champion = finalMatch.home_goals_pen > finalMatch.away_goals_pen ? finalMatch.home_team : finalMatch.away_team
-      finalist = finalMatch.home_goals_pen > finalMatch.away_goals_pen ? finalMatch.away_team : finalMatch.home_team
-    } else {
-      champion = finalMatch.home_goals > finalMatch.away_goals ? finalMatch.home_team : finalMatch.away_team
-      finalist = finalMatch.home_goals > finalMatch.away_goals ? finalMatch.away_team : finalMatch.home_team
-    }
-
-    // Get all winner picks for this room
-    var wpRes = await supabase.from('winner_picks').select('*').eq('room_code', roomCode)
-    var picks = wpRes.data || []
-
-    for (var j = 0; j < picks.length; j++) {
-      var pick = picks[j]
-      var bonus = 0
-      if (pick.team === champion) {
-        bonus = weights.winner_bonus || 20
-      } else if (pick.team === finalist) {
-        bonus = weights.finalist_bonus || 10
-      }
-      if (bonus !== pick.pts_awarded) {
-        await supabase.from('winner_picks').update({ pts_awarded: bonus }).eq('id', pick.id)
-      }
-    }
-  }
+  // (Winner pick bonus retired - champion is now scored via the KO bracket Final pick.)
 
   // Update best_rank for each player based on current standings.
   // This also backfills historical bests since recalc replays all scored matches.
   try {
     var totalsByPlayer = {}
     upserts.forEach(function(u){ totalsByPlayer[u.player_id] = (totalsByPlayer[u.player_id]||0) + (u.pts_total||0) })
-    // Include winner bonus
-    var wpRes = await supabase.from('winner_picks').select('player_id,pts_awarded').eq('room_code', roomCode)
-    ;(wpRes.data||[]).forEach(function(w){ totalsByPlayer[w.player_id] = (totalsByPlayer[w.player_id]||0) + (w.pts_awarded||0) })
+    // Include KO bracket advancement points (the current system)
+    var koRes = await supabase.from('ko_scores').select('player_id,pts_total').eq('room_code', roomCode)
+    ;(koRes.data||[]).forEach(function(k){ totalsByPlayer[k.player_id] = (totalsByPlayer[k.player_id]||0) + (k.pts_total||0) })
     // All room players (so people with 0 points still rank)
     var allPRes = await supabase.from('players').select('id,best_rank').eq('room_code', roomCode)
     var allP = allPRes.data || []
@@ -480,6 +452,8 @@ export async function syncMatchResults() {
       var updateData = {
         home_goals: score.home,
         away_goals: score.away,
+        home_goals_reg: m.score && m.score.regularTime && m.score.regularTime.home != null ? m.score.regularTime.home : null,
+        away_goals_reg: m.score && m.score.regularTime && m.score.regularTime.away != null ? m.score.regularTime.away : null,
         home_goals_et: m.score.extraTime ? m.score.extraTime.home : null,
         away_goals_et: m.score.extraTime ? m.score.extraTime.away : null,
         home_goals_pen: m.score.penalties ? m.score.penalties.home : null,
