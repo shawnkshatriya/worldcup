@@ -20,7 +20,7 @@ const WEIGHT_LABELS = {
   ko_score_exact: 'KO - exact score bonus (right team)',
   ko_score_diff:  'KO - goal difference bonus (right team)',
   ko_score_result:'KO - correct result bonus (right team)',
-  ko_penalty_bonus:'KO - penalty shootout bonus (predicted draw)',
+  ko_pen_exact:    'KO - exact penalty shootout score bonus',
   ko_consolation: 'KO - consolation (right score, wrong team)',
 }
 

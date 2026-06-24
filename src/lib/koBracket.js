@@ -90,17 +90,15 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
     var correctDiff = !exactScore && (predH - predA) === (actH - actA) && predH - predA !== 0
     var correctResult = !exactScore && Math.sign(predH - predA) === Math.sign(actH - actA)
 
-    // Penalty bonus: predicted a draw AND match went to pens
+    // Penalty bonus: ONLY for exactly nailing the penalty shootout score.
+    // (Predicting the 90-min draw is already rewarded by the regular score bonus.)
     var predictedDraw = predH === predA
-    if (predictedDraw && wentToPens) {
-      result.pts_penalty = w.ko_penalty_bonus || 2
-      // Hidden bonus: exactly nailing the penalty shootout score = +7
-      if (prediction.home_pens != null && prediction.away_pens != null &&
-          match.home_goals_pen != null && match.away_goals_pen != null &&
-          prediction.home_pens === match.home_goals_pen &&
-          prediction.away_pens === match.away_goals_pen) {
-        result.pts_penalty += (w.ko_pen_exact != null ? w.ko_pen_exact : 7)
-      }
+    if (predictedDraw && wentToPens &&
+        prediction.home_pens != null && prediction.away_pens != null &&
+        match.home_goals_pen != null && match.away_goals_pen != null &&
+        prediction.home_pens === match.home_goals_pen &&
+        prediction.away_pens === match.away_goals_pen) {
+      result.pts_penalty = (w.ko_pen_exact != null ? w.ko_pen_exact : 7)
     }
 
     if (pickedCorrectTeam) {
