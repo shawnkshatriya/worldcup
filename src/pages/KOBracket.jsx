@@ -5,6 +5,7 @@ import { isKoBracketLocked, calcKoMatchPoints, getDefaultKoWeights } from '../li
 import { buildBracketLinkage, computePredictedTeams, KO_ROUND_ORDER } from '../lib/bracketLinkage'
 import { localTime, localDateShort } from '../lib/timeFormat'
 import Flag from '../components/Flag'
+import BracketShareCard from '../components/BracketShareCard'
 
 const PHASE_LABELS = {
   ROUND_OF_32: 'Round of 32', ROUND_OF_16: 'Round of 16',
@@ -20,7 +21,7 @@ function isScoreLocked(match) {
   return false
 }
 
-export default function KOBracket() {
+export default function KOBracket({ embedded }) {
   const { player } = usePlayer()
   const [matches, setMatches] = useState([])
   const [bracketPicks, setBracketPicks] = useState({})
@@ -145,7 +146,9 @@ export default function KOBracket() {
     if (!res.error) flashSaved(matchId + '_score')
   }
 
-  if (loading) return <div className="page-wrapper"><div className="page-header"><div className="page-header-inner"><h1>Knockout Bracket</h1></div></div><p style={{color:'var(--c-muted)',padding:'2rem'}}>Loading...</p></div>
+  if (loading) return embedded
+    ? <p style={{color:'var(--c-muted)',padding:'1rem'}}>Loading bracket...</p>
+    : <div className="page-wrapper"><div className="page-header"><div className="page-header-inner"><h1>Knockout Bracket</h1></div></div><p style={{color:'var(--c-muted)',padding:'2rem'}}>Loading...</p></div>
 
   var matchesByPhase = {}
   KO_ROUND_ORDER.forEach(function(ph){ matchesByPhase[ph] = matches.filter(function(m){ return m.phase === ph }).sort(function(a,b){ return (a.match_number||a.id)-(b.match_number||b.id) }) })
@@ -153,57 +156,93 @@ export default function KOBracket() {
 
   var shared = { bracketPicks, predictions, saved, bracketLocked, player, pickTeam, updateScore, saveScore, weights, predictedTeams }
 
-  return (
-    <div className="page-wrapper">
-      <div className="page-header">
-        <div className="page-header-inner">
-          <h1>Knockout Bracket</h1>
-          {bracketLocked
-            ? <p style={{color:'var(--c-warn)',fontSize:12,fontWeight:600}}>Bracket locked - scores still editable until 15 min before each match</p>
-            : <p>Pick winners - they advance through your bracket. Locks at first knockout kickoff.</p>
-          }
+  var body = (
+    <>
+      {!embedded && (
+        <div className="page-header">
+          <div className="page-header-inner">
+            <h1>Knockout Bracket</h1>
+            {bracketLocked
+              ? <p style={{color:'var(--c-warn)',fontSize:12,fontWeight:600}}>Bracket locked - scores still editable until 15 min before each match</p>
+              : <p>Pick winners - they advance through your bracket. Locks at first knockout kickoff.</p>
+            }
+          </div>
         </div>
-      </div>
+      )}
+      {embedded && (
+        <p style={{fontSize:12,color:bracketLocked?'var(--c-warn)':'var(--c-muted)',marginBottom:12,fontWeight:bracketLocked?600:400}}>
+          {bracketLocked
+            ? 'Bracket locked - scores still editable until 15 min before each match'
+            : 'Pick winners - they advance through your bracket. Locks at first knockout kickoff.'}
+        </p>
+      )}
 
-      <div style={{display:'flex',gap:6,marginBottom:16,background:'var(--c-surface2)',borderRadius:10,padding:4,width:'fit-content'}}>
-        <button onClick={function(){ setView('bracket') }} style={tabStyle(view==='bracket')}>Bracket</button>
-        <button onClick={function(){ setView('day') }} style={tabStyle(view==='day')}>By Day</button>
+      <div style={{display:'flex',gap:6,marginBottom:16,alignItems:'center',flexWrap:'wrap'}}>
+        <div style={{display:'flex',gap:6,background:'var(--c-surface2)',borderRadius:10,padding:4,width:'fit-content'}}>
+          <button onClick={function(){ setView('bracket') }} style={tabStyle(view==='bracket')}>Bracket</button>
+          <button onClick={function(){ setView('day') }} style={tabStyle(view==='day')}>By Day</button>
+        </div>
+        {player && Object.keys(bracketPicks).length > 0 && (
+          <div style={{marginLeft:'auto',minWidth:180}}>
+            <BracketShareCard player={player} picks={bracketPicks} matchesByPhase={matchesByPhase} predictedTeams={predictedTeams}/>
+          </div>
+        )}
       </div>
 
       {view === 'day'
         ? <DayView matches={matches} {...shared}/>
         : <BracketView matchesByPhase={matchesByPhase} thirdPlace={thirdPlace} {...shared}/>
       }
+    </>
+  )
+
+  if (embedded) return body
+
+  return (
+    <div className="page-wrapper">
+      {body}
     </div>
   )
 }
+
 
 function tabStyle(active) {
   return { fontSize:13,padding:'6px 16px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,
     background:active?'var(--c-accent)':'transparent',color:active?'#fff':'var(--c-muted)' }
 }
 
-function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, showScore }) {
-  var displayTeam = actualTeam || predTeam
+function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, showScore, finished }) {
+  // March Madness style: the slot shows YOUR predicted team (it fills the bracket).
+  // Once results are in, color tells you if your pick was right or wrong.
+  var displayTeam = predTeam || actualTeam
   var isTBD = !displayTeam
-  var mismatch = predTeam && actualTeam && predTeam !== actualTeam
+  // After the match: was your predicted team the one actually here, and did they win?
+  var pickWasRight = finished && predTeam && actualTeam && predTeam === actualTeam
+  var pickWasWrong = finished && predTeam && actualTeam && predTeam !== actualTeam
+
+  var bg = 'var(--c-surface2)', borderC = 'transparent', textC = 'var(--c-text)'
+  if (isPick && !finished) { bg = 'var(--c-accent)'; borderC = 'var(--c-accent)'; textC = '#fff' }
+  else if (isWinner) { bg = 'rgba(34,197,94,0.14)'; borderC = '#22c55e' }
+  else if (finished && actualTeam) { bg = 'var(--c-surface2)' }
+
   return (
     <div
       onClick={function(){ if (canPick && predTeam) onPick(predTeam) }}
       style={{
         display:'flex',alignItems:'center',gap:7,padding:'7px 9px',borderRadius:7,
         cursor: canPick && predTeam ? 'pointer' : 'default',
-        background: isPick ? 'var(--c-accent)' : isWinner ? 'rgba(34,197,94,0.12)' : 'var(--c-surface2)',
-        border: isPick ? '1.5px solid var(--c-accent)' : isWinner ? '1.5px solid #22c55e' : '1.5px solid transparent',
-        opacity: isTBD ? 0.45 : 1,
+        background: bg, border: '1.5px solid ' + borderC,
+        opacity: isTBD ? 0.4 : 1,
+        position:'relative',
       }}
     >
       {displayTeam && <Flag team={displayTeam} size="sm"/>}
-      <span style={{flex:1,fontWeight:600,fontSize:13,color:isPick?'#fff':'var(--c-text)',display:'flex',flexDirection:'column'}}>
-        <span>{displayTeam || 'TBD'}</span>
-        {mismatch && <span style={{fontSize:9,color:isPick?'rgba(255,255,255,0.8)':'var(--c-hint)',fontWeight:500}}>you picked {predTeam}</span>}
+      <span style={{flex:1,fontWeight:600,fontSize:13,color:textC,textDecoration: pickWasWrong ? 'line-through' : 'none', opacity: pickWasWrong ? 0.6 : 1}}>
+        {displayTeam || 'TBD'}
       </span>
-      {showScore != null && <span style={{fontWeight:700,fontFamily:'var(--font-display)',fontSize:15,color:isPick?'#fff':'var(--c-text)'}}>{showScore}</span>}
+      {pickWasRight && <span style={{fontSize:11,color:'#22c55e',fontWeight:700}}>✓</span>}
+      {pickWasWrong && actualTeam && <span style={{fontSize:9,color:'var(--c-hint)'}}>→ {actualTeam}</span>}
+      {showScore != null && <span style={{fontWeight:700,fontFamily:'var(--font-display)',fontSize:15,color:textC}}>{showScore}</span>}
     </div>
   )
 }
@@ -231,7 +270,7 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       <TeamRow
         predTeam={predHome} actualTeam={actualHome}
         isPick={bracketPick && bracketPick === predHome && !finished}
-        isWinner={homeWon} canPick={canPick}
+        isWinner={homeWon} canPick={canPick} finished={finished}
         onPick={function(t){ pickTeam(match.id, t) }}
         showScore={match.home_goals != null ? match.home_goals : null}
       />
@@ -239,23 +278,22 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       <TeamRow
         predTeam={predAway} actualTeam={actualAway}
         isPick={bracketPick && bracketPick === predAway && !finished && predAway !== predHome}
-        isWinner={awayWon} canPick={canPick}
+        isWinner={awayWon} canPick={canPick} finished={finished}
         onPick={function(t){ pickTeam(match.id, t) }}
         showScore={match.away_goals != null ? match.away_goals : null}
       />
 
-      {(actualHome || predHome) && (actualAway || predAway) && !finished && player && (
+      {!finished && player && !scoreLocked && (
         <div style={{marginTop:9,display:'flex',alignItems:'center',gap:7,justifyContent:'center'}}>
-          {scoreLocked ? (
-            <span style={{fontSize:10,color:'var(--c-muted)'}}>{hasBoth ? pred.home_goals+'-'+pred.away_goals : 'locked'}</span>
-          ) : (
-            <>
-              <input type="number" min="0" max="20" value={pred.home_goals==null?'':pred.home_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'home_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred.home_goals,pred.away_goals) }} style={scoreInputStyle}/>
-              <span style={{color:'var(--c-muted)',fontWeight:700,fontSize:13}}>-</span>
-              <input type="number" min="0" max="20" value={pred.away_goals==null?'':pred.away_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'away_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred.home_goals,pred.away_goals) }} style={scoreInputStyle}/>
-              {saved[match.id+'_score'] && <span style={{fontSize:10,color:'var(--c-success)'}}>OK</span>}
-            </>
-          )}
+          <input type="number" min="0" max="20" value={pred.home_goals==null?'':pred.home_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'home_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred.home_goals,pred.away_goals) }} style={scoreInputStyle}/>
+          <span style={{color:'var(--c-muted)',fontWeight:700,fontSize:13}}>-</span>
+          <input type="number" min="0" max="20" value={pred.away_goals==null?'':pred.away_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'away_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred.home_goals,pred.away_goals) }} style={scoreInputStyle}/>
+          {saved[match.id+'_score'] && <span style={{fontSize:10,color:'var(--c-success)'}}>OK</span>}
+        </div>
+      )}
+      {!finished && player && scoreLocked && hasBoth && (
+        <div style={{marginTop:9,textAlign:'center'}}>
+          <span style={{fontSize:10,color:'var(--c-muted)'}}>🔒 {pred.home_goals}-{pred.away_goals}</span>
         </div>
       )}
 

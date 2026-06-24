@@ -7,6 +7,7 @@ import Flag from '../components/Flag'
 import MatchPreview from '../components/MatchPreview'
 import { useEspnLive } from '../hooks/useEspnLive'
 import { localTime } from '../lib/timeFormat'
+import KOBracket from './KOBracket'
 const TEAMS = [
   {name:'Algeria',flag:'🇩🇿'},{name:'Argentina',flag:'🇦🇷'},{name:'Australia',flag:'🇦🇺'},
   {name:'Austria',flag:'🇦🇹'},{name:'Belgium',flag:'🇧🇪'},{name:'Bosnia and Herzegovina',flag:'🇧🇦'},
@@ -140,6 +141,7 @@ function isLocked(match, koOpen) {
 export default function Predictions() {
   const { player } = usePlayer()
   const [activePhase, setActivePhase] = useState('GROUP_A')
+  const [stageMode, setStageMode] = useState('group') // 'group' | 'knockout'
   const [matches, setMatches] = useState([])
   const espnLiveP = useEspnLive(matches)
   const [preds, setPreds] = useState({})
@@ -338,10 +340,21 @@ export default function Predictions() {
       <div className="page-header">
         <div className="page-header-inner">
           <h1>My predictions</h1>
-          <p>Predictions lock 15 minutes before each match kicks off. KO predictions unlock when your admin opens them.</p>
+          <p>Group stage scores lock 15 min before kickoff. Switch to Knockouts to fill your bracket.</p>
         </div>
       </div>
       <div className="page-body">
+
+        {/* Group Stage / Knockouts top-level toggle */}
+        <div style={{display:'flex',gap:6,marginBottom:'1.25rem',background:'var(--c-surface2)',borderRadius:10,padding:4,width:'fit-content'}}>
+          <button onClick={function(){ setStageMode('group') }} style={{fontSize:13,padding:'7px 18px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:700,background:stageMode==='group'?'var(--c-accent)':'transparent',color:stageMode==='group'?'#fff':'var(--c-muted)'}}>Group Stage</button>
+          <button onClick={function(){ setStageMode('knockout') }} style={{fontSize:13,padding:'7px 18px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:700,background:stageMode==='knockout'?'var(--c-accent)':'transparent',color:stageMode==='knockout'?'#fff':'var(--c-muted)'}}>Knockouts</button>
+        </div>
+
+        {stageMode === 'knockout' ? (
+          <KOBracket embedded={true}/>
+        ) : (
+        <>
 
         <div style={{background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:'var(--radius)',padding:'12px 16px',marginBottom:'1.25rem'}}>
           <div style={{marginBottom:10}}>
@@ -543,6 +556,8 @@ export default function Predictions() {
             )
           })}
         </div>
+        </>
+        )}
       </div>
     </div>
   )
