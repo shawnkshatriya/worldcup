@@ -27,85 +27,6 @@ const TEAMS = [
   {name:'United States',flag:'🇺🇸'},{name:'Uruguay',flag:'🇺🇾'},{name:'Uzbekistan',flag:'🇺🇿'},
 ]
 
-function WinnerPickInline({ player, koOpen }) {
-  const [myPick, setMyPick] = useState(null)
-  const [selected, setSelected] = useState(null)
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [open, setOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  // Locks when admin opens KO predictions OR at the hard KO deadline (R32 starts Jun 28 2026)
-  const KO_DEADLINE = new Date('2026-06-28T00:00:00Z')
-  const locked = koOpen || new Date() >= KO_DEADLINE
-
-  useEffect(() => {
-    if (!player) return
-    supabase.from('winner_picks').select('*').eq('player_id', player.id).eq('room_code', player.room_code).maybeSingle()
-      .then(({ data }) => { if (data) { setMyPick(data); setSelected(data.team) } })
-  }, [player])
-
-  async function savePick() {
-    if (!selected || !player) return
-    setSaving(true)
-    await supabase.from('winner_picks').upsert({ player_id:player.id, room_code:player.room_code, team:selected, pts_awarded:0 }, { onConflict:'player_id,room_code' })
-    setMyPick({ team: selected })
-    setSaved(true); setSaving(false); setOpen(false)
-    setTimeout(() => setSaved(false), 2000)
-  }
-
-  const team = TEAMS.find(t => t.name === myPick?.team)
-  const filtered = TEAMS.filter(t => t.name.toLowerCase().includes(search.toLowerCase()))
-
-  return (
-    <div className="card" style={{marginBottom:'1.25rem',background:'rgba(240,165,0,0.04)',border:'1px solid rgba(240,165,0,0.2)'}}>
-      <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
-        <div style={{flex:1}}>
-          <div style={{fontWeight:600,fontSize:14,marginBottom:2}}>Tournament winner pick</div>
-          <div style={{fontSize:12,color:'var(--c-muted)'}}>
-            {locked ? 'Locked — knockout stage has started' : 'Pick who wins it all — worth a big bonus. Locks when knockout stage begins.'}
-          </div>
-        </div>
-        {myPick ? (
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            {team && <Flag team={team.name} size="lg"/>}
-            <span style={{fontWeight:600,fontSize:13}}>{myPick.team}</span>
-            {myPick.pts_awarded > 0 && <span style={{fontFamily:'var(--font-display)',fontSize:20,color:'var(--c-gold)'}}>+{myPick.pts_awarded}</span>}
-            {!locked && <button className="btn btn-sm" onClick={() => setOpen(o => !o)}>Change</button>}
-            {saved && <span className="badge badge-green">Saved!</span>}
-          </div>
-        ) : (
-          !locked && <button className="btn btn-accent btn-sm" onClick={() => setOpen(o => !o)}>Pick a winner</button>
-        )}
-      </div>
-
-      {open && !locked && (
-        <div style={{marginTop:'1rem',borderTop:'1px solid var(--c-border)',paddingTop:'1rem'}}>
-          <input type="text" placeholder="Search teams..." value={search} onChange={e => setSearch(e.target.value)} style={{width:'100%',marginBottom:'0.75rem'}} />
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:6,maxHeight:280,overflowY:'auto'}}>
-            {filtered.map(t => (
-              <button key={t.name} onClick={() => setSelected(t.name)} style={{
-                display:'flex',alignItems:'center',gap:6,padding:'7px 10px',
-                borderRadius:'var(--radius)',border:'1px solid',cursor:'pointer',fontSize:12,
-                background:selected===t.name?'var(--c-accent)':'var(--c-surface2)',
-                borderColor:selected===t.name?'var(--c-accent)':'var(--c-border)',
-                color:selected===t.name?'var(--c-accent-text,#fff)':'var(--c-text)',
-              }}>
-                <Flag team={t.name}/> {t.name}
-              </button>
-            ))}
-          </div>
-          <div style={{display:'flex',gap:8,marginTop:'0.75rem'}}>
-            <button className="btn btn-accent" onClick={savePick} disabled={!selected||saving}>
-              {saving ? 'Saving...' : 'Confirm pick'}
-            </button>
-            <button className="btn" onClick={() => setOpen(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 const PHASES = [
   'GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F',
   'GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L',
@@ -457,10 +378,6 @@ export default function Predictions() {
             <div className="alert alert-warn" style={{marginBottom:'1rem'}}>
               KO predictions are locked. Your pool admin will unlock them once the bracket is set.
             </div>
-          )}
-
-          {((groupBy === 'group' && activePhase === 'FINAL') || (groupBy === 'day' && matches.some(function(m){ return m.phase === 'FINAL' }))) && player && (
-            <WinnerPickInline player={player} koOpen={koOpen} />
           )}
 
           {matches.map(m => {
