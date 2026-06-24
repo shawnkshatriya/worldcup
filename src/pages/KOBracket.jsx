@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { isKoBracketLocked, calcKoMatchPoints, getDefaultKoWeights } from '../lib/koBracket'
-import { buildBracketLinkage, computePredictedTeams, KO_ROUND_ORDER } from '../lib/bracketLinkage'
+import { buildBracketLinkage, computePredictedTeams, KO_ROUND_ORDER, orderMatchesForBracket } from '../lib/bracketLinkage'
 import { localTime, localDateShort } from '../lib/timeFormat'
 import Flag from '../components/Flag'
 import BracketShareCard from '../components/BracketShareCard'
@@ -151,7 +151,7 @@ export default function KOBracket({ embedded }) {
     : <div className="page-wrapper"><div className="page-header"><div className="page-header-inner"><h1>Knockout Bracket</h1></div></div><p style={{color:'var(--c-muted)',padding:'2rem'}}>Loading...</p></div>
 
   var matchesByPhase = {}
-  KO_ROUND_ORDER.forEach(function(ph){ matchesByPhase[ph] = matches.filter(function(m){ return m.phase === ph }).sort(function(a,b){ return (a.match_number||a.id)-(b.match_number||b.id) }) })
+  KO_ROUND_ORDER.forEach(function(ph){ matchesByPhase[ph] = orderMatchesForBracket(ph, matches.filter(function(m){ return m.phase === ph })) })
   var thirdPlace = matches.filter(function(m){ return m.phase === 'THIRD_PLACE' })
 
   var shared = { bracketPicks, predictions, saved, bracketLocked, player, pickTeam, updateScore, saveScore, weights, predictedTeams }

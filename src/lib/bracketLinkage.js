@@ -45,7 +45,33 @@ const FIFA_LINKAGE = {
   101: { feedsInto: 104, slot: 'home' }, 102: { feedsInto: 104, slot: 'away' },
 }
 
-// Build linkage keyed by match ID (resolving match numbers to IDs from the DB).
+// Visual bracket order per round (by match_number), so paired matches sit adjacent
+// and each match lines up with the one it feeds into.
+// Derived by walking the tree from the Final backwards:
+//   Final(104) = SF101 + SF102
+//   SF101 = QF97 + QF98 ; SF102 = QF99 + QF100
+//   QF97 = R16:89+90 ; QF98 = 93+94 ; QF99 = 91+92 ; QF100 = 95+96
+//   R16:89=R32 74+77 ; 90=73+75 ; 91=76+78 ; 92=79+80 ; 93=83+84 ; 94=81+82 ; 95=86+88 ; 96=85+87
+export const BRACKET_ORDER = {
+  ROUND_OF_32: [74,77, 73,75, 76,78, 79,80, 83,84, 81,82, 86,88, 85,87],
+  ROUND_OF_16: [89,90, 93,94, 91,92, 95,96],
+  QUARTER_FINALS: [97,98, 99,100],
+  SEMI_FINALS: [101,102],
+  FINAL: [104],
+}
+
+// Sort a round's matches into bracket display order.
+export function orderMatchesForBracket(phase, matches) {
+  var order = BRACKET_ORDER[phase]
+  if (!order) return matches.slice().sort(function(a,b){ return (a.match_number||a.id)-(b.match_number||b.id) })
+  var rank = {}
+  order.forEach(function(num, i){ rank[num] = i })
+  return matches.slice().sort(function(a,b){
+    var ra = rank[a.match_number] != null ? rank[a.match_number] : 999
+    var rb = rank[b.match_number] != null ? rank[b.match_number] : 999
+    return ra - rb
+  })
+}
 export function buildBracketLinkage(matches) {
   var idByNumber = {}
   matches.forEach(function(m){ idByNumber[m.match_number] = m.id })

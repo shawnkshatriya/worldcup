@@ -3,6 +3,7 @@ import { supabase, mapTeamName } from '../lib/supabase'
 import { localTime, localDateLong } from '../lib/timeFormat'
 import { usePlayer } from '../hooks/usePlayer'
 import Flag from '../components/Flag'
+import AllBrackets from '../components/AllBrackets'
 
 const PHASES = ['GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F',
   'GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L',
@@ -34,6 +35,7 @@ export default function AllPredictions() {
   const { player, isAdmin, loading: playerLoading } = usePlayer()
   const roomCode = player?.room_code || 'DEFAULT'
   const [phase, setPhase] = useState('GROUP_A')
+  const [stageMode, setStageMode] = useState('group') // 'group' | 'brackets'
   const [matches, setMatches] = useState([])
   const [players, setPlayers] = useState([])
   const [predictions, setPredictions] = useState({})
@@ -214,6 +216,17 @@ export default function AllPredictions() {
       </div>
       <div className="page-body">
 
+        {/* Group Stage / Brackets toggle */}
+        <div style={{display:'flex',gap:6,marginBottom:'1rem',background:'var(--c-surface2)',borderRadius:10,padding:4,width:'fit-content'}}>
+          <button onClick={function(){ setStageMode('group') }} style={{fontSize:13,padding:'7px 18px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:700,background:stageMode==='group'?'var(--c-accent)':'transparent',color:stageMode==='group'?'#fff':'var(--c-muted)'}}>Group Stage</button>
+          <button onClick={function(){ setStageMode('brackets') }} style={{fontSize:13,padding:'7px 18px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:700,background:stageMode==='brackets'?'var(--c-accent)':'transparent',color:stageMode==='brackets'?'#fff':'var(--c-muted)'}}>Brackets</button>
+        </div>
+
+        {stageMode === 'brackets' ? (
+          <AllBrackets roomCode={roomCode}/>
+        ) : (
+        <>
+
         {/* View toggle */}
         <div className="tabs" style={{marginBottom:'0.75rem'}}>
           <button className={'tab' + (groupBy==='group'?' active':'')} onClick={function(){setGroupBy('group')}} style={{fontSize:11,padding:'4px 10px'}}>By Group</button>
@@ -373,6 +386,8 @@ export default function AllPredictions() {
               </tbody>
             </table>
           </div>
+        )}
+        </>
         )}
       </div>
     </div>
