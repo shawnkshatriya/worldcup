@@ -37,7 +37,7 @@ export function getDefaultKoWeights() {
     ko_r32_adv: 3, ko_r16_adv: 5, ko_qf_adv: 7, ko_sf_adv: 9,
     ko_final_adv: 15, ko_third_adv: 7,
     ko_score_exact: 4, ko_score_diff: 2, ko_score_result: 1,
-    ko_penalty_bonus: 2, ko_consolation: 1,
+    ko_penalty_bonus: 2, ko_consolation: 1, ko_pen_exact: 7,
   }
 }
 
@@ -94,6 +94,13 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
     var predictedDraw = predH === predA
     if (predictedDraw && wentToPens) {
       result.pts_penalty = w.ko_penalty_bonus || 2
+      // Hidden bonus: exactly nailing the penalty shootout score = +7
+      if (prediction.home_pens != null && prediction.away_pens != null &&
+          match.home_goals_pen != null && match.away_goals_pen != null &&
+          prediction.home_pens === match.home_goals_pen &&
+          prediction.away_pens === match.away_goals_pen) {
+        result.pts_penalty += (w.ko_pen_exact != null ? w.ko_pen_exact : 7)
+      }
     }
 
     if (pickedCorrectTeam) {
