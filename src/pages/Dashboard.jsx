@@ -234,7 +234,10 @@ export default function Dashboard() {
             <div><div style={{fontFamily:'var(--font-display)',fontSize:36,fontWeight:700,lineHeight:1}}>{String(countdown.mins).padStart(2,'0')}</div><div style={{fontSize:10,opacity:0.75,marginTop:2}}>MIN</div></div>
             <div><div style={{fontFamily:'var(--font-display)',fontSize:36,fontWeight:700,lineHeight:1}}>{String(countdown.secs).padStart(2,'0')}</div><div style={{fontSize:10,opacity:0.75,marginTop:2}}>SEC</div></div>
           </div>
-          <div style={{fontSize:11,opacity:0.75,marginTop:10}}>Fill your bracket before it locks 🔒</div>
+          <div style={{fontSize:11,opacity:0.9,marginTop:10}}>
+            Fill your bracket before it locks 🔒 &nbsp;·&nbsp;
+            <Link to="/guide#knockout-rules" style={{color:'#fff',textDecoration:'underline',fontWeight:700}}>Knockout rules</Link>
+          </div>
         </div>
       )}
       <div className="page-body">

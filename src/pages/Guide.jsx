@@ -72,6 +72,17 @@ export default function Guide() {
       .then(function(res) { if (res.data) setW(res.data) })
   }, [player])
 
+  // Scroll to anchor if URL has a hash (e.g. /guide#knockout-rules)
+  useEffect(function() {
+    if (window.location.hash) {
+      var id = window.location.hash.replace('#', '')
+      setTimeout(function() {
+        var el = document.getElementById(id)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 300)
+    }
+  }, [w])
+
   return (
     <div>
       <div className="page-header">
@@ -128,8 +139,6 @@ export default function Guide() {
             { pts: w ? '+'+w.group_diff+' pts' : '...', label:'Correct goal difference', desc:'Bonus on top of correct result. You got the right margin. E.g. you said 2-0, result was 3-1 (both +2). Total: '+(w?w.group_result+'+'+w.group_diff+'='+(w.group_result+w.group_diff):'')+' pts.' },
             { pts: w ? '+'+w.group_exact+' pts' : '...', label:'Exact score', desc:'Bonus on top of result + diff. You nailed the exact scoreline. E.g. 3-1 predicted, 3-1 actual. Total: '+(w?w.group_result+'+'+w.group_diff+'+'+w.group_exact+'='+(w.group_result+w.group_diff+w.group_exact):'')+' pts.' },
             { pts: w ? '+'+w.group_approx+' pt' : '...', label:'Approximation bonus', desc:'Group stage only, 4+ total goals. Your prediction was within 1 goal of actual each way but you didn\'t get the exact diff. Stacks with correct result.' },
-            { pts: w ? w.winner_bonus+' pts' : '...', label:'Tournament winner pick', desc:'Pick who wins it all. If your chosen team wins the final you get a big bonus. Locks when knockout stage begins.' },
-            { pts: w ? (w.finalist_bonus||10)+' pts' : '...', label:'Finalist bonus', desc:'If your chosen winner reaches the Final (even if they lose), you get a smaller bonus.' },
           ].map((s,i) => (
             <div key={i} style={{display:'flex',gap:14,padding:'12px 0',borderBottom: i<3?'1px solid var(--c-border)':'none',alignItems:'flex-start'}}>
               <div style={{
@@ -142,10 +151,26 @@ export default function Guide() {
               </div>
             </div>
           ))}
-          <div style={{marginTop:12,padding:'12px 0',borderTop:'1px solid var(--c-border)'}}>
-            <div style={{fontWeight:600,fontSize:14,marginBottom:6}}>Knockout rounds</div>
+          <div id="knockout-rules" style={{marginTop:12,padding:'14px',borderTop:'2px solid var(--c-accent)',background:'var(--c-surface2)',borderRadius:10,scrollMarginTop:80}}>
+            <div style={{fontWeight:700,fontSize:15,marginBottom:8,color:'var(--c-accent)'}}>Knockout Bracket Rules</div>
+            <p style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7,marginBottom:12}}>
+              The knockouts work like a March Madness bracket. You pick the winner of every match and they advance through your bracket all the way to the champion. Your whole bracket locks when the first Round of 32 match kicks off. Scores stay editable until 15 minutes before each match.
+            </p>
+            <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Advancement points - for picking the right team to win each match:</div>
+            <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.9,marginBottom:12}}>
+              Round of 32: <b>{w?w.ko_r32_adv:3}</b> &middot; Round of 16: <b>{w?w.ko_r16_adv:5}</b> &middot; Quarterfinal: <b>{w?w.ko_qf_adv:7}</b> &middot; Semifinal: <b>{w?w.ko_sf_adv:9}</b> &middot; Final: <b>{w?w.ko_final_adv:15}</b> &middot; 3rd place: <b>{w?w.ko_third_adv:7}</b>
+            </div>
+            <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Score bonus - only if you also picked the right team:</div>
+            <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.9,marginBottom:12}}>
+              Exact score: <b>+{w?w.ko_score_exact:4}</b> &middot; Correct goal difference: <b>+{w?w.ko_score_diff:2}</b> &middot; Correct result: <b>+{w?w.ko_score_result:1}</b>. Scores are judged on the 90-minute result.
+            </div>
+            <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Penalty shootout bonus:</div>
+            <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7,marginBottom:12}}>
+              If you predict a draw and the match goes to penalties, enter your shootout score too. Nail the exact penalty score and earn a hidden <b>+{w?(w.ko_pen_exact||7):7}</b> bonus.
+            </div>
+            <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Consolation - when your bracket busts:</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7}}>
-              {w ? 'KO matches use higher weights: correct result (' + w.ko_result + ' pts) + goal diff (+' + w.ko_diff + ' pts) + exact score (+' + w.ko_exact + ' pts) = ' + (w.ko_result+w.ko_diff+w.ko_exact) + ' pts max. No approximation bonus in KO rounds.' : 'KO matches use higher weights. Check the Dashboard for your room\'s values.'}
+              Picked the wrong team but still nailed the exact 90-minute score of the actual match? You earn <b>{w?w.ko_consolation:1}</b> consolation point. Keep predicting scores even after your bracket pick is out.
             </div>
           </div>
           <Tip>All points stack! Exact score earns correct result + goal diff + exact bonus. E.g. predicting 3-1 exactly = {w ? w.group_result+'+'+w.group_diff+'+'+w.group_exact+'='+(w.group_result+w.group_diff+w.group_exact)+' pts' : '9 pts'}.</Tip>
