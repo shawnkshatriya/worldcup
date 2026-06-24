@@ -362,25 +362,45 @@ const scoreInputStyle = { width:40,textAlign:'center',fontSize:15,fontFamily:'va
 const penInputStyle = { width:32,textAlign:'center',fontSize:12,fontFamily:'var(--font-display)',padding:'2px',borderRadius:5,border:'1px dashed var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)' }
 
 function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) {
+  var phasesWithMatches = KO_ROUND_ORDER.filter(function(ph){ return (matchesByPhase[ph]||[]).length > 0 })
   return (
     <div style={{overflowX:'auto',paddingBottom:16}}>
-      <div style={{display:'flex',gap:20,minWidth:'fit-content',alignItems:'stretch',paddingBottom:8}}>
-        {KO_ROUND_ORDER.map(function(phase){
+      <div style={{display:'flex',minWidth:'fit-content',alignItems:'stretch',paddingBottom:8}}>
+        {phasesWithMatches.map(function(phase, pi){
           var ms = matchesByPhase[phase] || []
-          if (ms.length === 0) return null
+          var isLast = pi === phasesWithMatches.length - 1
           return (
-            <div key={phase} style={{minWidth:210,maxWidth:230,display:'flex',flexDirection:'column'}}>
-              <div style={{fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:10,textAlign:'center'}}>{PHASE_LABELS[phase]}</div>
-              <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',flex:1,gap:8}}>
-                {ms.map(function(m){
-                  return <MatchCard key={m.id} match={m} predicted={predictedTeams[m.id]} bracketPick={shared.bracketPicks[m.id]} prediction={shared.predictions[m.id]} {...shared} compact={true}/>
-                })}
+            <div key={phase} style={{display:'flex',alignItems:'stretch'}}>
+              {/* Phase column */}
+              <div style={{minWidth:210,maxWidth:230,display:'flex',flexDirection:'column'}}>
+                <div style={{fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:10,textAlign:'center'}}>{PHASE_LABELS[phase]}</div>
+                <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',flex:1,gap:8}}>
+                  {ms.map(function(m){
+                    return <MatchCard key={m.id} match={m} predicted={predictedTeams[m.id]} bracketPick={shared.bracketPicks[m.id]} prediction={shared.predictions[m.id]} {...shared} compact={true}/>
+                  })}
+                </div>
               </div>
+              {/* Connector strip to next round */}
+              {!isLast && (
+                <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:24,paddingTop:31,flexShrink:0}}>
+                  {Array.from({length: Math.ceil(ms.length/2)}).map(function(_, gi){
+                    return (
+                      <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
+                        {/* Bracket connector: two horizontal stubs + vertical join + outgoing stub */}
+                        <div style={{position:'absolute',left:0,top:'25%',width:11,height:1,background:'var(--c-border)'}}/>
+                        <div style={{position:'absolute',left:0,top:'75%',width:11,height:1,background:'var(--c-border)'}}/>
+                        <div style={{position:'absolute',left:11,top:'25%',height:'50%',width:1,background:'var(--c-border)'}}/>
+                        <div style={{position:'absolute',left:11,top:'50%',width:13,height:1,background:'var(--c-border)'}}/>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )
         })}
         {thirdPlace.length > 0 && (
-          <div style={{minWidth:210,maxWidth:230}}>
+          <div style={{minWidth:210,maxWidth:230,marginLeft:20}}>
             <div style={{fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-muted)',marginBottom:10,textAlign:'center'}}>{PHASE_LABELS['THIRD_PLACE']}</div>
             {thirdPlace.map(function(m){
               return <MatchCard key={m.id} match={m} predicted={predictedTeams[m.id]} bracketPick={shared.bracketPicks[m.id]} prediction={shared.predictions[m.id]} {...shared} compact={true}/>
