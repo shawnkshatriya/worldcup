@@ -58,7 +58,7 @@ export default function KOBracket({ embedded }) {
       ;(picksRes.data || []).forEach(function(p){ picksMap[p.match_id] = p.picked_team })
       setBracketPicks(picksMap)
       var predMap = {}
-      ;(predRes.data || []).forEach(function(p){ predMap[p.match_id] = { home_goals: p.home_goals, away_goals: p.away_goals } })
+      ;(predRes.data || []).forEach(function(p){ predMap[p.match_id] = { home_goals: p.home_goals, away_goals: p.away_goals, home_pens: p.home_pens, away_pens: p.away_pens } })
       setPredictions(predMap)
       if (wRes.data) setWeights(wRes.data)
     }
@@ -131,18 +131,28 @@ export default function KOBracket({ embedded }) {
       var cur = next[matchId]
       if (cur && cur.home_goals != null && cur.away_goals != null) {
         if (saveTimers.current[matchId]) clearTimeout(saveTimers.current[matchId])
-        saveTimers.current[matchId] = setTimeout(function(){ saveScore(matchId, cur.home_goals, cur.away_goals) }, 800)
+        saveTimers.current[matchId] = setTimeout(function(){ saveScore(matchId, cur) }, 800)
       }
       return next
     })
   }
 
-  async function saveScore(matchId, h, a) {
+  async function saveScore(matchId, cur) {
     if (!player) return
-    var res = await supabase.from('predictions').upsert({
-      player_id: player.id, match_id: matchId, home_goals: h, away_goals: a,
+    var payload = {
+      player_id: player.id, match_id: matchId,
+      home_goals: cur.home_goals, away_goals: cur.away_goals,
       submitted_at: new Date().toISOString(),
-    }, { onConflict: 'player_id,match_id' }).select()
+    }
+    // Only save penalty winner when the predicted 90-min score is a draw
+    if (cur.home_goals != null && cur.home_goals === cur.away_goals) {
+      payload.home_pens = cur.home_pens != null ? cur.home_pens : null
+      payload.away_pens = cur.away_pens != null ? cur.away_pens : null
+    } else {
+      payload.home_pens = null
+      payload.away_pens = null
+    }
+    var res = await supabase.from('predictions').upsert(payload, { onConflict: 'player_id,match_id' }).select()
     if (!res.error) flashSaved(matchId + '_score')
   }
 
@@ -284,16 +294,27 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       />
 
       {!finished && player && !scoreLocked && (
-        <div style={{marginTop:9,display:'flex',alignItems:'center',gap:7,justifyContent:'center'}}>
-          <input type="number" min="0" max="20" value={pred.home_goals==null?'':pred.home_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'home_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred.home_goals,pred.away_goals) }} style={scoreInputStyle}/>
-          <span style={{color:'var(--c-muted)',fontWeight:700,fontSize:13}}>-</span>
-          <input type="number" min="0" max="20" value={pred.away_goals==null?'':pred.away_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'away_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred.home_goals,pred.away_goals) }} style={scoreInputStyle}/>
-          {saved[match.id+'_score'] && <span style={{fontSize:10,color:'var(--c-success)'}}>OK</span>}
+        <div style={{marginTop:9}}>
+          <div style={{display:'flex',alignItems:'center',gap:7,justifyContent:'center'}}>
+            <input type="number" min="0" max="20" value={pred.home_goals==null?'':pred.home_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'home_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred) }} style={scoreInputStyle}/>
+            <span style={{color:'var(--c-muted)',fontWeight:700,fontSize:13}}>-</span>
+            <input type="number" min="0" max="20" value={pred.away_goals==null?'':pred.away_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'away_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred) }} style={scoreInputStyle}/>
+            {saved[match.id+'_score'] && <span style={{fontSize:10,color:'var(--c-success)'}}>OK</span>}
+          </div>
+          {/* Penalty shootout input - only when predicting a draw */}
+          {hasBoth && pred.home_goals === pred.away_goals && (
+            <div style={{marginTop:7,display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>
+              <span style={{fontSize:10,color:'var(--c-hint)',fontWeight:600}}>PENS</span>
+              <input type="number" min="0" max="20" value={pred.home_pens==null?'':pred.home_pens} placeholder="?" onChange={function(e){ updateScore(match.id,'home_pens',e.target.value) }} onBlur={function(){ saveScore(match.id,pred) }} style={penInputStyle}/>
+              <span style={{color:'var(--c-muted)',fontWeight:700,fontSize:11}}>-</span>
+              <input type="number" min="0" max="20" value={pred.away_pens==null?'':pred.away_pens} placeholder="?" onChange={function(e){ updateScore(match.id,'away_pens',e.target.value) }} onBlur={function(){ saveScore(match.id,pred) }} style={penInputStyle}/>
+            </div>
+          )}
         </div>
       )}
       {!finished && player && scoreLocked && hasBoth && (
         <div style={{marginTop:9,textAlign:'center'}}>
-          <span style={{fontSize:10,color:'var(--c-muted)'}}>🔒 {pred.home_goals}-{pred.away_goals}</span>
+          <span style={{fontSize:10,color:'var(--c-muted)'}}>🔒 {pred.home_goals}-{pred.away_goals}{pred.home_pens!=null?' ('+pred.home_pens+'-'+pred.away_pens+' pens)':''}</span>
         </div>
       )}
 
@@ -313,6 +334,7 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
 }
 
 const scoreInputStyle = { width:40,textAlign:'center',fontSize:15,fontFamily:'var(--font-display)',padding:'3px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)' }
+const penInputStyle = { width:32,textAlign:'center',fontSize:12,fontFamily:'var(--font-display)',padding:'2px',borderRadius:5,border:'1px dashed var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)' }
 
 function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) {
   return (
