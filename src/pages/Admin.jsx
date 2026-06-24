@@ -11,12 +11,17 @@ const WEIGHT_LABELS = {
   group_diff:     'Group stage - correct goal difference',
   group_exact:    'Group stage - exact score',
   group_approx:   'Group stage - approximation bonus (4+ goal games)',
-  ko_team:        'KO round - correct team qualified',
-  ko_result:      'KO round - correct result',
-  ko_diff:        'KO round - correct goal difference',
-  ko_exact:       'KO round - exact score',
-  winner_bonus:   'Tournament winner - correct pick bonus',
-  finalist_bonus: 'Tournament finalist - correct pick bonus',
+  ko_r32_adv:     'KO - Round of 32 advancement',
+  ko_r16_adv:     'KO - Round of 16 advancement',
+  ko_qf_adv:      'KO - Quarterfinal advancement',
+  ko_sf_adv:      'KO - Semifinal advancement',
+  ko_final_adv:   'KO - Final (champion) advancement',
+  ko_third_adv:   'KO - 3rd place advancement',
+  ko_score_exact: 'KO - exact score bonus (right team)',
+  ko_score_diff:  'KO - goal difference bonus (right team)',
+  ko_score_result:'KO - correct result bonus (right team)',
+  ko_penalty_bonus:'KO - penalty shootout bonus (predicted draw)',
+  ko_consolation: 'KO - consolation (right score, wrong team)',
 }
 
 const PHASES = ['GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F','GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L','ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']
@@ -97,7 +102,14 @@ export default function Admin() {
   async function saveWeights() {
     await saveRoomWeights(adminRoom, weights)
     setWeightsSaved(true)
-    setTimeout(() => setWeightsSaved(false), 2000)
+    // Recalc both group-stage and KO scores so new weights take effect immediately
+    await recalcPlayerScores(adminRoom)
+    try {
+      var { recalcKoBracket } = await import('../lib/koBracket')
+      await recalcKoBracket(adminRoom)
+    } catch (e) { /* ignore */ }
+    setRecalcMsg('Weights saved & scores recalculated!')
+    setTimeout(() => { setWeightsSaved(false); setRecalcMsg('') }, 3000)
   }
 
   async function handleRecalc() {
