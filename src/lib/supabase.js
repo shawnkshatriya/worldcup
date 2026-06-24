@@ -309,7 +309,7 @@ async function safeMatchUpdate(id, updateData) {
 // Fetch matches with result_source; if the column doesn't exist yet (migration
 // not run), fall back to a query without it so sync never hard-fails.
 async function fetchMatchesForSync(extraCols) {
-  var cols = 'id, home_team, away_team, home_goals, away_goals, status' + (extraCols ? ', ' + extraCols : '')
+  var cols = 'id, phase, home_team, away_team, home_goals, away_goals, status' + (extraCols ? ', ' + extraCols : '')
   var res = await supabase.from('matches').select(cols + ', result_source')
   if (res.error) {
     // Likely the result_source column is missing - retry without it
@@ -371,6 +371,11 @@ export async function syncFromESPN() {
 
       // Don't overwrite football-data or admin results
       if (!canOverwrite(dbMatch.result_source, 'espn')) continue
+      // For KNOCKOUT matches, ESPN lacks extra-time/penalty breakdown which we need
+      // for advancement + scoreline scoring. Let football-data (authoritative, full
+      // ET/pen data) finalize KO results. ESPN still handles fast group-stage finals.
+      var dbIsKO = dbMatch.phase && !dbMatch.phase.startsWith('GROUP')
+      if (dbIsKO) continue
       // Already scored identically by espn - skip
       if (dbMatch.result_source === 'espn' && dbMatch.home_goals === em.homeScore && dbMatch.away_goals === em.awayScore) continue
 

@@ -32,8 +32,32 @@ export default function KOBracket({ embedded }) {
   const [weights, setWeights] = useState(getDefaultKoWeights())
   const [loading, setLoading] = useState(true)
   const saveTimers = useRef({})
+  const predictionsRef = useRef({})
+  predictionsRef.current = predictions
 
   useEffect(function() { loadAll() }, [player])
+
+  // Flush any pending debounced saves on unmount (user navigates away quickly)
+  useEffect(function() {
+    return function() {
+      Object.keys(saveTimers.current).forEach(function(mid){
+        clearTimeout(saveTimers.current[mid])
+        var cur = predictionsRef.current[mid]
+        if (cur && cur.home_goals != null && cur.away_goals != null && player) {
+          var payload = {
+            player_id: player.id, match_id: parseInt(mid),
+            home_goals: cur.home_goals, away_goals: cur.away_goals,
+            submitted_at: new Date().toISOString(),
+          }
+          if (cur.home_goals === cur.away_goals) {
+            payload.home_pens = cur.home_pens != null ? cur.home_pens : null
+            payload.away_pens = cur.away_pens != null ? cur.away_pens : null
+          }
+          supabase.from('predictions').upsert(payload, { onConflict: 'player_id,match_id' })
+        }
+      })
+    }
+  }, [player])
 
   async function loadAll() {
     setLoading(true)
@@ -297,18 +321,18 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       {!finished && player && !scoreLocked && (
         <div style={{marginTop:9}}>
           <div style={{display:'flex',alignItems:'center',gap:7,justifyContent:'center'}}>
-            <input type="number" min="0" max="20" value={pred.home_goals==null?'':pred.home_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'home_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred) }} style={scoreInputStyle}/>
+            <input type="number" min="0" max="20" value={pred.home_goals==null?'':pred.home_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'home_goals',e.target.value) }} style={scoreInputStyle}/>
             <span style={{color:'var(--c-muted)',fontWeight:700,fontSize:13}}>-</span>
-            <input type="number" min="0" max="20" value={pred.away_goals==null?'':pred.away_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'away_goals',e.target.value) }} onBlur={function(){ if (hasBoth) saveScore(match.id,pred) }} style={scoreInputStyle}/>
+            <input type="number" min="0" max="20" value={pred.away_goals==null?'':pred.away_goals} placeholder="?" onChange={function(e){ updateScore(match.id,'away_goals',e.target.value) }} style={scoreInputStyle}/>
             {saved[match.id+'_score'] && <span style={{fontSize:10,color:'var(--c-success)'}}>OK</span>}
           </div>
           {/* Penalty shootout input - only when predicting a draw */}
           {hasBoth && pred.home_goals === pred.away_goals && (
             <div style={{marginTop:7,display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>
               <span style={{fontSize:10,color:'var(--c-hint)',fontWeight:600}}>PENS</span>
-              <input type="number" min="0" max="20" value={pred.home_pens==null?'':pred.home_pens} placeholder="?" onChange={function(e){ updateScore(match.id,'home_pens',e.target.value) }} onBlur={function(){ saveScore(match.id,pred) }} style={penInputStyle}/>
+              <input type="number" min="0" max="20" value={pred.home_pens==null?'':pred.home_pens} placeholder="?" onChange={function(e){ updateScore(match.id,'home_pens',e.target.value) }} style={penInputStyle}/>
               <span style={{color:'var(--c-muted)',fontWeight:700,fontSize:11}}>-</span>
-              <input type="number" min="0" max="20" value={pred.away_pens==null?'':pred.away_pens} placeholder="?" onChange={function(e){ updateScore(match.id,'away_pens',e.target.value) }} onBlur={function(){ saveScore(match.id,pred) }} style={penInputStyle}/>
+              <input type="number" min="0" max="20" value={pred.away_pens==null?'':pred.away_pens} placeholder="?" onChange={function(e){ updateScore(match.id,'away_pens',e.target.value) }} style={penInputStyle}/>
             </div>
           )}
         </div>

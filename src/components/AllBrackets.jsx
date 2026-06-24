@@ -105,6 +105,20 @@ export default function AllBrackets({ roomCode }) {
               </div>
             )
           })}
+          {/* 3rd place */}
+          {(function(){
+            var third = matches.filter(function(m){ return m.phase === 'THIRD_PLACE' })
+            if (third.length === 0) return null
+            return (
+              <div style={{minWidth:170,maxWidth:185,display:'flex',flexDirection:'column'}}>
+                <div style={{fontWeight:700,fontSize:10,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-muted)',marginBottom:8,textAlign:'center'}}>{PHASE_LABELS['THIRD_PLACE']}</div>
+                {third.map(function(m){
+                  var pred = predictedTeams[m.id] || {}
+                  return <ReadOnlyMatch key={m.id} match={m} predHome={pred.predHome} predAway={pred.predAway} pick={selectedPicks[m.id]}/>
+                })}
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>

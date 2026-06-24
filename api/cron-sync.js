@@ -53,11 +53,13 @@ export default async function handler(req, res) {
 
       const { data: upd } = await supabase.from('matches').update({
         home_goals: score.home, away_goals: score.away,
+        home_goals_reg: m.score && m.score.regularTime && m.score.regularTime.home != null ? m.score.regularTime.home : null,
+        away_goals_reg: m.score && m.score.regularTime && m.score.regularTime.away != null ? m.score.regularTime.away : null,
         home_goals_et: m.score.extraTime ? m.score.extraTime.home : null,
         away_goals_et: m.score.extraTime ? m.score.extraTime.away : null,
         home_goals_pen: m.score.penalties ? m.score.penalties.home : null,
         away_goals_pen: m.score.penalties ? m.score.penalties.away : null,
-        status: m.status || 'SCHEDULED', updated_at: new Date().toISOString(),
+        status: m.status || 'SCHEDULED', result_source: 'football-data', updated_at: new Date().toISOString(),
       }).eq('id', dbMatch.id).select()
       if (upd && upd.length) updated++
     }
