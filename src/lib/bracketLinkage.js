@@ -67,7 +67,7 @@ export const BRACKET_ORDER = {
 export const BRACKET_SIDES = {
   left: {
     ROUND_OF_32: [74,77, 73,75, 81,82, 83,84],
-    ROUND_OF_16: [89,90, 93,94],
+    ROUND_OF_16: [89,90, 94,93],
     QUARTER_FINALS: [97,98],
     SEMI_FINALS: [101],
   },

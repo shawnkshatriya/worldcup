@@ -269,7 +269,7 @@ export default function Stats() {
       {tab==='tournament' ? <StatsTournament finished={finished} totalGoals={totalGoals} avgGoals={avgGoals} topScorer={topScorer} goalsHist={goalsHist} groupGoals={groupGoals} groupCounts={groupCounts} topTeams={topTeams} scoreless={scoreless} highScoring={highScoring} predictions={predictions}/> : null}
       {tab==='players' ? <StatsPlayers sorted={filteredSorted} maxPts={maxPts} leader={leader} playerStats={playerStats} poolAccuracy={poolAccuracy} poolExactRate={poolExactRate} players={players} currentPlayer={player} finished={finished} predictions={predictions} scores={scores} matches={matches}/> : null}
       {tab==='insights' ? <StatsInsights players={players} scores={scores} matches={matches} predictions={predictions}/> : null}
-      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} accuracyByPlayer={accuracyByPlayer} rankOverTime={rankOverTime} selectedPlayers={selectedPlayers}/> : null}
+      {tab==='charts' ? <StatsChartsTab scores={scores} accuracyOverTime={accuracyOverTime} ptsOverTime={ptsOverTime} accuracyByPlayer={accuracyByPlayer} rankOverTime={rankOverTime} selectedPlayers={selectedPlayers} playerStats={playerStats}/> : null}
       {tab==='funfacts' ? <FunFacts sorted={sorted} playerStats={playerStats} leader={sorted[0]} totalGoals={totalGoals} finished={finished} avgGoals={avgGoals} topScorer={topScorer} predictions={predictions}/> : null}
       </div>
     </div>

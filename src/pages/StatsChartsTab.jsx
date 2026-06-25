@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Donut, LineChart } from './StatsCharts'
 
-export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, accuracyByPlayer, rankOverTime, selectedPlayers }) {
+export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, accuracyByPlayer, rankOverTime, selectedPlayers, playerStats }) {
   var [raceType, setRaceType] = useState('points') // 'points' | 'rank' | 'accuracy'
 
   var hasScores = scores.length > 0
