@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
 import { isKoBracketLocked, calcKoMatchPoints, getDefaultKoWeights } from '../lib/koBracket'
-import { buildBracketLinkage, computePredictedTeams, KO_ROUND_ORDER, orderMatchesForBracket } from '../lib/bracketLinkage'
+import { buildBracketLinkage, computePredictedTeams, KO_ROUND_ORDER, orderMatchesForBracket, orderSideMatches, BRACKET_SIDES } from '../lib/bracketLinkage'
 import { localTime, localDateShort } from '../lib/timeFormat'
 import Flag from '../components/Flag'
 import BracketShareCard from '../components/BracketShareCard'
@@ -361,52 +361,131 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
 const scoreInputStyle = { width:40,textAlign:'center',fontSize:15,fontFamily:'var(--font-display)',padding:'3px',borderRadius:6,border:'1px solid var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)' }
 const penInputStyle = { width:32,textAlign:'center',fontSize:12,fontFamily:'var(--font-display)',padding:'2px',borderRadius:5,border:'1px dashed var(--c-border)',background:'var(--c-surface2)',color:'var(--c-text)' }
 
+const SIDE_ROUNDS_L = ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS']
+const SIDE_ROUNDS_R = ['SEMI_FINALS','QUARTER_FINALS','ROUND_OF_16','ROUND_OF_32']
+const SIDE_LABELS = { ROUND_OF_32:'R32', ROUND_OF_16:'R16', QUARTER_FINALS:'QF', SEMI_FINALS:'SF', FINAL:'Final', THIRD_PLACE:'3rd' }
+
 function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) {
-  var phasesWithMatches = KO_ROUND_ORDER.filter(function(ph){ return (matchesByPhase[ph]||[]).length > 0 })
-  return (
-    <div style={{overflowX:'auto',paddingBottom:16}}>
-      <div style={{display:'flex',minWidth:'fit-content',alignItems:'stretch',paddingBottom:8}}>
-        {phasesWithMatches.map(function(phase, pi){
-          var ms = matchesByPhase[phase] || []
-          var isLast = pi === phasesWithMatches.length - 1
+  const [side, setSide] = useState('left') // mobile: which half to show
+  var allMatches = []
+  Object.keys(matchesByPhase).forEach(function(ph){ (matchesByPhase[ph]||[]).forEach(function(m){ allMatches.push(m) }) })
+  thirdPlace.forEach(function(m){ allMatches.push(m) })
+
+  function sideMatches(sideKey, phase) { return orderSideMatches(sideKey, phase, allMatches) }
+  var finalMatch = (matchesByPhase['FINAL']||[])[0]
+
+  function renderColumn(sideKey, phase, mirror) {
+    var ms = sideMatches(sideKey, phase)
+    if (ms.length === 0) return null
+    return (
+      <div key={sideKey+phase} style={{minWidth:184,maxWidth:200,display:'flex',flexDirection:'column'}}>
+        <div style={{fontWeight:700,fontSize:10,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:8,textAlign:'center'}}>{SIDE_LABELS[phase]}</div>
+        <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',flex:1,gap:8}}>
+          {ms.map(function(m){
+            return <MatchCard key={m.id} match={m} predicted={predictedTeams[m.id]} bracketPick={shared.bracketPicks[m.id]} prediction={shared.predictions[m.id]} {...shared} compact={true}/>
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  function connectorCol(sideKey, fromPhase) {
+    var ms = sideMatches(sideKey, fromPhase)
+    var pairs = Math.ceil(ms.length/2)
+    if (pairs === 0) return null
+    return (
+      <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:22,paddingTop:26,flexShrink:0}}>
+        {Array.from({length:pairs}).map(function(_,gi){
           return (
-            <div key={phase} style={{display:'flex',alignItems:'stretch'}}>
-              {/* Phase column */}
-              <div style={{minWidth:210,maxWidth:230,display:'flex',flexDirection:'column'}}>
-                <div style={{fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:10,textAlign:'center'}}>{PHASE_LABELS[phase]}</div>
-                <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',flex:1,gap:8}}>
-                  {ms.map(function(m){
-                    return <MatchCard key={m.id} match={m} predicted={predictedTeams[m.id]} bracketPick={shared.bracketPicks[m.id]} prediction={shared.predictions[m.id]} {...shared} compact={true}/>
-                  })}
-                </div>
-              </div>
-              {/* Connector strip to next round */}
-              {!isLast && (
-                <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:24,paddingTop:31,flexShrink:0}}>
-                  {Array.from({length: Math.ceil(ms.length/2)}).map(function(_, gi){
-                    return (
-                      <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
-                        {/* Bracket connector: two horizontal stubs + vertical join + outgoing stub */}
-                        <div style={{position:'absolute',left:0,top:'25%',width:11,height:1,background:'var(--c-border)'}}/>
-                        <div style={{position:'absolute',left:0,top:'75%',width:11,height:1,background:'var(--c-border)'}}/>
-                        <div style={{position:'absolute',left:11,top:'25%',height:'50%',width:1,background:'var(--c-border)'}}/>
-                        <div style={{position:'absolute',left:11,top:'50%',width:13,height:1,background:'var(--c-border)'}}/>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+            <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
+              <div style={{position:'absolute',left:0,top:'25%',width:10,height:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',left:0,top:'75%',width:10,height:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',left:10,top:'25%',height:'50%',width:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',left:10,top:'50%',width:12,height:1,background:'var(--c-border)'}}/>
             </div>
           )
         })}
-        {thirdPlace.length > 0 && (
-          <div style={{minWidth:210,maxWidth:230,marginLeft:20}}>
-            <div style={{fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-muted)',marginBottom:10,textAlign:'center'}}>{PHASE_LABELS['THIRD_PLACE']}</div>
-            {thirdPlace.map(function(m){
-              return <MatchCard key={m.id} match={m} predicted={predictedTeams[m.id]} bracketPick={shared.bracketPicks[m.id]} prediction={shared.predictions[m.id]} {...shared} compact={true}/>
-            })}
-          </div>
-        )}
+      </div>
+    )
+  }
+
+  // LEFT half: R32 -> R16 -> QF -> SF  (left to right)
+  var leftHalf = (
+    <div style={{display:'flex',alignItems:'stretch'}}>
+      {renderColumn('left','ROUND_OF_32')}
+      {connectorCol('left','ROUND_OF_32')}
+      {renderColumn('left','ROUND_OF_16')}
+      {connectorCol('left','ROUND_OF_16')}
+      {renderColumn('left','QUARTER_FINALS')}
+      {connectorCol('left','QUARTER_FINALS')}
+      {renderColumn('left','SEMI_FINALS')}
+    </div>
+  )
+
+  function connectorColR(sideKey, fromPhase) {
+    var ms = sideMatches(sideKey, fromPhase)
+    var pairs = Math.ceil(ms.length/2)
+    if (pairs === 0) return null
+    return (
+      <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:22,paddingTop:26,flexShrink:0}}>
+        {Array.from({length:pairs}).map(function(_,gi){
+          return (
+            <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
+              <div style={{position:'absolute',right:0,top:'25%',width:10,height:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',right:0,top:'75%',width:10,height:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',right:10,top:'25%',height:'50%',width:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',right:10,top:'50%',width:12,height:1,background:'var(--c-border)'}}/>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // RIGHT half: SF <- QF <- R16 <- R32  (mirrored, connectors point left)
+  var rightHalf = (
+    <div style={{display:'flex',alignItems:'stretch'}}>
+      {renderColumn('right','SEMI_FINALS')}
+      {connectorColR('right','QUARTER_FINALS')}
+      {renderColumn('right','QUARTER_FINALS')}
+      {connectorColR('right','ROUND_OF_16')}
+      {renderColumn('right','ROUND_OF_16')}
+      {connectorColR('right','ROUND_OF_32')}
+      {renderColumn('right','ROUND_OF_32')}
+    </div>
+  )
+
+  // FINAL center column
+  var center = finalMatch ? (
+    <div style={{minWidth:184,maxWidth:210,display:'flex',flexDirection:'column',justifyContent:'center',padding:'0 6px'}}>
+      <div style={{fontWeight:800,fontSize:12,textTransform:'uppercase',letterSpacing:'0.1em',color:'#F0A500',marginBottom:8,textAlign:'center'}}>Final</div>
+      <MatchCard match={finalMatch} predicted={predictedTeams[finalMatch.id]} bracketPick={shared.bracketPicks[finalMatch.id]} prediction={shared.predictions[finalMatch.id]} {...shared} compact={true}/>
+      {thirdPlace.length>0 && (
+        <div style={{marginTop:16}}>
+          <div style={{fontWeight:700,fontSize:10,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-muted)',marginBottom:6,textAlign:'center'}}>3rd Place</div>
+          {thirdPlace.map(function(m){
+            return <MatchCard key={m.id} match={m} predicted={predictedTeams[m.id]} bracketPick={shared.bracketPicks[m.id]} prediction={shared.predictions[m.id]} {...shared} compact={true}/>
+          })}
+        </div>
+      )}
+    </div>
+  ) : null
+
+  return (
+    <div>
+      {/* Left/Right jump buttons (handy on mobile) */}
+      <div style={{display:'flex',gap:6,marginBottom:12,justifyContent:'center'}}>
+        <button onClick={function(){ setSide('left') }} style={{fontSize:12,padding:'5px 14px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,background:side==='left'?'var(--c-accent)':'var(--c-surface2)',color:side==='left'?'#fff':'var(--c-muted)'}}>Left side</button>
+        <button onClick={function(){ setSide('right') }} style={{fontSize:12,padding:'5px 14px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,background:side==='right'?'var(--c-accent)':'var(--c-surface2)',color:side==='right'?'#fff':'var(--c-muted)'}}>Right side</button>
+      </div>
+
+      <div style={{overflowX:'auto',paddingBottom:16}}>
+        {/* Full mirrored bracket: left half + final + right half */}
+        <div style={{display:'flex',alignItems:'stretch',minWidth:'fit-content',justifyContent:'center'}}>
+          {leftHalf}
+          {center}
+          {rightHalf}
+        </div>
       </div>
     </div>
   )

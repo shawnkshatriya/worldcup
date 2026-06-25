@@ -61,6 +61,34 @@ export const BRACKET_ORDER = {
 }
 
 // Sort a round's matches into bracket display order.
+// Bracket halves for the mirrored (left/right) layout.
+// Left half feeds Semifinal 1 (match 101), right half feeds Semifinal 2 (102).
+// The Final (104) sits in the center. Ordered top-to-bottom within each round.
+export const BRACKET_SIDES = {
+  left: {
+    ROUND_OF_32: [74,77, 73,75, 81,82, 83,84],
+    ROUND_OF_16: [89,90, 93,94],
+    QUARTER_FINALS: [97,98],
+    SEMI_FINALS: [101],
+  },
+  right: {
+    ROUND_OF_32: [76,78, 79,80, 86,88, 85,87],
+    ROUND_OF_16: [91,92, 95,96],
+    QUARTER_FINALS: [99,100],
+    SEMI_FINALS: [102],
+  },
+  center: { FINAL: [104], THIRD_PLACE: [103] },
+}
+
+// Order a round's matches for one side of the bracket.
+export function orderSideMatches(side, phase, matches) {
+  var order = (BRACKET_SIDES[side] || {})[phase]
+  if (!order) return []
+  var byNum = {}
+  matches.forEach(function(m){ byNum[m.match_number] = m })
+  return order.map(function(n){ return byNum[n] }).filter(Boolean)
+}
+
 export function orderMatchesForBracket(phase, matches) {
   var order = BRACKET_ORDER[phase]
   if (!order) return matches.slice().sort(function(a,b){ return (a.match_number||a.id)-(b.match_number||b.id) })
