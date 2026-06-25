@@ -15,14 +15,16 @@ const PHASE_ADV_KEY = {
 
 // Is the bracket locked? (First KO match has kicked off)
 export async function isKoBracketLocked() {
-  var now = new Date().toISOString()
   var res = await supabase.from('matches')
     .select('kickoff')
     .in('phase', ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'])
+    .not('kickoff', 'is', null)
     .order('kickoff', { ascending: true })
     .limit(1)
   if (!res.data || res.data.length === 0) return false
-  return new Date(res.data[0].kickoff) <= new Date()
+  var ko = new Date(res.data[0].kickoff)
+  if (isNaN(ko)) return false
+  return ko <= new Date()
 }
 
 // Get or load KO weights for a room
@@ -93,14 +95,16 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
     var correctDiff = !exactScore && (predH - predA) === (actH - actA) && predH - predA !== 0
     var correctResult = !exactScore && Math.sign(predH - predA) === Math.sign(actH - actA)
 
-    // Penalty bonus (right team): exactly nailing the penalty shootout score.
+    // Penalty bonus (right team only): exactly nailing the penalty shootout score.
     // (Predicting the full-time draw is already rewarded by the regular score bonus.)
+    // Wrong-team penalty accuracy is handled by the consolation branch below.
     var predictedDraw = predH === predA
-    if (predictedDraw && wentToPens &&
+    var nailedPens = predictedDraw && wentToPens &&
         prediction.home_pens != null && prediction.away_pens != null &&
         match.home_goals_pen != null && match.away_goals_pen != null &&
         prediction.home_pens === match.home_goals_pen &&
-        prediction.away_pens === match.away_goals_pen) {
+        prediction.away_pens === match.away_goals_pen
+    if (nailedPens && pickedCorrectTeam) {
       result.pts_penalty = (w.ko_pen_exact != null ? w.ko_pen_exact : 7)
     }
 
@@ -115,10 +119,7 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
       if (exactScore) result.pts_consolation = (w.ko_consolation != null ? w.ko_consolation : 2)
       else if (correctDiff) result.pts_consolation = (w.ko_consolation_diff != null ? w.ko_consolation_diff : 1)
       // Even with the wrong team, exactly nailing the penalty shootout score = +3.
-      if (wentToPens && prediction.home_pens != null && prediction.away_pens != null &&
-          match.home_goals_pen != null && match.away_goals_pen != null &&
-          prediction.home_pens === match.home_goals_pen &&
-          prediction.away_pens === match.away_goals_pen) {
+      if (nailedPens) {
         result.pts_consolation += (w.ko_pen_consolation != null ? w.ko_pen_consolation : 3)
       }
     }
