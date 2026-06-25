@@ -19,6 +19,7 @@
   --c-surface3:  #1D2340;
   --c-border:    rgba(255,255,255,0.07);
   --c-border2:   rgba(255,255,255,0.13);
+  --c-bracket-line: rgba(255,255,255,0.32);
 
   /* Text */
   --c-text:      #EEF0F8;
@@ -859,4 +860,11 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
 @media (max-width: 768px) {
   .stats-grid { grid-template-columns: 1fr; }
   .stats-grid .span-2 { grid-column: span 1; }
+}
+
+/* Bracket left/right jump buttons: only show on mobile (bracket scrolls there).
+   On desktop the full mirrored bracket is visible, so the buttons are hidden. */
+.bracket-jump { display: flex; }
+@media (min-width: 900px) {
+  .bracket-jump { display: none; }
 }

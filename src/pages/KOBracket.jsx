@@ -392,7 +392,7 @@ const SIDE_ROUNDS_R = ['SEMI_FINALS','QUARTER_FINALS','ROUND_OF_16','ROUND_OF_32
 const SIDE_LABELS = { ROUND_OF_32:'R32', ROUND_OF_16:'R16', QUARTER_FINALS:'QF', SEMI_FINALS:'SF', FINAL:'Final', THIRD_PLACE:'3rd' }
 
 function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) {
-  const [side, setSide] = useState('left') // mobile: which half to show
+  const scrollRef = useRef(null)
   var allMatches = []
   Object.keys(matchesByPhase).forEach(function(ph){ (matchesByPhase[ph]||[]).forEach(function(m){ allMatches.push(m) }) })
   thirdPlace.forEach(function(m){ allMatches.push(m) })
@@ -424,10 +424,10 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
         {Array.from({length:pairs}).map(function(_,gi){
           return (
             <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
-              <div style={{position:'absolute',left:0,top:'25%',width:7,height:1,background:'var(--c-border)'}}/>
-              <div style={{position:'absolute',left:0,top:'75%',width:7,height:1,background:'var(--c-border)'}}/>
-              <div style={{position:'absolute',left:7,top:'25%',height:'50%',width:1,background:'var(--c-border)'}}/>
-              <div style={{position:'absolute',left:7,top:'50%',width:9,height:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',left:0,top:'25%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',left:0,top:'75%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',left:7,top:'25%',height:'50%',width:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',left:7,top:'50%',width:9,height:1,background:'var(--c-bracket-line)'}}/>
             </div>
           )
         })}
@@ -457,10 +457,10 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
         {Array.from({length:pairs}).map(function(_,gi){
           return (
             <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
-              <div style={{position:'absolute',right:0,top:'25%',width:7,height:1,background:'var(--c-border)'}}/>
-              <div style={{position:'absolute',right:0,top:'75%',width:7,height:1,background:'var(--c-border)'}}/>
-              <div style={{position:'absolute',right:7,top:'25%',height:'50%',width:1,background:'var(--c-border)'}}/>
-              <div style={{position:'absolute',right:7,top:'50%',width:9,height:1,background:'var(--c-border)'}}/>
+              <div style={{position:'absolute',right:0,top:'25%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',right:0,top:'75%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',right:7,top:'25%',height:'50%',width:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',right:7,top:'50%',width:9,height:1,background:'var(--c-bracket-line)'}}/>
             </div>
           )
         })}
@@ -499,13 +499,14 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
 
   return (
     <div>
-      {/* Left/Right jump buttons (handy on mobile) */}
-      <div style={{display:'flex',gap:6,marginBottom:12,justifyContent:'center'}}>
-        <button onClick={function(){ setSide('left') }} style={{fontSize:12,padding:'5px 14px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,background:side==='left'?'var(--c-accent)':'var(--c-surface2)',color:side==='left'?'#fff':'var(--c-muted)'}}>Left side</button>
-        <button onClick={function(){ setSide('right') }} style={{fontSize:12,padding:'5px 14px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,background:side==='right'?'var(--c-accent)':'var(--c-surface2)',color:side==='right'?'#fff':'var(--c-muted)'}}>Right side</button>
+      {/* Left/Right jump buttons - only useful on mobile where the bracket scrolls.
+          Hidden on desktop (CSS) since both halves are visible at once. */}
+      <div className="bracket-jump" style={{gap:6,marginBottom:12,justifyContent:'center'}}>
+        <button onClick={function(){ if (scrollRef.current) scrollRef.current.scrollTo({left:0,behavior:'smooth'}) }} style={{fontSize:12,padding:'5px 14px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,background:'var(--c-surface2)',color:'var(--c-text)'}}>‹ Left side</button>
+        <button onClick={function(){ if (scrollRef.current) scrollRef.current.scrollTo({left:scrollRef.current.scrollWidth,behavior:'smooth'}) }} style={{fontSize:12,padding:'5px 14px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,background:'var(--c-surface2)',color:'var(--c-text)'}}>Right side ›</button>
       </div>
 
-      <div style={{overflowX:'auto',paddingBottom:16}}>
+      <div ref={scrollRef} style={{overflowX:'auto',paddingBottom:16}}>
         {/* Full mirrored bracket: left half + final + right half */}
         <div style={{display:'flex',alignItems:'stretch',minWidth:'fit-content',justifyContent:'center'}}>
           {leftHalf}
