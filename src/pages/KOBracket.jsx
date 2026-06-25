@@ -298,6 +298,26 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
   var awayWon = finished && match.home_goals != null && match.away_goals > match.home_goals
 
   var canPick = !bracketLocked && !finished && player
+
+  // Consistency check: does the predicted score agree with the team picked to advance?
+  // If you picked a team but your score (or penalties) has the OTHER team winning, warn.
+  var scoreConflict = null
+  if (bracketPick && hasBoth && (bracketPick === predHome || bracketPick === predAway)) {
+    var pickIsHome = bracketPick === predHome
+    if (pred.home_goals !== pred.away_goals) {
+      // Decisive score - winner must be the picked team
+      var scoreWinnerIsHome = pred.home_goals > pred.away_goals
+      if (scoreWinnerIsHome !== pickIsHome) {
+        scoreConflict = 'Your score has ' + (scoreWinnerIsHome ? predHome : predAway) + ' winning, but you picked ' + bracketPick + ' to advance.'
+      }
+    } else if (pred.home_pens != null && pred.away_pens != null && pred.home_pens !== pred.away_pens) {
+      // Draw decided on penalties - pen winner must be the picked team
+      var penWinnerIsHome = pred.home_pens > pred.away_pens
+      if (penWinnerIsHome !== pickIsHome) {
+        scoreConflict = 'Your penalty score has ' + (penWinnerIsHome ? predHome : predAway) + ' winning the shootout, but you picked ' + bracketPick + ' to advance.'
+      }
+    }
+  }
   var scored = (finished && player) ? calcKoMatchPoints(match, pred, bracketPick, weights) : null
 
   return (
@@ -340,6 +360,12 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       {!finished && player && scoreLocked && hasBoth && (
         <div style={{marginTop:9,textAlign:'center'}}>
           <span style={{fontSize:10,color:'var(--c-muted)'}}>🔒 {pred.home_goals}-{pred.away_goals}{pred.home_pens!=null?' ('+pred.home_pens+'-'+pred.away_pens+' pens)':''}</span>
+        </div>
+      )}
+
+      {scoreConflict && !finished && (
+        <div style={{marginTop:8,padding:'6px 8px',background:'rgba(245,158,11,0.12)',border:'1px solid var(--c-warn)',borderRadius:6,fontSize:10.5,color:'var(--c-warn)',lineHeight:1.4,textAlign:'center'}}>
+          ⚠️ {scoreConflict}
         </div>
       )}
 
