@@ -1,6 +1,7 @@
 import { usePlayer } from '../hooks/usePlayer'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import KOScoringTree from '../components/KOScoringTree'
 
 function Section({ title, children }) {
   return (
@@ -156,13 +157,18 @@ export default function Guide() {
             <p style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7,marginBottom:12}}>
               The knockouts work like a March Madness bracket. You pick the winner of every match and they advance through your bracket all the way to the champion. Your whole bracket locks when the first Round of 32 match kicks off. Scores stay editable until 15 minutes before each match.
             </p>
+
+            <div style={{margin:'4px 0 18px'}}>
+              <KOScoringTree w={w}/>
+            </div>
+
             <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Advancement points - for picking the right team to win each match:</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.9,marginBottom:12}}>
               Round of 32: <b>{w?w.ko_r32_adv:3}</b> &middot; Round of 16: <b>{w?w.ko_r16_adv:5}</b> &middot; Quarterfinal: <b>{w?w.ko_qf_adv:7}</b> &middot; Semifinal: <b>{w?w.ko_sf_adv:9}</b> &middot; Final: <b>{w?w.ko_final_adv:15}</b> &middot; 3rd place: <b>{w?w.ko_third_adv:7}</b>
             </div>
             <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Score bonus - only if you also picked the right team:</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.9,marginBottom:12}}>
-              Exact score: <b>+{w?w.ko_score_exact:4}</b> &middot; Correct goal difference: <b>+{w?w.ko_score_diff:2}</b> &middot; Correct result: <b>+{w?w.ko_score_result:1}</b>. Scores are judged on the 90-minute result.
+              Exact score: <b>+{w?w.ko_score_exact:4}</b> &middot; Correct goal difference: <b>+{w?w.ko_score_diff:2}</b> &middot; Correct result: <b>+{w?w.ko_score_result:1}</b>. Scores are judged on the final result, including extra time (penalties decide who advances but are not part of the scoreline).
             </div>
             <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Penalty shootout bonus:</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7,marginBottom:12}}>
@@ -170,7 +176,7 @@ export default function Guide() {
             </div>
             <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Consolation - when your bracket busts:</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7}}>
-              Picked the wrong team but still nailed the exact 90-minute score of the actual match? You earn <b>{w?w.ko_consolation:1}</b> consolation point. Keep predicting scores even after your bracket pick is out.
+              Picked the wrong team but still read the actual match well? Nail the exact final score and earn <b>{w?(w.ko_consolation!=null?w.ko_consolation:2):2}</b> points; get the goal difference right and earn <b>{w?(w.ko_consolation_diff!=null?w.ko_consolation_diff:1):1}</b>. And if it goes to penalties, nailing the exact shootout score earns <b>{w?(w.ko_pen_consolation!=null?w.ko_pen_consolation:3):3}</b> even with the wrong team. Keep predicting scores even after your bracket pick is out.
             </div>
           </div>
           <Tip>All points stack! Exact score earns correct result + goal diff + exact bonus. E.g. predicting 3-1 exactly = {w ? w.group_result+'+'+w.group_diff+'+'+w.group_exact+'='+(w.group_result+w.group_diff+w.group_exact)+' pts' : '9 pts'}.</Tip>

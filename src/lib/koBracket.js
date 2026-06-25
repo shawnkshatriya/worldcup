@@ -37,7 +37,7 @@ export function getDefaultKoWeights() {
     ko_r32_adv: 3, ko_r16_adv: 5, ko_qf_adv: 7, ko_sf_adv: 9,
     ko_final_adv: 15, ko_third_adv: 7,
     ko_score_exact: 4, ko_score_diff: 2, ko_score_result: 1,
-    ko_penalty_bonus: 2, ko_consolation: 1, ko_pen_exact: 7,
+    ko_penalty_bonus: 2, ko_consolation: 2, ko_consolation_diff: 1, ko_pen_exact: 7, ko_pen_consolation: 3,
   }
 }
 
@@ -83,20 +83,18 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
     result.pts_adv = advPts
   }
 
-  // Score prediction (judged on 90-min / regulation result).
-  // home_goals/away_goals include extra time; home_goals_reg is the 90-min score.
-  // Fall back to full-time score when regulation isn't recorded (match ended in 90,
-  // or admin-entered result without a separate regulation score).
+  // Score prediction (judged on the FINAL score, including extra time).
+  // home_goals/away_goals are the full-time score. Penalties decide advancement
+  // but are NOT part of the scoreline (a 1-1 that goes to pens is judged as 1-1).
   if (prediction && prediction.home_goals != null && prediction.away_goals != null) {
     var predH = prediction.home_goals, predA = prediction.away_goals
-    var actH = match.home_goals_reg != null ? match.home_goals_reg : match.home_goals
-    var actA = match.away_goals_reg != null ? match.away_goals_reg : match.away_goals
+    var actH = match.home_goals, actA = match.away_goals
     var exactScore = predH === actH && predA === actA
     var correctDiff = !exactScore && (predH - predA) === (actH - actA) && predH - predA !== 0
     var correctResult = !exactScore && Math.sign(predH - predA) === Math.sign(actH - actA)
 
-    // Penalty bonus: ONLY for exactly nailing the penalty shootout score.
-    // (Predicting the 90-min draw is already rewarded by the regular score bonus.)
+    // Penalty bonus (right team): exactly nailing the penalty shootout score.
+    // (Predicting the full-time draw is already rewarded by the regular score bonus.)
     var predictedDraw = predH === predA
     if (predictedDraw && wentToPens &&
         prediction.home_pens != null && prediction.away_pens != null &&
@@ -112,8 +110,17 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
       else if (correctDiff) result.pts_score = w.ko_score_diff || 2
       else if (correctResult) result.pts_score = w.ko_score_result || 1
     } else {
-      // Wrong team but exact 90-min score = consolation
-      if (exactScore) result.pts_consolation = w.ko_consolation || 1
+      // Wrong team (busted bracket) but you still read the actual match well:
+      //   exact score = +2 consolation, correct goal difference = +1.
+      if (exactScore) result.pts_consolation = (w.ko_consolation != null ? w.ko_consolation : 2)
+      else if (correctDiff) result.pts_consolation = (w.ko_consolation_diff != null ? w.ko_consolation_diff : 1)
+      // Even with the wrong team, exactly nailing the penalty shootout score = +3.
+      if (wentToPens && prediction.home_pens != null && prediction.away_pens != null &&
+          match.home_goals_pen != null && match.away_goals_pen != null &&
+          prediction.home_pens === match.home_goals_pen &&
+          prediction.away_pens === match.away_goals_pen) {
+        result.pts_consolation += (w.ko_pen_consolation != null ? w.ko_pen_consolation : 3)
+      }
     }
   }
 

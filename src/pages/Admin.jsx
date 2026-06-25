@@ -21,7 +21,9 @@ const WEIGHT_LABELS = {
   ko_score_diff:  'KO - goal difference bonus (right team)',
   ko_score_result:'KO - correct result bonus (right team)',
   ko_pen_exact:    'KO - exact penalty shootout score bonus',
-  ko_consolation: 'KO - consolation (right score, wrong team)',
+  ko_consolation: 'KO - consolation: exact score, wrong team',
+  ko_consolation_diff: 'KO - consolation: goal difference, wrong team',
+  ko_pen_consolation: 'KO - consolation: exact penalty score, wrong team',
 }
 
 const PHASES = ['GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F','GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L','ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']
