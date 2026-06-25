@@ -245,7 +245,7 @@ function tabStyle(active) {
     background:active?'var(--c-accent)':'transparent',color:active?'#fff':'var(--c-muted)' }
 }
 
-function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, showScore, finished }) {
+function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, showScore, finished, compact }) {
   // March Madness style: the slot shows YOUR predicted team (it fills the bracket).
   // Once results are in, color tells you if your pick was right or wrong.
   var displayTeam = predTeam || actualTeam
@@ -263,7 +263,7 @@ function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, show
     <div
       onClick={function(){ if (canPick && predTeam) onPick(predTeam) }}
       style={{
-        display:'flex',alignItems:'center',gap:7,padding:'7px 9px',borderRadius:7,
+        display:'flex',alignItems:'center',gap: compact?4:7,padding: compact?'5px 6px':'7px 9px',borderRadius:7,
         cursor: canPick && predTeam ? 'pointer' : 'default',
         background: bg, border: '1.5px solid ' + borderC,
         opacity: isTBD ? 0.4 : 1,
@@ -271,7 +271,7 @@ function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, show
       }}
     >
       {displayTeam && <Flag team={displayTeam} size="sm"/>}
-      <span style={{flex:1,minWidth:0,fontWeight:600,fontSize:13,color:textC,textDecoration: pickWasWrong ? 'line-through' : 'none', opacity: pickWasWrong ? 0.6 : 1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>
+      <span style={{flex:1,minWidth:0,fontWeight:600,fontSize: compact?10.5:13,color:textC,textDecoration: pickWasWrong ? 'line-through' : 'none', opacity: pickWasWrong ? 0.6 : 1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', letterSpacing: compact?'-0.01em':'normal'}}>
         {displayTeam || 'TBD'}
       </span>
       {pickWasRight && <span style={{fontSize:11,color:'#22c55e',fontWeight:700}}>✓</span>}
@@ -321,11 +321,11 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
   var scored = (finished && player) ? calcKoMatchPoints(match, pred, bracketPick, weights) : null
 
   return (
-    <div style={{background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:11,padding:compact?'8px 10px':'12px 14px',marginBottom:compact?8:12,position:'relative'}}>
+    <div style={{background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:10,padding:compact?'6px 6px':'12px 14px',marginBottom:compact?8:12,position:'relative'}}>
       <TeamRow
         predTeam={predHome} actualTeam={actualHome}
         isPick={bracketPick && bracketPick === predHome && !finished}
-        isWinner={homeWon} canPick={canPick} finished={finished}
+        isWinner={homeWon} canPick={canPick} finished={finished} compact={compact}
         onPick={function(t){ pickTeam(match.id, t) }}
         showScore={match.home_goals != null ? match.home_goals : null}
       />
@@ -333,7 +333,7 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       <TeamRow
         predTeam={predAway} actualTeam={actualAway}
         isPick={bracketPick && bracketPick === predAway && !finished && predAway !== predHome}
-        isWinner={awayWon} canPick={canPick} finished={finished}
+        isWinner={awayWon} canPick={canPick} finished={finished} compact={compact}
         onPick={function(t){ pickTeam(match.id, t) }}
         showScore={match.away_goals != null ? match.away_goals : null}
       />
