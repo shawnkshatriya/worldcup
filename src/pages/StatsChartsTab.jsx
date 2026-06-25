@@ -18,6 +18,14 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
 
   var raceSeries = raceType === 'points' ? ptsOverTime : raceType === 'rank' ? (rankOverTime || []) : (accuracyByPlayer || [])
   var hasRace = raceSeries.length > 0 && raceSeries.some(function(s){ return s.points && s.points.length > 0 })
+
+  // Average points per game per participant (respects the player filter).
+  var avgPerGame = (playerStats || [])
+    .filter(function(p){ return p.scored > 0 })
+    .filter(function(p){ return selectedPlayers.length === 0 || selectedPlayers.includes(p.id) })
+    .map(function(p){ return { id:p.id, name:p.name, color:p.color, avg: p.total / p.scored } })
+    .sort(function(a,b){ return b.avg - a.avg })
+  var avgMax = avgPerGame.length > 0 ? avgPerGame[0].avg : 0
   var raceTitle = raceType === 'points' ? '\uD83C\uDFC1 Points race' : raceType === 'rank' ? '\uD83D\uDCCA Rank over time' : '\uD83C\uDFAF Accuracy race'
   var raceDesc = raceType === 'points' ? 'Cumulative points per match' : raceType === 'rank' ? 'Standings position per match (1 = top; lower line is better)' : 'Running accuracy % per match'
 
@@ -73,6 +81,31 @@ export default function StatsChartsTab({ scores, accuracyOverTime, ptsOverTime, 
         {hasScores ? <Donut slices={slices} size={200}/> : <p style={{color:'var(--c-muted)',fontSize:13}}>No scores yet</p>}
         <p style={{fontSize:11,color:'var(--c-muted)',marginTop:10}}>Correct results outnumber exact scores \u2014 every exact score also counts as a correct result, so this shows where points actually came from.</p>
       </div>
+
+      {/* Average points per game per participant */}
+      <div className="card" style={{marginBottom:0,overflow:'visible'}}>
+        <div className="card-title">Average points per game</div>
+        <p style={{fontSize:12,color:'var(--c-muted)',marginBottom:16}}>
+          Each person's total points divided by the games they've been scored on{selectedPlayers.length === 0 ? ' \u2014 filter above to compare specific people' : ''}
+        </p>
+        {avgPerGame.length > 0 ? (
+          <div style={{display:'flex',flexDirection:'column',gap:9}}>
+            {avgPerGame.map(function(p){
+              var pct = avgMax > 0 ? Math.round((p.avg / avgMax) * 100) : 0
+              return (
+                <div key={p.id} style={{display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{width:96,fontSize:12.5,fontWeight:600,color:'var(--c-text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',flexShrink:0,textAlign:'right'}}>{p.name}</div>
+                  <div style={{flex:1,height:20,background:'var(--c-surface2)',borderRadius:5,position:'relative',overflow:'hidden'}}>
+                    <div style={{position:'absolute',left:0,top:0,bottom:0,width:Math.max(pct,2)+'%',background:p.color,borderRadius:5,transition:'width 0.4s'}}/>
+                  </div>
+                  <div style={{width:42,fontSize:13,fontWeight:700,fontFamily:'var(--font-display)',color:'var(--c-text)',textAlign:'right',flexShrink:0}}>{p.avg.toFixed(1)}</div>
+                </div>
+              )
+            })}
+          </div>
+        ) : <p style={{color:'var(--c-muted)',fontSize:13}}>No games scored yet</p>}
+      </div>
+
 
     </div>
   )
