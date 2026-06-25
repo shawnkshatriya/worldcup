@@ -404,7 +404,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
     var ms = sideMatches(sideKey, phase)
     if (ms.length === 0) return null
     return (
-      <div key={sideKey+phase} style={{flex:'1 1 0',minWidth:96,maxWidth:150,display:'flex',flexDirection:'column'}}>
+      <div key={sideKey+phase} className="bracket-col" style={{display:'flex',flexDirection:'column'}}>
         <div style={{fontWeight:700,fontSize:10,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:8,textAlign:'center'}}>{SIDE_LABELS[phase]}</div>
         <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',flex:1,gap:8}}>
           {ms.map(function(m){
@@ -508,7 +508,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
 
       <div ref={scrollRef} style={{overflowX:'auto',paddingBottom:16}}>
         {/* Full mirrored bracket: left half + final + right half. Flexes to fit width. */}
-        <div style={{display:'flex',alignItems:'stretch',width:'100%',minWidth:760,justifyContent:'center'}}>
+        <div className="bracket-grid" style={{display:'flex',alignItems:'stretch',justifyContent:'center'}}>
           {leftHalf}
           {center}
           {rightHalf}

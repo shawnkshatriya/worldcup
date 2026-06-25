@@ -868,3 +868,15 @@ tbody tr:hover { background: rgba(255,255,255,0.015); }
 @media (min-width: 900px) {
   .bracket-jump { display: none; }
 }
+
+/* Bracket responsive sizing.
+   Desktop: columns flex to fill width, whole bracket fits on screen (no scroll).
+   Mobile: columns get a readable fixed width so names don't truncate; bracket scrolls. */
+.bracket-grid { width: 100%; min-width: 760px; }
+.bracket-col { flex: 1 1 0; min-width: 96px; max-width: 150px; }
+
+@media (max-width: 760px) {
+  /* Give cards room to show full names; let the bracket scroll horizontally. */
+  .bracket-grid { width: max-content; min-width: 0; }
+  .bracket-col { flex: 0 0 auto; min-width: 116px; max-width: 116px; }
+}
