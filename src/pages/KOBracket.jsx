@@ -271,7 +271,7 @@ function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, show
       }}
     >
       {displayTeam && <Flag team={displayTeam} size="sm"/>}
-      <span style={{flex:1,fontWeight:600,fontSize:13,color:textC,textDecoration: pickWasWrong ? 'line-through' : 'none', opacity: pickWasWrong ? 0.6 : 1}}>
+      <span style={{flex:1,minWidth:0,fontWeight:600,fontSize:13,color:textC,textDecoration: pickWasWrong ? 'line-through' : 'none', opacity: pickWasWrong ? 0.6 : 1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>
         {displayTeam || 'TBD'}
       </span>
       {pickWasRight && <span style={{fontSize:11,color:'#22c55e',fontWeight:700}}>✓</span>}
@@ -404,7 +404,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
     var ms = sideMatches(sideKey, phase)
     if (ms.length === 0) return null
     return (
-      <div key={sideKey+phase} style={{minWidth:128,maxWidth:140,display:'flex',flexDirection:'column'}}>
+      <div key={sideKey+phase} style={{flex:'1 1 0',minWidth:96,maxWidth:150,display:'flex',flexDirection:'column'}}>
         <div style={{fontWeight:700,fontSize:10,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:8,textAlign:'center'}}>{SIDE_LABELS[phase]}</div>
         <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',flex:1,gap:8}}>
           {ms.map(function(m){
@@ -437,7 +437,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
 
   // LEFT half: R32 -> R16 -> QF -> SF  (left to right)
   var leftHalf = (
-    <div style={{display:'flex',alignItems:'stretch'}}>
+    <div style={{display:'flex',alignItems:'stretch',flex:'1 1 0',minWidth:0}}>
       {renderColumn('left','ROUND_OF_32')}
       {connectorCol('left','ROUND_OF_32')}
       {renderColumn('left','ROUND_OF_16')}
@@ -470,7 +470,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
 
   // RIGHT half: SF <- QF <- R16 <- R32  (mirrored, connectors point left)
   var rightHalf = (
-    <div style={{display:'flex',alignItems:'stretch'}}>
+    <div style={{display:'flex',alignItems:'stretch',flex:'1 1 0',minWidth:0}}>
       {renderColumn('right','SEMI_FINALS')}
       {connectorColR('right','QUARTER_FINALS')}
       {renderColumn('right','QUARTER_FINALS')}
@@ -483,7 +483,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
 
   // FINAL center column
   var center = finalMatch ? (
-    <div style={{minWidth:128,maxWidth:146,display:'flex',flexDirection:'column',justifyContent:'center',padding:'0 6px'}}>
+    <div style={{flex:'0 0 auto',width:120,display:'flex',flexDirection:'column',justifyContent:'center',padding:'0 4px'}}>
       <div style={{fontWeight:800,fontSize:12,textTransform:'uppercase',letterSpacing:'0.1em',color:'#F0A500',marginBottom:8,textAlign:'center'}}>Final</div>
       <MatchCard match={finalMatch} predicted={predictedTeams[finalMatch.id]} bracketPick={shared.bracketPicks[finalMatch.id]} prediction={shared.predictions[finalMatch.id]} {...shared} compact={true}/>
       {thirdPlace.length>0 && (
@@ -507,8 +507,8 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
       </div>
 
       <div ref={scrollRef} style={{overflowX:'auto',paddingBottom:16}}>
-        {/* Full mirrored bracket: left half + final + right half */}
-        <div style={{display:'flex',alignItems:'stretch',minWidth:'fit-content',justifyContent:'center'}}>
+        {/* Full mirrored bracket: left half + final + right half. Flexes to fit width. */}
+        <div style={{display:'flex',alignItems:'stretch',width:'100%',minWidth:760,justifyContent:'center'}}>
           {leftHalf}
           {center}
           {rightHalf}
