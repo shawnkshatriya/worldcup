@@ -404,7 +404,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
     var ms = sideMatches(sideKey, phase)
     if (ms.length === 0) return null
     return (
-      <div key={sideKey+phase} style={{minWidth:150,maxWidth:164,display:'flex',flexDirection:'column'}}>
+      <div key={sideKey+phase} style={{minWidth:128,maxWidth:140,display:'flex',flexDirection:'column'}}>
         <div style={{fontWeight:700,fontSize:10,textTransform:'uppercase',letterSpacing:'0.08em',color:'var(--c-accent)',marginBottom:8,textAlign:'center'}}>{SIDE_LABELS[phase]}</div>
         <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',flex:1,gap:8}}>
           {ms.map(function(m){
@@ -420,14 +420,14 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
     var pairs = Math.ceil(ms.length/2)
     if (pairs === 0) return null
     return (
-      <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:16,paddingTop:24,flexShrink:0}}>
+      <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:13,paddingTop:24,flexShrink:0}}>
         {Array.from({length:pairs}).map(function(_,gi){
           return (
             <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
-              <div style={{position:'absolute',left:0,top:'25%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
-              <div style={{position:'absolute',left:0,top:'75%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
-              <div style={{position:'absolute',left:7,top:'25%',height:'50%',width:1,background:'var(--c-bracket-line)'}}/>
-              <div style={{position:'absolute',left:7,top:'50%',width:9,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',left:0,top:'25%',width:5,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',left:0,top:'75%',width:5,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',left:5,top:'25%',height:'50%',width:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',left:5,top:'50%',width:8,height:1,background:'var(--c-bracket-line)'}}/>
             </div>
           )
         })}
@@ -453,14 +453,14 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
     var pairs = Math.ceil(ms.length/2)
     if (pairs === 0) return null
     return (
-      <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:16,paddingTop:24,flexShrink:0}}>
+      <div style={{display:'flex',flexDirection:'column',justifyContent:'space-around',width:13,paddingTop:24,flexShrink:0}}>
         {Array.from({length:pairs}).map(function(_,gi){
           return (
             <div key={gi} style={{flex:1,display:'flex',alignItems:'center',position:'relative'}}>
-              <div style={{position:'absolute',right:0,top:'25%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
-              <div style={{position:'absolute',right:0,top:'75%',width:7,height:1,background:'var(--c-bracket-line)'}}/>
-              <div style={{position:'absolute',right:7,top:'25%',height:'50%',width:1,background:'var(--c-bracket-line)'}}/>
-              <div style={{position:'absolute',right:7,top:'50%',width:9,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',right:0,top:'25%',width:5,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',right:0,top:'75%',width:5,height:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',right:5,top:'25%',height:'50%',width:1,background:'var(--c-bracket-line)'}}/>
+              <div style={{position:'absolute',right:5,top:'50%',width:8,height:1,background:'var(--c-bracket-line)'}}/>
             </div>
           )
         })}
@@ -483,7 +483,7 @@ function BracketView({ matchesByPhase, thirdPlace, predictedTeams, ...shared }) 
 
   // FINAL center column
   var center = finalMatch ? (
-    <div style={{minWidth:150,maxWidth:170,display:'flex',flexDirection:'column',justifyContent:'center',padding:'0 6px'}}>
+    <div style={{minWidth:128,maxWidth:146,display:'flex',flexDirection:'column',justifyContent:'center',padding:'0 6px'}}>
       <div style={{fontWeight:800,fontSize:12,textTransform:'uppercase',letterSpacing:'0.1em',color:'#F0A500',marginBottom:8,textAlign:'center'}}>Final</div>
       <MatchCard match={finalMatch} predicted={predictedTeams[finalMatch.id]} bracketPick={shared.bracketPicks[finalMatch.id]} prediction={shared.predictions[finalMatch.id]} {...shared} compact={true}/>
       {thirdPlace.length>0 && (
