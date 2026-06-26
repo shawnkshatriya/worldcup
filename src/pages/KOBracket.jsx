@@ -150,9 +150,16 @@ export default function KOBracket({ embedded }) {
           var pt = computePredictedTeams(matches, linkage, picks)[m.id] || {}
           var home = pt.predHome || m.home_team
           var away = pt.predAway || m.away_team
-          if (!home || !away) return // can't pick without both sides
-          var pickHome = Math.random() < 0.5
+          // Pick a side. If a side's team is still TBD (not yet qualified), we can
+          // still pick the OTHER side if known; if BOTH are unknown we can't form a
+          // meaningful pick, so skip (there's no team to advance).
+          var pickHome
+          if (home && away) pickHome = Math.random() < 0.5
+          else if (home && !away) pickHome = true
+          else if (!home && away) pickHome = false
+          else return // both TBD - nothing to pick yet
           var winner = pickHome ? home : away
+          if (!winner) return
           picks[m.id] = winner
 
           // Score where the winner wins (or a draw + pens won by the winner).
