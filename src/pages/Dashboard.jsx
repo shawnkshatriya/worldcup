@@ -224,7 +224,7 @@ export default function Dashboard() {
       </div>
 
       {countdown && koStart && (
-        <div style={{background:'linear-gradient(135deg,var(--c-accent) 0%,var(--c-accent2) 100%)',borderRadius:14,padding:'16px 20px',marginBottom:16,textAlign:'center',color:'#fff'}}>
+        <div style={{background:'var(--c-banner-bg, linear-gradient(135deg,var(--c-accent) 0%,var(--c-accent2) 100%))',borderRadius:14,padding:'16px 20px',marginBottom:16,textAlign:'center',color:'var(--c-banner-text, #fff)'}}>
           <div style={{fontSize:11,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',opacity:0.85,marginBottom:8}}>⚡ Knockout Stage Begins In</div>
           <div style={{display:'flex',gap:16,justifyContent:'center',alignItems:'flex-end'}}>
             {countdown.days > 0 && (
@@ -236,7 +236,7 @@ export default function Dashboard() {
           </div>
           <div style={{fontSize:11,opacity:0.9,marginTop:10}}>
             Fill your bracket before it locks 🔒 &nbsp;·&nbsp;
-            <Link to="/guide#knockout-rules" style={{color:'#fff',textDecoration:'underline',fontWeight:700}}>Knockout rules</Link>
+            <Link to="/guide#knockout-rules" style={{color:'var(--c-banner-text, #fff)',textDecoration:'underline',fontWeight:700}}>Knockout rules</Link>
           </div>
         </div>
       )}

@@ -20,6 +20,8 @@
   --c-border:    rgba(255,255,255,0.07);
   --c-border2:   rgba(255,255,255,0.13);
   --c-bracket-line: rgba(255,255,255,0.32);
+  --c-banner-bg: linear-gradient(135deg,#C8102E 0%,#A00D24 100%);
+  --c-banner-text: #ffffff;
 
   /* Text */
   --c-text:      #EEF0F8;
