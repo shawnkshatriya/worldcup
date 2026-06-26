@@ -31,6 +31,7 @@ export default function KOBracket({ embedded }) {
   const [view, setView] = useState('bracket')
   const [weights, setWeights] = useState(getDefaultKoWeights())
   const [loading, setLoading] = useState(true)
+  const [randomizing, setRandomizing] = useState(false)
   const saveTimers = useRef({})
   const predictionsRef = useRef({})
   predictionsRef.current = predictions
@@ -117,6 +118,102 @@ export default function KOBracket({ embedded }) {
     }, { onConflict: 'player_id,match_id' })
     if (current && current !== team) await persistDownstreamClears(matchId)
     flashSaved(matchId + '_pick')
+  }
+
+  // Realistic-ish random scoreline (weighted toward low scores).
+  function randGoals() {
+    var r = Math.random()
+    if (r < 0.30) return 0
+    if (r < 0.62) return 1
+    if (r < 0.85) return 2
+    if (r < 0.96) return 3
+    return 4
+  }
+
+
+  async function randomizeBracket() {
+    if (bracketLocked || !player) return
+    if (!window.confirm('Randomize your entire bracket? This replaces all your current picks and scores.')) return
+    setRandomizing(true)
+    try {
+      // Walk rounds R32 -> Final, picking a winner for each match from the
+      // teams predicted to be in it (cascading as we go), then a score where
+      // the picked team wins. Build picks + predictions, then persist.
+      var picks = {}
+      var preds = {}
+      var rounds = ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','FINAL']
+
+      rounds.forEach(function(phase){
+        var ms = matches.filter(function(m){ return m.phase === phase })
+        ms.forEach(function(m){
+          // Determine the two teams in this match from the cascade-so-far.
+          var pt = computePredictedTeams(matches, linkage, picks)[m.id] || {}
+          var home = pt.predHome || m.home_team
+          var away = pt.predAway || m.away_team
+          if (!home || !away) return // can't pick without both sides
+          var pickHome = Math.random() < 0.5
+          var winner = pickHome ? home : away
+          picks[m.id] = winner
+
+          // Score where the winner wins (or a draw + pens won by the winner).
+          var wg, lg, drawPens = null
+          if (Math.random() < 0.18) {
+            // Draw decided on penalties
+            var dg = randGoals()
+            wg = dg; lg = dg
+            var pw = 3 + Math.floor(Math.random()*3) // 3-5
+            var pl = Math.floor(Math.random()*pw)    // 0..pw-1
+            drawPens = pickHome ? { h:pw, a:pl } : { h:pl, a:pw }
+          } else {
+            wg = 1 + randGoals() // winner scores >=1
+            lg = Math.floor(Math.random() * wg) // loser strictly fewer
+          }
+          var hg = pickHome ? wg : lg
+          var ag = pickHome ? lg : wg
+          preds[m.id] = { home_goals: hg, away_goals: ag }
+          if (drawPens) { preds[m.id].home_pens = drawPens.h; preds[m.id].away_pens = drawPens.a }
+        })
+      })
+
+      // 3rd place: pick a random winner from its predicted teams too.
+      var third = matches.find(function(m){ return m.phase === 'THIRD_PLACE' })
+      if (third) {
+        var tp = computePredictedTeams(matches, linkage, picks)[third.id] || {}
+        if (tp.predHome && tp.predAway) {
+          var th = Math.random() < 0.5
+          picks[third.id] = th ? tp.predHome : tp.predAway
+          var twg = 1 + randGoals(), tlg = Math.floor(Math.random()*twg)
+          preds[third.id] = { home_goals: th?twg:tlg, away_goals: th?tlg:twg }
+        }
+      }
+
+      // Persist: clear old, insert new picks + predictions.
+      await supabase.from('ko_bracket_picks').delete().eq('player_id', player.id)
+      var pickRows = Object.keys(picks).map(function(mid){
+        return { player_id: player.id, match_id: parseInt(mid), picked_team: picks[mid], room_code: player.room_code, updated_at: new Date().toISOString() }
+      })
+      if (pickRows.length > 0) await supabase.from('ko_bracket_picks').insert(pickRows)
+
+      var predRows = Object.keys(preds).map(function(mid){
+        var p = preds[mid]
+        return {
+          player_id: player.id, match_id: parseInt(mid),
+          home_goals: p.home_goals, away_goals: p.away_goals,
+          home_pens: p.home_pens != null ? p.home_pens : null,
+          away_pens: p.away_pens != null ? p.away_pens : null,
+          submitted_at: new Date().toISOString(),
+        }
+      })
+      for (var i = 0; i < predRows.length; i++) {
+        await supabase.from('predictions').upsert(predRows[i], { onConflict: 'player_id,match_id' })
+      }
+
+      setBracketPicks(picks)
+      setPredictions(preds)
+      flashSaved('randomized')
+    } finally {
+      setRandomizing(false)
+    }
   }
 
   function clearDownstream(matchId, picksObj) {
@@ -216,6 +313,11 @@ export default function KOBracket({ embedded }) {
           <button onClick={function(){ setView('bracket') }} style={tabStyle(view==='bracket')}>Bracket</button>
           <button onClick={function(){ setView('day') }} style={tabStyle(view==='day')}>By Day</button>
         </div>
+        {player && !bracketLocked && (
+          <button onClick={randomizeBracket} disabled={randomizing} style={{fontSize:12,padding:'7px 14px',borderRadius:8,border:'1px solid var(--c-border2)',cursor:randomizing?'default':'pointer',fontWeight:600,background:'var(--c-surface2)',color:'var(--c-text)',opacity:randomizing?0.6:1}}>
+            {randomizing ? 'Randomizing…' : '🎲 Randomize'}
+          </button>
+        )}
         {player && Object.keys(bracketPicks).length > 0 && (
           <div style={{marginLeft:'auto',minWidth:180}}>
             <BracketShareCard player={player} picks={bracketPicks} matchesByPhase={matchesByPhase} predictedTeams={predictedTeams}/>
