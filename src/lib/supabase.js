@@ -144,7 +144,13 @@ export async function recalcPlayerScores(roomCode) {
     var chunkSize = 500
     for (var u = 0; u < upserts.length; u += chunkSize) {
       var chunk = upserts.slice(u, u + chunkSize)
-      await supabase.from('scores').upsert(chunk, { onConflict: 'player_id,match_id' })
+      var upRes = await supabase.from('scores').upsert(chunk, { onConflict: 'player_id,match_id' })
+      // Retry once on failure so a transient error doesn't silently drop a batch
+      // of players' scores (the cause of "only some people have points").
+      if (upRes.error) {
+        await new Promise(function(r){ setTimeout(r, 400) })
+        await supabase.from('scores').upsert(chunk, { onConflict: 'player_id,match_id' })
+      }
     }
   }
 
