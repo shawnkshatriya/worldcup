@@ -315,6 +315,18 @@ export default function KOBracket({ embedded }) {
         </p>
       )}
 
+      {/* Sticky extra-time reminder - prevents the #1 source of scoring confusion */}
+      <div style={{
+        position:'sticky', top:8, zIndex:20, marginBottom:14,
+        background:'var(--c-banner-bg, linear-gradient(135deg,var(--c-accent) 0%,var(--c-accent2) 100%))',
+        color:'var(--c-banner-text, #fff)',
+        borderRadius:10, padding:'10px 14px', fontSize:12.5, fontWeight:600,
+        boxShadow:'0 2px 10px rgba(0,0,0,0.18)', display:'flex', alignItems:'center', gap:8,
+      }}>
+        <span style={{fontSize:16}}>⏱️</span>
+        <span>Heads up: scores count the <b>final result after extra time (120 min)</b> — not just 90 minutes. Penalties decide who advances but aren't part of the score.</span>
+      </div>
+
       <div style={{display:'flex',gap:6,marginBottom:16,alignItems:'center',flexWrap:'wrap'}}>
         <div style={{display:'flex',gap:6,background:'var(--c-surface2)',borderRadius:10,padding:4,width:'fit-content'}}>
           <button onClick={function(){ setView('bracket') }} style={tabStyle(view==='bracket')}>Bracket</button>

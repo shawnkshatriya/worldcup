@@ -55,12 +55,13 @@ export default function Scores() {
     didInitialTab.current = true
     ;(async function(){
       var now = new Date()
-      // Primary signal: DB status IN_PLAY/PAUSED. Plus a SMALL buffer (15 min) to catch
-      // a match that just kicked off before football-data syncs its status.
-      var bufStart = new Date(now.getTime() - 15*60*1000).toISOString()
+      // A match is "live" for the tab if: DB says IN_PLAY/PAUSED, OR it kicked off
+      // within the last ~2.25 hrs and the DB hasn't marked it FINISHED yet (covers the
+      // case where football-data is slow to flip SCHEDULED -> IN_PLAY).
+      var bufStart = new Date(now.getTime() - 135*60*1000).toISOString()
       var res = await supabase.from('matches')
         .select('id,status,kickoff')
-        .or('status.in.(IN_PLAY,PAUSED),and(status.eq.SCHEDULED,kickoff.gte.' + bufStart + ',kickoff.lte.' + now.toISOString() + ')')
+        .or('status.in.(IN_PLAY,PAUSED),and(status.neq.FINISHED,kickoff.gte.' + bufStart + ',kickoff.lte.' + now.toISOString() + ')')
         .limit(1)
       if (res.data && res.data.length > 0) {
         setFilter('live')
