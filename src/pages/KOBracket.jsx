@@ -33,6 +33,7 @@ export default function KOBracket({ embedded }) {
   const [loading, setLoading] = useState(true)
   const [randomizing, setRandomizing] = useState(false)
   const [justPicked, setJustPicked] = useState(null) // matchId of a freshly-picked winner (for pop animation)
+  const [championCelebration, setChampionCelebration] = useState(null) // team name to celebrate in the modal
   const saveTimers = useRef({})
   const predictionsRef = useRef({})
   predictionsRef.current = predictions
@@ -116,6 +117,12 @@ export default function KOBracket({ embedded }) {
     // Trigger the pop animation on the freshly-picked winner.
     setJustPicked(matchId)
     setTimeout(function(){ setJustPicked(function(cur){ return cur === matchId ? null : cur }) }, 450)
+
+    // If this was the Final match, celebrate the newly crowned champion with a modal.
+    var pickedMatch = matches.find(function(m){ return m.id === matchId })
+    if (pickedMatch && pickedMatch.phase === 'FINAL' && current !== team) {
+      setChampionCelebration(team)
+    }
 
     await supabase.from('ko_bracket_picks').upsert({
       player_id: player.id, match_id: matchId, picked_team: team,
@@ -323,6 +330,9 @@ export default function KOBracket({ embedded }) {
 
   var body = (
     <>
+      {championCelebration && (
+        <ChampionCelebration team={championCelebration} onClose={function(){ setChampionCelebration(null) }} />
+      )}
       {!embedded && (
         <div className="page-header">
           <div className="page-header-inner">
@@ -414,6 +424,70 @@ export default function KOBracket({ embedded }) {
 function tabStyle(active) {
   return { fontSize:13,padding:'6px 16px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:600,
     background:active?'var(--c-accent)':'transparent',color:active?'#fff':'var(--c-muted)' }
+}
+
+function ChampionCelebration({ team, onClose }) {
+  useEffect(function() {
+    var t = setTimeout(onClose, 4000) // auto-dismiss after 4s
+    return function(){ clearTimeout(t) }
+  }, [team])
+
+  // Confetti pieces
+  var confetti = []
+  var colors = ['#F0A500','#C8102E','#22c55e','#3b82f6','#ffffff','#FFD700']
+  for (var i = 0; i < 40; i++) {
+    confetti.push({
+      left: Math.random()*100,
+      delay: Math.random()*0.6,
+      dur: 1.8 + Math.random()*1.4,
+      color: colors[i % colors.length],
+      size: 6 + Math.random()*7,
+      rot: Math.random()*360,
+    })
+  }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position:'fixed', inset:0, zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center',
+        background:'rgba(0,0,0,0.62)', backdropFilter:'blur(3px)', animation:'champFade 0.25s ease',
+        padding:20, cursor:'pointer', overflow:'hidden',
+      }}
+    >
+      {/* Confetti */}
+      {confetti.map(function(c, idx){
+        return <span key={idx} style={{
+          position:'absolute', top:'-20px', left:c.left+'%', width:c.size, height:c.size*0.45,
+          background:c.color, borderRadius:1, transform:'rotate('+c.rot+'deg)',
+          animation:'champConfetti '+c.dur+'s linear '+c.delay+'s forwards',
+        }}/>
+      })}
+
+      <div style={{
+        position:'relative', textAlign:'center', maxWidth:380, width:'100%',
+        background:'var(--c-banner-bg, linear-gradient(145deg,#1a1d2e 0%,#0d0f1a 100%))',
+        border:'2px solid var(--c-accent2)', borderRadius:20, padding:'32px 26px',
+        boxShadow:'0 24px 70px rgba(0,0,0,0.55)', animation:'champPop 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+      }}>
+        <div style={{fontSize:14, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:'var(--c-banner-text, #fff)', opacity:0.8, marginBottom:14}}>
+          Your Champion
+        </div>
+        <div style={{fontSize:64, lineHeight:1, marginBottom:14, animation:'champTrophy 1s ease infinite alternate'}}>🏆</div>
+        <div style={{display:'inline-flex', alignItems:'center', gap:10, marginBottom:10}}>
+          <Flag team={team} size="lg"/>
+          <span style={{fontFamily:'var(--font-display)', fontSize:30, fontWeight:800, color:'var(--c-banner-text, #fff)', lineHeight:1.1}}>{team}</span>
+        </div>
+        <div style={{fontSize:15, fontWeight:600, color:'var(--c-banner-text, #fff)', opacity:0.92, marginTop:6}}>
+          You crowned <b>{team}</b> to win it all! 🎉
+        </div>
+        <button onClick={onClose} style={{
+          marginTop:20, fontSize:13, fontWeight:700, padding:'9px 22px', borderRadius:9, border:'none',
+          background:'var(--c-banner-text, #fff)', color:'#111', cursor:'pointer',
+        }}>Let's go! ⚽</button>
+      </div>
+    </div>
+  )
 }
 
 function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, showScore, finished, compact, animate }) {
