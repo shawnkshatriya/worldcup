@@ -292,6 +292,28 @@ export default function KOBracket({ embedded }) {
   KO_ROUND_ORDER.forEach(function(ph){ matchesByPhase[ph] = orderMatchesForBracket(ph, matches.filter(function(m){ return m.phase === ph })) })
   var thirdPlace = matches.filter(function(m){ return m.phase === 'THIRD_PLACE' })
 
+  // Completion: how many pickable matches have a pick. A match is "pickable" once
+  // both its teams are known (predicted from earlier rounds or actually set).
+  var pickableIds = []
+  var pickedCount = 0
+  KO_ROUND_ORDER.concat(['THIRD_PLACE']).forEach(function(ph){
+    ;(matchesByPhase[ph] || (ph==='THIRD_PLACE'?thirdPlace:[])).forEach(function(m){
+      var pt = predictedTeams[m.id] || {}
+      var home = pt.predHome || m.home_team
+      var away = pt.predAway || m.away_team
+      if (home && away) {
+        pickableIds.push(m.id)
+        if (bracketPicks[m.id]) pickedCount++
+      }
+    })
+  })
+  var totalPickable = pickableIds.length
+  var pctComplete = totalPickable > 0 ? Math.round((pickedCount / totalPickable) * 100) : 0
+
+  // Champion = the pick in the Final match (104).
+  var finalM = (matchesByPhase['FINAL'] || [])[0]
+  var champion = finalM ? bracketPicks[finalM.id] : null
+
   var shared = { bracketPicks, predictions, saved, bracketLocked, player, pickTeam, updateScore, saveScore, weights, predictedTeams }
 
   var body = (
@@ -343,6 +365,29 @@ export default function KOBracket({ embedded }) {
           </div>
         )}
       </div>
+
+      {player && totalPickable > 0 && (
+        <div style={{marginBottom:16,padding:'12px 14px',background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:10}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8,flexWrap:'wrap',gap:6}}>
+            <span style={{fontSize:12.5,fontWeight:600,color:'var(--c-text)'}}>
+              Bracket {pctComplete === 100 ? 'complete' : 'progress'}: {pickedCount} of {totalPickable} picks
+            </span>
+            {champion ? (
+              <span style={{fontSize:12.5,fontWeight:700,color:'var(--c-accent2)',display:'inline-flex',alignItems:'center',gap:5}}>
+                You chose <Flag team={champion} size="sm"/> {champion} as champion 🏆
+              </span>
+            ) : (
+              <span style={{fontSize:12,color:'var(--c-muted)',fontStyle:'italic'}}>No champion chosen yet</span>
+            )}
+          </div>
+          <div style={{height:8,background:'var(--c-surface2)',borderRadius:5,overflow:'hidden'}}>
+            <div style={{height:'100%',width:Math.max(pctComplete,2)+'%',background:pctComplete===100?'var(--c-success)':'var(--c-accent)',borderRadius:5,transition:'width 0.4s'}}/>
+          </div>
+          {pctComplete === 100 && !bracketLocked && (
+            <p style={{fontSize:11,color:'var(--c-success)',marginTop:7,marginBottom:0,fontWeight:600}}>✓ Every available match is picked. You can still adjust until the bracket locks.</p>
+          )}
+        </div>
+      )}
 
       {view === 'day'
         ? <DayView matches={matches} {...shared}/>
