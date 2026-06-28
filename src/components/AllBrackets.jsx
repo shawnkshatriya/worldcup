@@ -15,6 +15,7 @@ export default function AllBrackets({ roomCode }) {
   const [players, setPlayers] = useState([])
   const [picksByPlayer, setPicksByPlayer] = useState({})
   const [selectedPlayer, setSelectedPlayer] = useState(null)
+  const [viewMode, setViewMode] = useState('player') // 'player' | 'round'
   const [bracketLocked, setBracketLocked] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -69,6 +70,16 @@ export default function AllBrackets({ roomCode }) {
 
   return (
     <div>
+      {/* View toggle */}
+      <div style={{display:'flex',gap:6,marginBottom:14,background:'var(--c-surface2)',borderRadius:10,padding:4,width:'fit-content'}}>
+        <button onClick={function(){ setViewMode('player') }} style={{fontSize:12.5,padding:'6px 16px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:700,background:viewMode==='player'?'var(--c-accent)':'transparent',color:viewMode==='player'?'#fff':'var(--c-muted)'}}>By Player</button>
+        <button onClick={function(){ setViewMode('round') }} style={{fontSize:12.5,padding:'6px 16px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:700,background:viewMode==='round'?'var(--c-accent)':'transparent',color:viewMode==='round'?'#fff':'var(--c-muted)'}}>By Round</button>
+      </div>
+
+      {viewMode === 'round' ? (
+        <RoundView matches={matches} matchesByPhase={matchesByPhase} thirdPlace={matches.filter(function(m){ return m.phase === 'THIRD_PLACE' })} picksByPlayer={picksByPlayer} playerCount={players.length}/>
+      ) : (
+      <div>
       {/* Player selector */}
       <div style={{overflowX:'auto',paddingBottom:6,marginBottom:14}}>
         <div style={{display:'flex',gap:6,width:'max-content'}}>
@@ -121,6 +132,62 @@ export default function AllBrackets({ roomCode }) {
           })()}
         </div>
       </div>
+      </div>
+      )}
+    </div>
+  )
+}
+
+function RoundView({ matches, matchesByPhase, thirdPlace, picksByPlayer, playerCount }) {
+  // For each match, tally how many players picked each team to advance.
+  var allPhases = KO_ROUND_ORDER.concat(['THIRD_PLACE'])
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:20}}>
+      {allPhases.map(function(phase){
+        var ms = phase === 'THIRD_PLACE' ? thirdPlace : (matchesByPhase[phase] || [])
+        if (ms.length === 0) return null
+        return (
+          <div key={phase}>
+            <div style={{fontWeight:700,fontSize:12,textTransform:'uppercase',letterSpacing:'0.08em',color:phase==='THIRD_PLACE'?'var(--c-muted)':'var(--c-accent)',marginBottom:10}}>{PHASE_LABELS[phase]}</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              {ms.map(function(m){
+                // tally picks for this match
+                var tally = {}
+                var total = 0
+                Object.keys(picksByPlayer).forEach(function(pid){
+                  var t = picksByPlayer[pid][m.id]
+                  if (t) { tally[t] = (tally[t]||0)+1; total++ }
+                })
+                var teams = Object.keys(tally).map(function(t){ return { team:t, n:tally[t] } }).sort(function(a,b){ return b.n-a.n })
+                var label = (m.home_team || 'TBD') + ' vs ' + (m.away_team || 'TBD')
+                return (
+                  <div key={m.id} style={{background:'var(--c-surface)',border:'1px solid var(--c-border)',borderRadius:10,padding:'10px 12px'}}>
+                    <div style={{fontSize:12.5,fontWeight:600,color:'var(--c-text)',marginBottom:total>0?8:0}}>
+                      <span style={{color:'var(--c-muted)',fontWeight:400}}>#{m.match_number} · </span>{label}
+                    </div>
+                    {total > 0 ? (
+                      <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                        {teams.map(function(t){
+                          var pct = total > 0 ? Math.round((t.n/total)*100) : 0
+                          return (
+                            <div key={t.team} style={{display:'flex',alignItems:'center',gap:8}}>
+                              <div style={{width:96,fontSize:12,fontWeight:600,color:'var(--c-text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',flexShrink:0}}>{t.team}</div>
+                              <div style={{flex:1,height:14,background:'var(--c-surface2)',borderRadius:4,position:'relative',overflow:'hidden'}}>
+                                <div style={{position:'absolute',left:0,top:0,bottom:0,width:Math.max(pct,3)+'%',background:'var(--c-accent)',borderRadius:4}}/>
+                              </div>
+                              <div style={{width:62,fontSize:11.5,color:'var(--c-muted)',textAlign:'right',flexShrink:0}}><b style={{color:'var(--c-text)'}}>{t.n}</b> ({pct}%)</div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : <div style={{fontSize:11.5,color:'var(--c-muted)'}}>No picks yet</div>}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
