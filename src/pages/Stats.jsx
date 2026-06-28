@@ -67,6 +67,19 @@ export default function Stats() {
     var scores = playerIds.length ? await fetchAllRows('scores', '*', playerIds) : []
     var preds = playerIds.length ? await fetchAllRows('predictions', '*', playerIds) : []
 
+    // Knockout points live in ko_scores. Normalize to the group-score shape so all
+    // stats sub-tabs count KO points (pts_total drives rankings; detailed group-only
+    // fields like pts_approx stay 0 for KO rows, which is correct).
+    var koScores = playerIds.length ? await fetchAllRows('ko_scores', '*', playerIds) : []
+    var koNormalized = koScores.map(function(k){
+      return {
+        player_id: k.player_id, match_id: k.match_id, pts_total: k.pts_total || 0,
+        pts_exact: k.correct_score ? 1 : 0, pts_diff: 0, pts_result: 0, pts_approx: 0,
+        correct: k.correct_team ? 1 : 0,
+      }
+    })
+    scores = scores.concat(koNormalized)
+
     setPlayers(roomPlayers)
     setScores(scores)
     setMatches(matchesRes.data || [])

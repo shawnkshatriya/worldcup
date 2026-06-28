@@ -151,6 +151,15 @@ export default function AllPredictions() {
       seenAS[k] = true
       totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0)
     })
+    // Include knockout points so the column order reflects the true standings.
+    var { data: koScoreRows } = await supabase.from('ko_scores')
+      .select('player_id,pts_total,match_id').in('player_id', playerIds)
+    ;(koScoreRows||[]).forEach(function(s){
+      var k = 'ko_' + s.player_id + '_' + s.match_id
+      if (seenAS[k]) return
+      seenAS[k] = true
+      totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0)
+    })
     var sortedPlayers = [...(playerData || [])].sort(function(a,b){ return (totals[b.id]||0) - (totals[a.id]||0) })
     setPlayers(sortedPlayers)
   }
