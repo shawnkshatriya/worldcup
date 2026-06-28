@@ -133,11 +133,11 @@ export default function Scores() {
     // Fetch current user's predictions to show "your pick" + on-track status
     if (player) {
       var { data: myPreds } = await supabase.from('predictions')
-        .select('match_id,home_goals,away_goals')
+        .select('match_id,home_goals,away_goals,home_pens,away_pens')
         .eq('player_id', player.id)
         .not('home_goals','is',null)
       var mine = {}
-      ;(myPreds || []).forEach(function(p){ mine[String(p.match_id)] = { h:p.home_goals, a:p.away_goals } })
+      ;(myPreds || []).forEach(function(p){ mine[String(p.match_id)] = { h:p.home_goals, a:p.away_goals, hp:p.home_pens, ap:p.away_pens } })
       setMyPicks(mine)
     }
   }
@@ -455,7 +455,7 @@ export default function Scores() {
                 }
                 return (
                   <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:8,fontSize:11,paddingBottom:8}}>
-                    <span style={{color:'var(--c-muted)'}}>Your pick: <strong style={{color:'var(--c-text)'}}>{pick.h}-{pick.a}</strong></span>
+                    <span style={{color:'var(--c-muted)'}}>Your pick: <strong style={{color:'var(--c-text)'}}>{pick.h}-{pick.a}</strong>{pick.hp != null && pick.ap != null && <strong style={{color:'var(--c-accent2)'}}> ({pick.hp}-{pick.ap} pens)</strong>}</span>
                     <span style={{color:color,fontWeight:700}}>{status}</span>
                     {isLiveEff && (
                       <button

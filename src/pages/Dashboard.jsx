@@ -148,7 +148,7 @@ export default function Dashboard() {
     // My upcoming predictions
     if (player && upcoming && upcoming.length > 0) {
       var matchIds = upcoming.map(function(m){ return m.id })
-      var { data: myPreds } = await supabase.from('predictions').select('match_id, home_goals, away_goals')
+      var { data: myPreds } = await supabase.from('predictions').select('match_id, home_goals, away_goals, home_pens, away_pens')
         .eq('player_id', player.id).in('match_id', matchIds)
       var predMap = {}
       ;(myPreds || []).forEach(function(p){ predMap[p.match_id] = p })
@@ -463,6 +463,9 @@ export default function Dashboard() {
                       {m.pred && m.pred.home_goals != null ? (
                         <div style={{textAlign:'right'}}>
                           <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{m.pred.home_goals} - {m.pred.away_goals}</span>
+                          {m.pred.home_pens != null && m.pred.away_pens != null && (
+                            <div style={{fontSize:9,color:'var(--c-accent2)',fontWeight:700}}>({m.pred.home_pens}-{m.pred.away_pens} pens)</div>
+                          )}
                           <div style={{fontSize:9,color:'var(--c-muted)'}}>up to +{maxPointsForMatch(m, weights)} pts</div>
                         </div>
                       ) : (

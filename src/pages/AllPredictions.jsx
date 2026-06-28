@@ -101,7 +101,7 @@ export default function AllPredictions() {
     var pageSize = 1000
     while (true) {
       var { data: page } = await supabase.from('predictions')
-        .select('match_id,player_id,home_goals,away_goals')
+        .select('match_id,player_id,home_goals,away_goals,home_pens,away_pens')
         .in('player_id', playerIds)
         .order('id',{ascending:true})
         .range(from, from + pageSize - 1)
@@ -115,7 +115,7 @@ export default function AllPredictions() {
     for (const p of allPreds) {
       const mid = String(p.match_id)
       if (!predMap[mid]) predMap[mid] = {}
-      predMap[mid][String(p.player_id)] = { hg: p.home_goals, ag: p.away_goals }
+      predMap[mid][String(p.player_id)] = { hg: p.home_goals, ag: p.away_goals, hp: p.home_pens, ap: p.away_pens }
     }
     setPredictions(predMap)
 
@@ -371,6 +371,9 @@ export default function AllPredictions() {
                               <div style={{fontFamily:'var(--font-display)',fontSize:16,fontWeight:700,lineHeight:1}}>
                                 {pred.hg}-{pred.ag}
                               </div>
+                              {pred.hp != null && pred.ap != null && (
+                                <div style={{fontSize:9,color:'var(--c-accent2)',fontWeight:700,marginTop:1}}>({pred.hp}-{pred.ap} pens)</div>
+                              )}
                               {pts != null && (
                                 <div style={{fontSize:10,color:'var(--c-muted)',marginTop:2}}>+{pts}pts</div>
                               )}
