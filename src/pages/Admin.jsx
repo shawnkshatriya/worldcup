@@ -258,7 +258,7 @@ export default function Admin() {
         </div>
 
         <div className="tabs">
-          {['rooms','locks','weights','invite','results','players','dev'].map(t => (
+          {['rooms','locks','weights','invite','results','brackets','players','dev'].map(t => (
             <button key={t} className={`tab${tab===t?' active':''}`} onClick={() => setTab(t)}>
               {t.charAt(0).toUpperCase()+t.slice(1)}
               {t==='players' && dupeCount>0 && (
@@ -554,6 +554,9 @@ export default function Admin() {
           </div>
         )}
 
+        {/* -- BRACKETS -- */}
+        {tab==='brackets' && <AdminBrackets roomCode={adminRoom}/>}
+
         {/* -- DEV -- */}
         {tab==='dev' && <DevPanel onRefresh={loadRoomData} roomCode={adminRoom} roomName={currentRoom?.name}/>}
       </div>
@@ -746,4 +749,125 @@ function MatchResultRow({ match: initialMatch, onSave }) {
       </div>
     </div>
   )
+}
+
+function AdminBrackets({ roomCode }) {
+  const [loading, setLoading] = useState(true)
+  const [rows, setRows] = useState([])
+  const [players, setPlayers] = useState([])
+  const [view, setView] = useState('byMatch') // 'byMatch' | 'byPlayer'
+
+  useEffect(function() { load() }, [roomCode])
+
+  async function load() {
+    setLoading(true)
+    var [picksRes, matchRes, playerRes] = await Promise.all([
+      supabase.from('ko_bracket_picks').select('player_id,match_id,picked_team,updated_at').eq('room_code', roomCode),
+      supabase.from('matches').select('id,match_number,home_team,away_team,phase')
+        .in('phase', ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL']),
+      supabase.from('players').select('id,name').eq('room_code', roomCode),
+    ])
+    var matchById = {}
+    ;(matchRes.data || []).forEach(function(m){ matchById[m.id] = m })
+    var nameById = {}
+    ;(playerRes.data || []).forEach(function(p){ nameById[p.id] = p.name })
+    var enriched = (picksRes.data || []).map(function(pk){
+      var m = matchById[pk.match_id] || {}
+      return {
+        matchNumber: m.match_number || 0,
+        matchup: (m.home_team || '?') + ' vs ' + (m.away_team || '?'),
+        player: nameById[pk.player_id] || '(unknown)',
+        pickedTeam: pk.picked_team,
+        phase: m.phase || '',
+      }
+    })
+    setRows(enriched)
+    setPlayers(playerRes.data || [])
+    setLoading(false)
+  }
+
+  if (loading) return <div className="card"><p style={{color:'var(--c-muted)'}}>Loading bracket picks...</p></div>
+
+  if (rows.length === 0) {
+    return <div className="card"><div className="card-title">Bracket picks</div><p style={{color:'var(--c-muted)',fontSize:13}}>No bracket picks yet.</p></div>
+  }
+
+  // Group by match
+  var byMatch = {}
+  rows.forEach(function(r){
+    var k = r.matchNumber + '|' + r.matchup
+    if (!byMatch[k]) byMatch[k] = { matchNumber: r.matchNumber, matchup: r.matchup, picks: [] }
+    byMatch[k].picks.push(r)
+  })
+  var matchGroups = Object.values(byMatch).sort(function(a,b){ return a.matchNumber - b.matchNumber })
+
+  // Group by player
+  var byPlayer = {}
+  rows.forEach(function(r){
+    if (!byPlayer[r.player]) byPlayer[r.player] = []
+    byPlayer[r.player].push(r)
+  })
+  var playerGroups = Object.keys(byPlayer).sort().map(function(name){
+    return { name: name, picks: byPlayer[name].sort(function(a,b){ return a.matchNumber - b.matchNumber }) }
+  })
+
+  return (
+    <div className="card">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14,flexWrap:'wrap',gap:8}}>
+        <div className="card-title" style={{marginBottom:0}}>Bracket picks ({rows.length} total, {players.length} players)</div>
+        <div style={{display:'flex',gap:6,background:'var(--c-surface2)',borderRadius:8,padding:3}}>
+          <button onClick={function(){ setView('byMatch') }} style={miniTab(view==='byMatch')}>By match</button>
+          <button onClick={function(){ setView('byPlayer') }} style={miniTab(view==='byPlayer')}>By player</button>
+        </div>
+      </div>
+
+      {view === 'byMatch' ? (
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          {matchGroups.map(function(g){
+            // tally picks per team
+            var tally = {}
+            g.picks.forEach(function(p){ tally[p.pickedTeam] = (tally[p.pickedTeam]||0)+1 })
+            var tallyArr = Object.keys(tally).map(function(t){ return { team:t, n:tally[t] } }).sort(function(a,b){ return b.n-a.n })
+            return (
+              <div key={g.matchNumber} style={{borderBottom:'1px solid var(--c-border)',paddingBottom:12}}>
+                <div style={{fontSize:13,fontWeight:700,color:'var(--c-text)',marginBottom:6}}>
+                  <span style={{color:'var(--c-muted)',fontWeight:400}}>#{g.matchNumber}</span> {g.matchup}
+                </div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:6}}>
+                  {tallyArr.map(function(t){
+                    return <span key={t.team} style={{fontSize:12,fontWeight:600,padding:'3px 9px',borderRadius:12,background:'var(--c-surface2)',color:'var(--c-text)'}}>{t.team}: {t.n}</span>
+                  })}
+                </div>
+                <div style={{fontSize:11.5,color:'var(--c-muted)',lineHeight:1.6}}>
+                  {g.picks.map(function(p, i){
+                    return <span key={i}>{p.player} → <b style={{color:'var(--c-text)'}}>{p.pickedTeam}</b>{i < g.picks.length-1 ? ' · ' : ''}</span>
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          {playerGroups.map(function(g){
+            return (
+              <div key={g.name} style={{borderBottom:'1px solid var(--c-border)',paddingBottom:12}}>
+                <div style={{fontSize:13,fontWeight:700,color:'var(--c-text)',marginBottom:6}}>{g.name} <span style={{color:'var(--c-muted)',fontWeight:400}}>({g.picks.length} picks)</span></div>
+                <div style={{fontSize:11.5,color:'var(--c-muted)',lineHeight:1.7}}>
+                  {g.picks.map(function(p, i){
+                    return <span key={i}><span style={{color:'var(--c-muted)'}}>#{p.matchNumber}</span> <b style={{color:'var(--c-text)'}}>{p.pickedTeam}</b>{i < g.picks.length-1 ? '  ·  ' : ''}</span>
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function miniTab(active) {
+  return { fontSize:12,padding:'5px 12px',borderRadius:6,border:'none',cursor:'pointer',fontWeight:600,
+    background:active?'var(--c-accent)':'transparent',color:active?'#fff':'var(--c-muted)' }
 }
