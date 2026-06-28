@@ -70,6 +70,22 @@ export default function Predictions() {
   const [saved, setSaved] = useState({})
   const saveTimers = useRef({})
 
+  // Default the stage toggle to Knockouts once the group stage is over, so people
+  // land on the bracket (what's live now) instead of having to switch each visit.
+  const didDefaultStage = useRef(false)
+  useEffect(function() {
+    if (didDefaultStage.current) return
+    didDefaultStage.current = true
+    supabase.from('matches')
+      .select('id', { count: 'exact', head: true })
+      .like('phase', 'GROUP%')
+      .neq('status', 'FINISHED')
+      .then(function(res) {
+        // No unfinished group matches => group stage complete => show knockouts.
+        if ((res.count || 0) === 0) setStageMode('knockout')
+      })
+  }, [])
+
   // Flush any pending debounced saves when leaving the page (don't lose edits)
   useEffect(function() {
     return function() {
