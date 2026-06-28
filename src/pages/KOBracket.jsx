@@ -32,6 +32,7 @@ export default function KOBracket({ embedded }) {
   const [weights, setWeights] = useState(getDefaultKoWeights())
   const [loading, setLoading] = useState(true)
   const [randomizing, setRandomizing] = useState(false)
+  const [justPicked, setJustPicked] = useState(null) // matchId of a freshly-picked winner (for pop animation)
   const saveTimers = useRef({})
   const predictionsRef = useRef({})
   predictionsRef.current = predictions
@@ -111,6 +112,10 @@ export default function KOBracket({ embedded }) {
     newPicks[matchId] = team
     if (current && current !== team) clearDownstream(matchId, newPicks)
     setBracketPicks(newPicks)
+
+    // Trigger the pop animation on the freshly-picked winner.
+    setJustPicked(matchId)
+    setTimeout(function(){ setJustPicked(function(cur){ return cur === matchId ? null : cur }) }, 450)
 
     await supabase.from('ko_bracket_picks').upsert({
       player_id: player.id, match_id: matchId, picked_team: team,
@@ -314,7 +319,7 @@ export default function KOBracket({ embedded }) {
   var finalM = (matchesByPhase['FINAL'] || [])[0]
   var champion = finalM ? bracketPicks[finalM.id] : null
 
-  var shared = { bracketPicks, predictions, saved, bracketLocked, player, pickTeam, updateScore, saveScore, weights, predictedTeams }
+  var shared = { bracketPicks, predictions, saved, bracketLocked, player, pickTeam, updateScore, saveScore, weights, predictedTeams, justPicked }
 
   var body = (
     <>
@@ -411,7 +416,7 @@ function tabStyle(active) {
     background:active?'var(--c-accent)':'transparent',color:active?'#fff':'var(--c-muted)' }
 }
 
-function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, showScore, finished, compact }) {
+function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, showScore, finished, compact, animate }) {
   // March Madness style: the slot shows YOUR predicted team (it fills the bracket).
   // Once results are in, color tells you if your pick was right or wrong.
   var displayTeam = predTeam || actualTeam
@@ -427,6 +432,7 @@ function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, show
 
   return (
     <div
+      className={animate ? 'bracket-pick-anim' : undefined}
       onClick={function(){ if (canPick && predTeam) onPick(predTeam) }}
       style={{
         display:'flex',alignItems:'center',gap: compact?4:7,padding: compact?'5px 6px':'7px 9px',borderRadius:7,
@@ -447,7 +453,7 @@ function TeamRow({ predTeam, actualTeam, isPick, isWinner, canPick, onPick, show
   )
 }
 
-function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLocked, player, pickTeam, updateScore, saveScore, weights, compact }) {
+function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLocked, player, pickTeam, updateScore, saveScore, weights, compact, justPicked }) {
   if (!match) return null
   var pred = prediction || {}
   var hasBoth = pred.home_goals != null && pred.away_goals != null
@@ -491,6 +497,7 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       <TeamRow
         predTeam={predHome} actualTeam={actualHome}
         isPick={bracketPick && bracketPick === predHome && !finished}
+        animate={justPicked === match.id && bracketPick === predHome}
         isWinner={homeWon} canPick={canPick} finished={finished} compact={compact}
         onPick={function(t){ pickTeam(match.id, t) }}
         showScore={match.home_goals != null ? match.home_goals : null}
@@ -499,6 +506,7 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
       <TeamRow
         predTeam={predAway} actualTeam={actualAway}
         isPick={bracketPick && bracketPick === predAway && !finished && predAway !== predHome}
+        animate={justPicked === match.id && bracketPick === predAway}
         isWinner={awayWon} canPick={canPick} finished={finished} compact={compact}
         onPick={function(t){ pickTeam(match.id, t) }}
         showScore={match.away_goals != null ? match.away_goals : null}
