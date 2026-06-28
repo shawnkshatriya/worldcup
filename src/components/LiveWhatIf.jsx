@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase, calcMatchPoints } from '../lib/supabase'
+import { calcKoMatchPoints, getDefaultKoWeights } from '../lib/koBracket'
 
 // Default scoring weights (match the room defaults)
 var DEFAULT_WEIGHTS = {
@@ -54,10 +55,20 @@ export default function LiveWhatIf({ match, player, roomCode }) {
         seenSc[k] = true
         totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0)
       })
+      // Knockout points live in ko_scores, separate from the group `scores` table -
+      // include them so the what-if baseline ranks reflect everyone's true total.
+      var { data: koScoreRows } = await supabase.from('ko_scores')
+        .select('player_id,pts_total,match_id').in('player_id', ids)
+      ;(koScoreRows||[]).forEach(function(s){
+        var k = 'ko_' + s.player_id + '_' + s.match_id
+        if (seenSc[k]) return
+        seenSc[k] = true
+        totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0)
+      })
 
-      // 3. Everyone's prediction for THIS match only
+      // 3. Everyone's prediction for THIS match only (incl penalties for KO)
       var { data: preds } = await supabase.from('predictions')
-        .select('player_id,home_goals,away_goals,submitted_at,id')
+        .select('player_id,home_goals,away_goals,home_pens,away_pens,submitted_at,id')
         .eq('match_id', match.id)
         .in('player_id', ids)
       var predByPlayer = {}
@@ -72,18 +83,34 @@ export default function LiveWhatIf({ match, player, roomCode }) {
         if (pt > et || (pt === et && String(p.id) > String(ex.id))) predByPlayer[p.player_id] = p
       })
 
-      // 4. Current points already counted for this match (so we don't double-count if live score is in scores table)
-      var { data: existingMatchScores } = await supabase.from('scores')
-        .select('player_id,pts_total').eq('match_id', match.id).in('player_id', ids)
+      // 3b. For knockout matches, each player's advancement pick for this match.
+      var picksByPlayer = {}
+      var isKoMatch = match.phase && !match.phase.startsWith('GROUP')
+      if (isKoMatch) {
+        var { data: koPicks } = await supabase.from('ko_bracket_picks')
+          .select('player_id,picked_team').eq('match_id', match.id).in('player_id', ids)
+        ;(koPicks||[]).forEach(function(k){ picksByPlayer[k.player_id] = k.picked_team })
+      }
+
+      // 4. Current points already counted for this match (so we don't double-count
+      // if the live score was already scored). KO matches are scored in ko_scores.
       var alreadyCounted = {}
-      ;(existingMatchScores||[]).forEach(function(s){ alreadyCounted[s.player_id] = s.pts_total||0 })
+      if (isKoMatch) {
+        var { data: existingKo } = await supabase.from('ko_scores')
+          .select('player_id,pts_total').eq('match_id', match.id).in('player_id', ids)
+        ;(existingKo||[]).forEach(function(s){ alreadyCounted[s.player_id] = s.pts_total||0 })
+      } else {
+        var { data: existingMatchScores } = await supabase.from('scores')
+          .select('player_id,pts_total').eq('match_id', match.id).in('player_id', ids)
+        ;(existingMatchScores||[]).forEach(function(s){ alreadyCounted[s.player_id] = s.pts_total||0 })
+      }
 
       if (cancelled) return
 
       var nameById = {}
       players.forEach(function(p){ nameById[p.id] = p.name })
 
-      setData({ players, totals, predByPlayer, alreadyCounted, nameById })
+      setData({ players, totals, predByPlayer, alreadyCounted, nameById, picksByPlayer, isKoMatch })
       setLoading(false)
     }
     load()
@@ -108,8 +135,23 @@ export default function LiveWhatIf({ match, player, roomCode }) {
       var pred = data.predByPlayer[p.id]
       var add = 0
       if (pred && pred.home_goals != null) {
-        var pts = calcMatchPoints(pred, result, DEFAULT_WEIGHTS, phase)
-        if (pts) add = pts.pts_total
+        if (data.isKoMatch) {
+          // KO scoring: build a hypothetical finished match for this outcome and use
+          // the real advancement-based scorer with the player's bracket pick.
+          var hypoWinner = outcomeH > outcomeA ? match.home_team : (outcomeA > outcomeH ? match.away_team : null)
+          var hypoMatch = {
+            phase: match.phase, home_team: match.home_team, away_team: match.away_team,
+            home_goals: outcomeH, away_goals: outcomeA,
+            home_goals_pen: null, away_goals_pen: null, status: 'FINISHED',
+          }
+          // For a decisive scenario we can score advancement; a drawn scenario would
+          // go to pens (unknown here) so only the scoreline bonuses apply.
+          var koPts = calcKoMatchPoints(hypoMatch, pred, data.picksByPlayer[p.id] || null, getDefaultKoWeights())
+          add = koPts.pts_total
+        } else {
+          var pts = calcMatchPoints(pred, result, DEFAULT_WEIGHTS, phase)
+          if (pts) add = pts.pts_total
+        }
       }
       return { id: p.id, total: base + add, gained: add }
     }).sort(function(a,b){ return b.total - a.total })

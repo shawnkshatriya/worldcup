@@ -141,7 +141,14 @@ export async function recalcKoBracket(roomCode) {
   var matchRes = await supabase.from('matches').select('*')
     .in('phase', ['ROUND_OF_32','ROUND_OF_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'])
   var koMatches = matchRes.data || []
-  var finishedKO = koMatches.filter(function(m){ return m.status === 'FINISHED' && m.home_goals != null })
+  var finishedKO = koMatches.filter(function(m){
+    if (m.status !== 'FINISHED' || m.home_goals == null) return false
+    // A knockout match must have a decided winner. If it's tied with no penalty
+    // data yet (sync lag), it isn't truly final — skip until the shootout syncs in,
+    // so we don't briefly score advancement to nobody.
+    if (m.home_goals === m.away_goals && (m.home_goals_pen == null || m.away_goals_pen == null)) return false
+    return true
+  })
   if (finishedKO.length === 0) return { ok: true, updated: 0 }
 
   // Get all players in room
