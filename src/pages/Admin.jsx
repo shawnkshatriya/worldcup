@@ -19,7 +19,6 @@ const WEIGHT_LABELS = {
   ko_third_adv:   'KO - 3rd place advancement',
   ko_score_exact: 'KO - exact score bonus (right team)',
   ko_score_diff:  'KO - goal difference bonus (right team)',
-  ko_score_result:'KO - correct result bonus (right team)',
   ko_pen_exact:    'KO - exact penalty shootout score bonus',
   ko_consolation: 'KO - consolation: exact score, wrong team',
   ko_consolation_diff: 'KO - consolation: goal difference, wrong team',

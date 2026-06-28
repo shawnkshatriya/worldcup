@@ -401,6 +401,9 @@ export default function KOBracket({ embedded }) {
           {pctComplete === 100 && !bracketLocked && (
             <p style={{fontSize:11,color:'var(--c-success)',marginTop:7,marginBottom:0,fontWeight:600}}>✓ Every available match is picked. You can still adjust until the bracket locks.</p>
           )}
+          {pctComplete < 100 && pickedCount > 0 && (
+            <p style={{fontSize:11,color:'var(--c-muted)',marginTop:7,marginBottom:0}}>Keep picking winners — each pick advances a team and unlocks the next round's matchups.</p>
+          )}
         </div>
       )}
 

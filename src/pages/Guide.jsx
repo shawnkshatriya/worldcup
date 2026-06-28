@@ -166,9 +166,9 @@ export default function Guide() {
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.9,marginBottom:12}}>
               Round of 32: <b>{w?w.ko_r32_adv:3}</b> &middot; Round of 16: <b>{w?w.ko_r16_adv:5}</b> &middot; Quarterfinal: <b>{w?w.ko_qf_adv:7}</b> &middot; Semifinal: <b>{w?w.ko_sf_adv:9}</b> &middot; Final: <b>{w?w.ko_final_adv:15}</b> &middot; 3rd place: <b>{w?w.ko_third_adv:7}</b>
             </div>
-            <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Score bonus - only if you also picked the right team:</div>
+            <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Score bonus - only if you also picked the right team (these stack):</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.9,marginBottom:12}}>
-              Exact score: <b>+{w?w.ko_score_exact:4}</b> &middot; Correct goal difference: <b>+{w?w.ko_score_diff:2}</b> &middot; Correct result: <b>+{w?w.ko_score_result:1}</b>. Scores are judged on the final result, including extra time (penalties decide who advances but are not part of the scoreline).
+              Correct goal difference: <b>+{w?w.ko_score_diff:2}</b> &middot; Exact score: <b>+{w?w.ko_score_exact:4}</b> more. Getting the winner right is already rewarded by the advancement points, so the bonuses add on top for reading the scoreline. A perfect Round of 32 call is worth <b>{w?(w.ko_r32_adv+w.ko_score_diff+w.ko_score_exact):9}</b> ({w?w.ko_r32_adv:3}+{w?w.ko_score_diff:2}+{w?w.ko_score_exact:4}). Scores are judged on the final result, including extra time (penalties decide who advances but are not part of the scoreline).
             </div>
             <div style={{fontWeight:600,fontSize:13,marginBottom:6}}>Penalty shootout bonus:</div>
             <div style={{fontSize:13,color:'var(--c-muted)',lineHeight:1.7,marginBottom:12}}>
@@ -179,7 +179,7 @@ export default function Guide() {
               Picked the wrong team but still read the actual match well? Nail the exact final score and earn <b>{w?(w.ko_consolation!=null?w.ko_consolation:2):2}</b> points; get the goal difference right and earn <b>{w?(w.ko_consolation_diff!=null?w.ko_consolation_diff:1):1}</b>. And if it goes to penalties, nailing the exact shootout score earns <b>{w?(w.ko_pen_consolation!=null?w.ko_pen_consolation:3):3}</b> even with the wrong team. Keep predicting scores even after your bracket pick is out.
             </div>
           </div>
-          <Tip>All points stack! Exact score earns correct result + goal diff + exact bonus. E.g. predicting 3-1 exactly = {w ? w.group_result+'+'+w.group_diff+'+'+w.group_exact+'='+(w.group_result+w.group_diff+w.group_exact)+' pts' : '9 pts'}.</Tip>
+          <Tip>Bonuses stack! A perfect knockout call = advancement + goal diff + exact score. E.g. nailing an R32 match 2-1 exactly = {w ? w.ko_r32_adv+'+'+w.ko_score_diff+'+'+w.ko_score_exact+'='+(w.ko_r32_adv+w.ko_score_diff+w.ko_score_exact)+' pts' : '9 pts'}.</Tip>
         </Section>
 
         {/* -- PAGES -- */}

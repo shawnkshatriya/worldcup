@@ -242,10 +242,11 @@ export async function clearDemoData() {
       status: 'SCHEDULED',
     }).in('id', allIds.slice(i, i + 20))
   }
-  // Also reset KO match team names back to TBD
+  // Also reset KO match team names back to empty (NULL, not the literal string 'TBD'
+  // which would pollute the bracket cascade).
   const koIds = KO_RESULTS.map(r => r.id)
   for (let i = 0; i < koIds.length; i += 10) {
-    await supabase.from('matches').update({ home_team: 'TBD', away_team: 'TBD' })
+    await supabase.from('matches').update({ home_team: null, away_team: null })
       .in('id', koIds.slice(i, i + 10))
   }
 }

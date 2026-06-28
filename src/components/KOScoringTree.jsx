@@ -5,7 +5,6 @@ export default function KOScoringTree({ w }) {
   var adv = { r32: w?w.ko_r32_adv:3, r16: w?w.ko_r16_adv:5, qf: w?w.ko_qf_adv:7, sf: w?w.ko_sf_adv:9, fin: w?w.ko_final_adv:15 }
   var exact = w?w.ko_score_exact:4
   var diff = w?w.ko_score_diff:2
-  var resu = w?w.ko_score_result:1
   var penEx = w?(w.ko_pen_exact||7):7
   var consEx = w?(w.ko_consolation!=null?w.ko_consolation:2):2
   var consDiff = w?(w.ko_consolation_diff!=null?w.ko_consolation_diff:1):1
@@ -31,11 +30,13 @@ export default function KOScoringTree({ w }) {
             <span style={{fontSize:12,color:'var(--c-muted)'}}>R32 {adv.r32} · R16 {adv.r16} · QF {adv.qf} · SF {adv.sf} · Final {adv.fin}</span>
           </Node>
           <Connector/>
-          <div style={{fontSize:11,fontWeight:700,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.06em',margin:'6px 0'}}>+ your scoreline bonus</div>
-          <Pill>Exact final score → +{exact}</Pill>
+          <div style={{fontSize:11,fontWeight:700,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.06em',margin:'6px 0'}}>+ scoreline bonuses (these stack)</div>
           <Pill>Correct goal difference → +{diff}</Pill>
-          <Pill>Correct result only → +{resu}</Pill>
+          <Pill>Exact final score → +{exact} more</Pill>
           <Pill tone="gold">Predicted a draw + nailed the penalty score → +{penEx} hidden</Pill>
+          <div style={{fontSize:11,color:'var(--c-hint)',marginTop:8,lineHeight:1.5}}>
+            Getting the winner right is already rewarded by the advancement points. Nail the exact score and you collect both the goal-difference and exact bonuses — e.g. a perfect R32 call is worth {adv.r32 + diff + exact}.
+          </div>
         </div>
 
         {/* NO branch */}
@@ -46,9 +47,9 @@ export default function KOScoringTree({ w }) {
             <span style={{fontSize:12,color:'var(--c-muted)'}}>Your bracket busted for this match</span>
           </Node>
           <Connector/>
-          <div style={{fontSize:11,fontWeight:700,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.06em',margin:'6px 0'}}>but you can still score the actual match</div>
-          <Pill>Exact final score → +{consEx} consolation</Pill>
+          <div style={{fontSize:11,fontWeight:700,color:'var(--c-muted)',textTransform:'uppercase',letterSpacing:'0.06em',margin:'6px 0'}}>but you can still score the actual match (stacks)</div>
           <Pill>Correct goal difference → +{consDiff} consolation</Pill>
+          <Pill>Exact final score → +{consEx} more</Pill>
           <Pill tone="gold">Went to pens + nailed the shootout score → +{consPen}</Pill>
           <div style={{fontSize:11,color:'var(--c-hint)',marginTop:8,lineHeight:1.5}}>
             Keep updating your score for the real matchup even after your pick is knocked out.
