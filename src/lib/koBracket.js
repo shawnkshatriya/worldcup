@@ -184,8 +184,18 @@ export async function recalcKoBracket(roomCode) {
   })
 
   if (upserts.length > 0) {
-    var { error } = await supabase.from('ko_scores').upsert(upserts, { onConflict: 'player_id,match_id' })
-    if (error) return { ok: false, error: error.message }
+    // Chunk + retry (same hardening as the group scorer) so a large or transient
+    // failure never silently drops some players' KO scores.
+    var chunkSize = 500
+    for (var c = 0; c < upserts.length; c += chunkSize) {
+      var chunk = upserts.slice(c, c + chunkSize)
+      var up = await supabase.from('ko_scores').upsert(chunk, { onConflict: 'player_id,match_id' })
+      if (up.error) {
+        await new Promise(function(r){ setTimeout(r, 400) })
+        var up2 = await supabase.from('ko_scores').upsert(chunk, { onConflict: 'player_id,match_id' })
+        if (up2.error) return { ok: false, error: up2.error.message }
+      }
+    }
   }
 
   return { ok: true, updated: upserts.length }
