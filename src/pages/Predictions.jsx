@@ -27,6 +27,8 @@ const TEAMS = [
   {name:'United States',flag:'🇺🇸'},{name:'Uruguay',flag:'🇺🇾'},{name:'Uzbekistan',flag:'🇺🇿'},
 ]
 
+function isKnockout(m) { return m && m.phase && !m.phase.startsWith("GROUP") }
+
 const PHASES = [
   'GROUP_A','GROUP_B','GROUP_C','GROUP_D','GROUP_E','GROUP_F',
   'GROUP_G','GROUP_H','GROUP_I','GROUP_J','GROUP_K','GROUP_L',
@@ -199,6 +201,17 @@ export default function Predictions() {
       away_goals: awayGoals !== '' ? parseInt(awayGoals) : null,
       submitted_at: new Date().toISOString()
     }
+    // Knockout penalty shootout prediction: only meaningful on a predicted draw.
+    // Read the current pred for pens; clear them if it isn't a draw.
+    var curPred = preds[matchId] || {}
+    var isDraw = row.home_goals != null && row.away_goals != null && row.home_goals === row.away_goals
+    if (isDraw && curPred.home_pens != null && curPred.away_pens != null) {
+      row.home_pens = parseInt(curPred.home_pens)
+      row.away_pens = parseInt(curPred.away_pens)
+    } else {
+      row.home_pens = null
+      row.away_pens = null
+    }
 
     var result = await supabase.from('predictions')
       .upsert(row, { onConflict: 'player_id,match_id' })
@@ -208,7 +221,7 @@ export default function Predictions() {
     if (result.error || !result.data || result.data.length === 0) {
       // Try update first (row may already exist)
       var upd = await supabase.from('predictions')
-        .update({ home_goals: row.home_goals, away_goals: row.away_goals, submitted_at: row.submitted_at })
+        .update({ home_goals: row.home_goals, away_goals: row.away_goals, home_pens: row.home_pens, away_pens: row.away_pens, submitted_at: row.submitted_at })
         .eq('player_id', player.id).eq('match_id', matchId).select()
       if (!upd.data || upd.data.length === 0) {
         // No existing row - insert
@@ -484,6 +497,26 @@ export default function Predictions() {
                     </div>
                   </div>
                 </div>
+
+                {/* Penalty shootout input: knockout matches predicted as a draw go to pens. */}
+                {isKnockout(m) && hasBothGoals && pred.home_goals === pred.away_goals && (
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginTop:8,flexWrap:'wrap'}}>
+                    <span style={{fontSize:11.5,color:'var(--c-accent2)',fontWeight:700}}>⚽ Penalty shootout:</span>
+                    <input type="number" min="0" max="20" className="score-input" style={{width:44}}
+                      value={pred.home_pens ?? ''} disabled={locked}
+                      placeholder="-"
+                      onChange={e => updatePred(m.id, 'home_pens', e.target.value)}
+                      onBlur={() => { if (pred.home_goals != null && pred.away_goals != null) savePred(m.id, pred.home_goals, pred.away_goals) }}
+                    />
+                    <span style={{fontSize:12,color:'var(--c-muted)'}}>pens</span>
+                    <input type="number" min="0" max="20" className="score-input" style={{width:44}}
+                      value={pred.away_pens ?? ''} disabled={locked}
+                      placeholder="-"
+                      onChange={e => updatePred(m.id, 'away_pens', e.target.value)}
+                      onBlur={() => { if (pred.home_goals != null && pred.away_goals != null) savePred(m.id, pred.home_goals, pred.away_goals) }}
+                    />
+                  </div>
+                )}
                 {!locked && m.home_team && m.away_team && <MatchPreview match={m}/>}
               </div>
             )
