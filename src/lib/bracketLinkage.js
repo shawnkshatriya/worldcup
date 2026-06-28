@@ -118,8 +118,11 @@ export function buildBracketLinkage(matches) {
 // Returns { [matchId]: { predHome, predAway } }
 export function computePredictedTeams(matches, linkage, bracketPicks) {
   var predicted = {} // matchId -> { predHome, predAway }
+  // Treat a literal 'TBD' string (or empty) the same as null - some KO matches are
+  // seeded with placeholder 'TBD' team names that must not pollute the cascade.
+  function realTeam(t) { return (t && t !== 'TBD') ? t : null }
   matches.forEach(function(m){
-    predicted[m.id] = { predHome: m.home_team || null, predAway: m.away_team || null }
+    predicted[m.id] = { predHome: realTeam(m.home_team), predAway: realTeam(m.away_team) }
   })
 
   // Process rounds in order so earlier picks cascade forward
@@ -160,8 +163,8 @@ export function computePredictedTeams(matches, linkage, bracketPicks) {
       return null
     })
     predicted[thirdMatch.id] = {
-      predHome: losers[0] || thirdMatch.home_team || null,
-      predAway: losers[1] || thirdMatch.away_team || null,
+      predHome: losers[0] || realTeam(thirdMatch.home_team) || null,
+      predAway: losers[1] || realTeam(thirdMatch.away_team) || null,
     }
   }
 
