@@ -26,6 +26,27 @@ const WEIGHT_COLORS = {
 }
 const AVATAR_COLORS = ['#C8102E','#003DA5','#F0A500','#22C55E','#a855f7','#f97316','#06b6d4','#ec4899']
 
+// Best-case points for a single match prediction, derived from the live weights.
+// For knockout matches this is the typical (non-penalty) max: advancement + exact score.
+function maxPointsForMatch(m, w) {
+  if (!w) return null
+  var phase = m.phase || ''
+  if (phase.startsWith('GROUP')) {
+    // Group points stack: correct result + correct goal-diff + exact score all apply
+    // to a perfect prediction.
+    return (w.group_result || 0) + (w.group_diff || 0) + (w.group_exact || 0)
+  }
+  var advKeyByPhase = {
+    ROUND_OF_32: 'ko_r32_adv', ROUND_OF_16: 'ko_r16_adv', QUARTER_FINALS: 'ko_qf_adv',
+    SEMI_FINALS: 'ko_sf_adv', FINAL: 'ko_final_adv', THIRD_PLACE: 'ko_third_adv',
+  }
+  var adv = w[advKeyByPhase[phase]] || 0
+  // Best case (right team, exact score): advancement + goal-diff + exact stack.
+  var diff = w.ko_score_diff || 0
+  var exact = w.ko_score_exact || 0
+  return adv + diff + exact
+}
+
 function useCountdown(target) {
   const [diff, setDiff] = useState(null)
   useEffect(() => {
@@ -442,7 +463,7 @@ export default function Dashboard() {
                       {m.pred && m.pred.home_goals != null ? (
                         <div style={{textAlign:'right'}}>
                           <span style={{fontFamily:'var(--font-display)',fontSize:18,color:'var(--c-accent)'}}>{m.pred.home_goals} - {m.pred.away_goals}</span>
-                          <div style={{fontSize:9,color:'var(--c-muted)'}}>up to +{m.phase && m.phase.startsWith('GROUP') ? 9 : 10} pts</div>
+                          <div style={{fontSize:9,color:'var(--c-muted)'}}>up to +{maxPointsForMatch(m, weights)} pts</div>
                         </div>
                       ) : (
                         <Link to="/predictions" style={{fontSize:11,color:'var(--c-warn)',fontWeight:600}}>Not predicted</Link>

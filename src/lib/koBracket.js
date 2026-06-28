@@ -91,9 +91,10 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
   if (prediction && prediction.home_goals != null && prediction.away_goals != null) {
     var predH = prediction.home_goals, predA = prediction.away_goals
     var actH = match.home_goals, actA = match.away_goals
+    // Nested (non-exclusive): exact ⊆ correct goal-difference. The correct W/D/L
+    // result itself is already rewarded by advancement, so it isn't scored again here.
+    var correctDiff = (predH - predA) === (actH - actA)
     var exactScore = predH === actH && predA === actA
-    var correctDiff = !exactScore && (predH - predA) === (actH - actA) && predH - predA !== 0
-    var correctResult = !exactScore && Math.sign(predH - predA) === Math.sign(actH - actA)
 
     // Penalty bonus (right team only): exactly nailing the penalty shootout score.
     // (Predicting the full-time draw is already rewarded by the regular score bonus.)
@@ -109,15 +110,17 @@ export function calcKoMatchPoints(match, prediction, bracketPick, weights) {
     }
 
     if (pickedCorrectTeam) {
-      // Score bonus only when right team
-      if (exactScore) { result.pts_score = w.ko_score_exact || 4; result.correct_score = true }
-      else if (correctDiff) result.pts_score = w.ko_score_diff || 2
-      else if (correctResult) result.pts_score = w.ko_score_result || 1
+      // Score bonuses (right team). The correct W/D/L result is already rewarded by
+      // the advancement points, so only goal-difference and exact score add on top.
+      //   exact: adv + diff + exact
+      //   diff:  adv + diff
+      if (correctDiff)  result.pts_score += (w.ko_score_diff || 2)
+      if (exactScore) { result.pts_score += (w.ko_score_exact || 4); result.correct_score = true }
     } else {
-      // Wrong team (busted bracket) but you still read the actual match well:
-      //   exact score = +2 consolation, correct goal difference = +1.
-      if (exactScore) result.pts_consolation = (w.ko_consolation != null ? w.ko_consolation : 2)
-      else if (correctDiff) result.pts_consolation = (w.ko_consolation_diff != null ? w.ko_consolation_diff : 1)
+      // Wrong team (busted bracket) but you still read the actual match well.
+      // Consolation: exact score stacks on goal-difference.
+      if (correctDiff)  result.pts_consolation += (w.ko_consolation_diff != null ? w.ko_consolation_diff : 1)
+      if (exactScore)   result.pts_consolation += (w.ko_consolation != null ? w.ko_consolation : 2)
       // Even with the wrong team, exactly nailing the penalty shootout score = +3.
       if (nailedPens) {
         result.pts_consolation += (w.ko_pen_consolation != null ? w.ko_pen_consolation : 3)
