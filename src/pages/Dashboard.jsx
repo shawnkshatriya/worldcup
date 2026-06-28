@@ -149,10 +149,20 @@ export default function Dashboard() {
       }
     }
 
+    // Knockout bracket points (advancement + score + penalty + consolation) live in
+    // ko_scores, separate from the group-stage `scores` table. Include them so the
+    // home-page leaderboard matches the full Leaderboard page.
+    var koByPlayer = {}
+    if (roomPlayerIds.length) {
+      var koRes = await supabase.from('ko_scores').select('player_id,pts_total').in('player_id', roomPlayerIds)
+      ;(koRes.data || []).forEach(function(k){ koByPlayer[k.player_id] = (koByPlayer[k.player_id]||0) + (k.pts_total||0) })
+    }
+
     const totals = players.map((p,i) => {
       var ps = scores?.filter(s=>s.player_id===p.id)||[]
       var seen = {}, sum = 0
       ps.forEach(function(s){ var k = String(s.match_id); if (seen[k]) return; seen[k]=true; sum += (s.pts_total||0) })
+      sum += (koByPlayer[p.id] || 0)
       return { ...p, color:AVATAR_COLORS[i%AVATAR_COLORS.length], pts: sum }
     }).sort((a,b)=>b.pts-a.pts)
 
@@ -184,16 +194,25 @@ export default function Dashboard() {
         var matchLookup = {}
         ;(finishedMatches||[]).forEach(function(m){ matchLookup[m.id] = m })
 
+        // Knockout highlights: bracket points live in ko_scores, not `scores`.
+        // Pull KO points for these finished matches so KO calls also surface here.
+        var koScoreRows = []
+        var koRes2 = await supabase.from('ko_scores').select('player_id,match_id,pts_total')
+          .in('player_id', roomPlayerIds).in('match_id', fIds).gt('pts_total', 0)
+        koScoreRows = koRes2.data || []
+        // Merge KO rows into topScores (same shape: player_id, match_id, pts_total, pts_exact).
+        koScoreRows.forEach(function(k){ topScores.push({ player_id:k.player_id, match_id:k.match_id, pts_total:k.pts_total, pts_exact:0, isKo:true }) })
+
         // finishedMatches is already ordered by kickoff desc; preserve that order, top points within
         var matchOrder = {}
         ;(finishedMatches||[]).forEach(function(m, idx){ matchOrder[m.id] = idx })
         var calls = topScores.map(function(s){
           var pr = predLookup[s.player_id+'_'+s.match_id]
           var m = matchLookup[s.match_id]
-          if (!pr || !m) return null
+          if (!m) return null
           return { name: playerNames[s.player_id]||'?', pts: s.pts_total, isExact: s.pts_exact>0,
-            ph: pr.home_goals, pa: pr.away_goals, home: m.home_team, away: m.away_team,
-            rh: m.home_goals, ra: m.away_goals, mOrder: matchOrder[s.match_id] }
+            ph: pr?pr.home_goals:null, pa: pr?pr.away_goals:null, home: m.home_team, away: m.away_team,
+            rh: m.home_goals, ra: m.away_goals, mOrder: matchOrder[s.match_id], isKo: !!s.isKo }
         }).filter(Boolean).sort(function(a,b){
           if (a.mOrder !== b.mOrder) return a.mOrder - b.mOrder  // recent matches first
           return b.pts - a.pts  // best calls within a match
@@ -367,7 +386,10 @@ export default function Dashboard() {
                       <div style={{flex:1,minWidth:0}}>
                         <span style={{fontWeight:700,color:call.isExact?'var(--c-accent)':'var(--c-text)'}}>{call.name}</span>
                         <span style={{color:'var(--c-muted)'}}> called </span>
-                        <span style={{fontWeight:600}}>{call.home} {call.ph}-{call.pa} {call.away}</span>
+                        {call.ph != null && call.pa != null
+                          ? <span style={{fontWeight:600}}>{call.home} {call.ph}-{call.pa} {call.away}</span>
+                          : <span style={{fontWeight:600}}>{call.home} vs {call.away}</span>}
+                        {call.isKo && <span style={{marginLeft:4,fontSize:10,color:'var(--c-accent2)',fontWeight:700}}>KO</span>}
                         {call.isExact && <span style={{marginLeft:4}}>🎯</span>}
                       </div>
                       <span style={{fontFamily:'var(--font-display)',fontSize:16,color:'var(--c-success)',fontWeight:700,marginLeft:8,flexShrink:0}}>+{call.pts}</span>
