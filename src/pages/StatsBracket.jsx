@@ -30,11 +30,11 @@ export default function StatsBracket() {
   const [koMatches, setKoMatches] = useState([])
   const [locked, setLocked] = useState(false)
 
-  useEffect(function() { load() }, [])
+  useEffect(function() { if (player) load() }, [player])
 
   async function load() {
     setLoading(true)
-    var roomCode = 'DEFAULT'
+    var roomCode = (player && player.room_code) || 'DEFAULT'
     var [playerRes, matchRes] = await Promise.all([
       supabase.from('players').select('id,name').eq('room_code', roomCode).order('created_at').limit(500),
       supabase.from('matches').select('id,match_number,phase,home_team,away_team,home_goals,away_goals,home_goals_pen,away_goals_pen,status,kickoff')
