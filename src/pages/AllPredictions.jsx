@@ -40,6 +40,7 @@ export default function AllPredictions() {
   const [players, setPlayers] = useState([])
   const [predictions, setPredictions] = useState({})
   const [scores, setScores] = useState({})
+  const [playerTotals, setPlayerTotals] = useState({})
   const [loading, setLoading] = useState(true)
   const [groupBy, setGroupBy] = useState('day')
   const [allMatches, setAllMatches] = useState([])
@@ -134,11 +135,20 @@ export default function AllPredictions() {
       from += pageSize
     }
 
+    // Knockout points live in ko_scores (not the group `scores` table). Fetch them
+    // once and use for both the per-match cells and the standings sort.
+    var { data: koScoreRows } = await supabase.from('ko_scores')
+      .select('player_id,pts_total,match_id').in('player_id', playerIds)
+
     const scoreMap = {}
     for (const s of allScores) {
       if (!scoreMap[String(s.match_id)]) scoreMap[String(s.match_id)] = {}
       scoreMap[String(s.match_id)][String(s.player_id)] = s.pts_total || 0
     }
+    ;(koScoreRows||[]).forEach(function(s){
+      if (!scoreMap[String(s.match_id)]) scoreMap[String(s.match_id)] = {}
+      scoreMap[String(s.match_id)][String(s.player_id)] = s.pts_total || 0
+    })
     setScores(scoreMap)
 
     // Sort players by total points, leader first
@@ -151,9 +161,6 @@ export default function AllPredictions() {
       seenAS[k] = true
       totals[s.player_id] = (totals[s.player_id]||0) + (s.pts_total||0)
     })
-    // Include knockout points so the column order reflects the true standings.
-    var { data: koScoreRows } = await supabase.from('ko_scores')
-      .select('player_id,pts_total,match_id').in('player_id', playerIds)
     ;(koScoreRows||[]).forEach(function(s){
       var k = 'ko_' + s.player_id + '_' + s.match_id
       if (seenAS[k]) return
@@ -162,6 +169,7 @@ export default function AllPredictions() {
     })
     var sortedPlayers = [...(playerData || [])].sort(function(a,b){ return (totals[b.id]||0) - (totals[a.id]||0) })
     setPlayers(sortedPlayers)
+    setPlayerTotals(totals)
   }
 
   async function loadMatchData() {
@@ -311,6 +319,9 @@ export default function AllPredictions() {
                         </div>
                         <span style={{fontSize:10,color:'var(--c-muted)',maxWidth:90,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                           {p.name}
+                        </span>
+                        <span style={{fontSize:11,fontWeight:700,color:'var(--c-accent)',fontFamily:'var(--font-display)'}}>
+                          {playerTotals[p.id] || 0}
                         </span>
                       </div>
                     </th>
