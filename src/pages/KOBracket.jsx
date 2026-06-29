@@ -620,10 +620,11 @@ function MatchCard({ match, predicted, bracketPick, prediction, saved, bracketLo
         </div>
       )}
 
-      {finished && hasBoth && (
+      {finished && (hasBoth || (scored && scored.pts_total > 0)) && (
         <div style={{marginTop:7,textAlign:'center',fontSize:10,color:'var(--c-muted)'}}>
-          Predicted {pred.home_goals}-{pred.away_goals}
-          {scored && scored.pts_total > 0 && <span style={{marginLeft:5,color:'var(--c-success)',fontWeight:700}}>+{scored.pts_total}</span>}
+          {hasBoth ? <>Predicted {pred.home_goals}-{pred.away_goals}</> : <>Your pick</>}
+          {scored && scored.pts_total > 0 && <span style={{marginLeft:5,color:'var(--c-success)',fontWeight:700}}>+{scored.pts_total} pts</span>}
+          {scored && scored.pts_total === 0 && bracketPick && <span style={{marginLeft:5,color:'var(--c-muted)'}}>+0 pts</span>}
         </div>
       )}
 
