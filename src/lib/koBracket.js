@@ -31,7 +31,21 @@ export async function isKoBracketLocked() {
 async function getKoWeights(roomCode) {
   var res = await supabase.from('scoring_weights').select('*').eq('room_code', roomCode).maybeSingle()
   if (!res.data) return getDefaultKoWeights()
-  return res.data
+  // Merge the saved row OVER the defaults so a partial weights row (missing any KO
+  // column) falls back to the default value instead of undefined/0.
+  return mergeKoWeights(res.data)
+}
+
+// Overlay a (possibly partial) weights row onto the full default set. Only non-null
+// values from the row override defaults.
+export function mergeKoWeights(row) {
+  var defaults = getDefaultKoWeights()
+  if (!row) return defaults
+  var merged = {}
+  Object.keys(defaults).forEach(function(k){
+    merged[k] = (row[k] != null) ? row[k] : defaults[k]
+  })
+  return merged
 }
 
 export function getDefaultKoWeights() {

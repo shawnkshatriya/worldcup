@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { usePlayer } from '../hooks/usePlayer'
-import { isKoBracketLocked, calcKoMatchPoints, getDefaultKoWeights } from '../lib/koBracket'
+import { isKoBracketLocked, calcKoMatchPoints, getDefaultKoWeights, mergeKoWeights } from '../lib/koBracket'
 import { buildBracketLinkage, computePredictedTeams, KO_ROUND_ORDER, orderMatchesForBracket, orderSideMatches, BRACKET_SIDES } from '../lib/bracketLinkage'
 import { localTime, localDateShort } from '../lib/timeFormat'
 import Flag from '../components/Flag'
@@ -87,7 +87,7 @@ export default function KOBracket({ embedded }) {
       var predMap = {}
       ;(predRes.data || []).forEach(function(p){ predMap[p.match_id] = { home_goals: p.home_goals, away_goals: p.away_goals, home_pens: p.home_pens, away_pens: p.away_pens } })
       setPredictions(predMap)
-      if (wRes.data) setWeights(wRes.data)
+      if (wRes.data) setWeights(mergeKoWeights(wRes.data))
     }
     setLoading(false)
   }
