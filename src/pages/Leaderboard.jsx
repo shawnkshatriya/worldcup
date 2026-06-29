@@ -82,13 +82,19 @@ export default function Leaderboard() {
     setLoading(true)
     var playersQ = await supabase.from('players').select('id,name,site,team').eq('room_code', roomCode).limit(500)
     if (playersQ.error) playersQ = await supabase.from('players').select('id,name').eq('room_code', roomCode).limit(500)
-    const [scores, predictions, { count:finished }, { data:koScores }, { data:finishedMatchRows }] = await Promise.all([
+    var roomPlayerIds = (playersQ.data || []).map(function(p){ return p.id })
+    const [scores, predictions, { count:finished }, koScoresRes, { data:finishedMatchRows }] = await Promise.all([
       fetchAll('scores', '*'),
       fetchAll('predictions', 'player_id,match_id,home_goals,away_goals'),
       supabase.from('matches').select('*',{count:'exact',head:true}).eq('status','FINISHED'),
-      supabase.from('ko_scores').select('player_id,pts_total').eq('room_code', roomCode).then(function(r){ return r.data || [] }).catch(function(){ return [] }),
+      // Filter by player IDs (matches the home page's approach) so this can't miss
+      // rows due to any room_code edge case. Falls back to empty on error.
+      roomPlayerIds.length
+        ? supabase.from('ko_scores').select('player_id,pts_total').in('player_id', roomPlayerIds)
+        : Promise.resolve({ data: [] }),
       supabase.from('matches').select('id').eq('status','FINISHED'),
     ])
+    var koScores = (koScoresRes && koScoresRes.data) || []
     var players = playersQ.data
     setFinished(finished||0)
     if (!players) { setLoading(false); return }
