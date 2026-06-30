@@ -116,6 +116,11 @@ export default function Admin() {
   async function handleRecalc() {
     setRecalcing(true); setRecalcMsg('')
     await recalcPlayerScores(adminRoom)
+    // Also recalc the knockout bracket (KO points live in ko_scores).
+    try {
+      var { recalcKoBracket } = await import('../lib/koBracket')
+      await recalcKoBracket(adminRoom)
+    } catch (e) { /* group scores still updated */ }
     setRecalcing(false); setRecalcMsg('Scores recalculated!')
     setTimeout(() => setRecalcMsg(''), 3000)
   }

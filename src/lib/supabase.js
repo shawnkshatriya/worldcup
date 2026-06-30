@@ -239,8 +239,12 @@ export async function backfillBestRanks(roomCode) {
 export async function recalcAllRooms() {
   var res = await supabase.from('rooms').select('code')
   var rooms = res.data || []
+  var { recalcKoBracket } = await import('./koBracket')
   for (var i = 0; i < rooms.length; i++) {
     await recalcPlayerScores(rooms[i].code)
+    // Also recalc the knockout bracket - KO points live in ko_scores, separate from
+    // the group-stage scores. Without this, correcting a KO result leaves stale points.
+    try { await recalcKoBracket(rooms[i].code) } catch (e) { /* keep going for other rooms */ }
   }
   return rooms.length
 }
